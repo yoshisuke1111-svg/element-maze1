@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#102c2a" />
+<title>夜雀 | 麻雀・カジノ試作</title>
+<style>
+:root{color-scheme:dark;--bg:#091a1a;--bg2:#0c2523;--surface:#12332f;--surface2:#18453e;--edge:#376358;--ink:#f5f7e9;--muted:#adc9bf;--gold:#e9c77e;--accent:#8bdeba;--red:#e0786b;--dark:#082522;--r:15px;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;background:radial-gradient(ellipse at 45% -15%,#215e4c 0,transparent 50%),linear-gradient(170deg,#0b2121,#07191b 65%,#122622);min-height:100vh;color:var(--ink);overflow-x:hidden}button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.43;cursor:not-allowed}.shell{max-width:920px;margin:0 auto;padding:0 12px calc(30px + env(safe-area-inset-bottom));}.header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:17px 4px 10px}.brand{display:flex;gap:8px;align-items:center;font-weight:900;letter-spacing:.13em;color:var(--gold);font-size:21px}.brand-symbol{font-size:28px;color:var(--accent)}.tiny{font-size:11px;color:var(--muted);line-height:1.5}.top-actions{display:flex;gap:7px}.iconbtn{color:var(--ink);border:1px solid var(--edge);background:var(--surface);border-radius:10px;padding:9px 11px;min-height:40px}.card{border:1px solid var(--edge);border-radius:var(--r);background:linear-gradient(145deg,rgba(28,68,58,.91),rgba(13,44,42,.95));box-shadow:0 9px 24px #0002;padding:16px;margin:11px 0}.hero{min-height:240px;padding:29px 22px;border-radius:22px;display:flex;flex-direction:column;justify-content:center;background:radial-gradient(ellipse at 70% 50%,#28795f 0,transparent 58%),linear-gradient(130deg,#16453e,#102a2c 60%,#162e33);border:1px solid #53877a;position:relative;overflow:hidden}.hero:after{content:"🀄";font-size:210px;line-height:1;position:absolute;right:-30px;top:5px;opacity:.13;transform:rotate(19deg);pointer-events:none}.hero>*{position:relative;z-index:1}.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--gold);font-weight:900}.hero h1{font-size:clamp(28px,8vw,48px);line-height:1.2;margin:12px 0 10px}.lead{color:#cfe5d9;line-height:1.8;margin:6px 0 20px;font-size:14px;max-width:530px}.btn{border:1px solid #6ba78f;border-radius:12px;padding:12px 15px;background:linear-gradient(#2d856e,#266c5d);color:#f8fff9;font-weight:800;min-height:46px;box-shadow:0 2px 0 #082723;text-align:center}.btn.secondary{background:#1b3e39;color:var(--ink);border-color:#457569}.btn.gold{background:linear-gradient(#f4d88c,#d5aa60);color:#27332a;border-color:#fff0c0}.btn.ghost{background:transparent;box-shadow:none}.btn.small{padding:8px 10px;min-height:34px;font-size:12px}.btn.block{width:100%}.btn:active,.iconbtn:active{transform:translateY(1px)}.menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.menu-tile{min-height:126px;border:1px solid #487968;border-radius:17px;background:linear-gradient(130deg,#245a4c,#183d3c);padding:17px 13px;text-align:left;color:var(--ink);display:flex;flex-direction:column;justify-content:space-between}.menu-tile .emoji{font-size:32px}.menu-tile strong{font-size:18px}.menu-tile .sub{color:var(--muted);font-size:12px}.menu-tile[disabled]{opacity:.47}.section-title{font-weight:900;font-size:18px;letter-spacing:.03em;margin:16px 2px 9px}.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:4px 1px 12px;flex-wrap:wrap}.crumb span:last-child{color:var(--gold)}.pill{font-size:11px;font-weight:800;color:var(--dark);background:var(--gold);border-radius:40px;padding:3px 8px;white-space:nowrap}.note{color:var(--muted);font-size:12px;line-height:1.7}.warning{border-color:#a8784e;background:#473827;color:#ffebca;padding:11px;border-radius:10px;font-size:12px;line-height:1.65;margin-top:12px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:750}.field select,.field input{width:100%;background:#091f20;border:1px solid #48786b;border-radius:10px;color:var(--ink);padding:11px 10px;font-size:15px;min-height:43px}.field.check{flex-direction:row;align-items:center;border:1px solid #3f7266;padding:10px;border-radius:12px;background:#143a35}.field.check input{min-height:auto;width:20px;height:20px;accent-color:#b5dba7}.field.check label{font-size:13px;color:var(--ink)}.full{grid-column:1/-1}.setting-group{border-top:1px solid #2e5a50;padding-top:12px;margin-top:16px}.two-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.scoreboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0}.player{border:1px solid #3c6d60;border-radius:11px;padding:10px 4px;text-align:center;background:#143a35;min-width:0}.player.current{background:#236650;border-color:#e3ca87;box-shadow:0 0 0 1px #a38c5b inset}.player .name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800}.player .points{font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:5px}.player .status{font-size:10px;color:var(--gold);height:15px;margin-top:4px}.board{position:relative;border:1px solid #568c7e;background:radial-gradient(circle at center,#1e6551,#145140 65%,#0c3b35);border-radius:19px;box-shadow:inset 0 0 45px #001b15a6;min-height:260px;padding:11px 8px}.board-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;font-size:12px;color:#deecdd}.board-head strong{font-size:17px;color:var(--gold)}.river-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.river{border:1px solid #397966;background:#071f1c42;border-radius:10px;padding:6px;min-height:98px}.river-name{font-size:11px;color:#c2ddcc;font-weight:800;display:flex;justify-content:space-between;margin-bottom:5px}.river .tiles{display:flex;flex-wrap:wrap;gap:2px}.center-tiles{margin-top:10px;background:#0b2d2750;border-radius:9px;padding:7px;display:flex;justify-content:space-between;gap:6px;align-items:center}.seat-melds{display:flex;flex-wrap:wrap;gap:3px;margin-top:7px;min-height:26px}.meld{display:flex;gap:2px;border:1px solid #71917b;border-radius:7px;padding:2px}.tile{color:#18372e;background:linear-gradient(150deg,#fffdf0,#e3e7d3);border:1px solid #b2c3b3;border-bottom:4px solid #9ba99a;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;min-width:25px;width:25px;height:39px;user-select:none;line-height:1;box-shadow:0 2px 2px #0018;position:relative;overflow:hidden}.tile .val{font-size:15px;font-weight:900;color:#192b24;white-space:nowrap}.tile .val.suit-number{font-size:16px}.tile .suit{font-size:9px;margin-top:3px;font-weight:900;color:#386e7c}.tile.suit1 .suit{color:#cc665e}.tile.suit2 .suit{color:#348665}.tile.honor .val{font-size:17px}.tile.red .val,.tile.red .suit{color:#bd3f36}.tile.river-tile{min-width:20px;width:20px;height:29px;border-bottom-width:3px}.tile.river-tile .val{font-size:12px}.tile.river-tile .suit{font-size:7px;margin-top:1px}.tile.sm{min-width:22px;width:22px;height:32px;border-bottom-width:3px}.tile.sm .val{font-size:12px}.tile.sm .suit{font-size:8px}.tile.back{background:linear-gradient(#367361,#184837);color:#e4ffdc;border-color:#649986}.tile button{border:0}.tile.hand{width:calc((100vw - 49px) / 14);min-width:0;max-width:40px;height:clamp(48px,11.5vw,58px);border-radius:5px;cursor:pointer;padding:0;border-bottom-width:5px}.tile.hand .val{font-size:clamp(15px,4.7vw,23px)}.tile.hand .suit{font-size:clamp(9px,2.3vw,12px);margin-top:3px}.tile.hand.drawn{margin-left:5px;border-color:#dcb45d;box-shadow:0 0 0 2px #dcb45d50}.tile.hand.can-riichi{box-shadow:0 0 0 2px #edce6c}.tile.hand:active{transform:translateY(-5px)}.tile.selected{outline:3px solid #edc560;outline-offset:1px}.tile.called{opacity:.56;transform:rotate(90deg)}.tilebackrow{display:flex;flex-wrap:wrap;gap:3px}.hand-panel{padding:12px 8px 13px;background:linear-gradient(#14392f,#102e2b);border:1px solid #4a8072;border-radius:15px;margin:10px 0}.handline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}.handline strong{color:var(--gold)}.hand-tiles{display:flex;align-items:end;justify-content:center;gap:1px;min-height:64px;overflow:visible}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.actions .btn{flex:1 1 90px}.actions .btn.gold{flex:1 0 100px}.events{font-size:11px;line-height:1.7;color:#cee3db;padding:10px 11px;background:#0a2724b5;border:1px solid #2c6052;border-radius:12px;margin-top:8px}.events b{color:var(--gold)}.bottom-link{margin-top:15px;display:flex;justify-content:space-between;align-items:center;gap:7px}.admin{border:1px solid #d5b772;background:linear-gradient(135deg,#303728,#102523);border-radius:14px;padding:13px;margin:10px 0}.admin h3{font-size:17px;color:var(--gold);margin:3px 0 7px}.admin h4{font-size:13px;margin:15px 0 7px}.admin-row{border:1px solid #5c6d53;border-radius:10px;padding:8px;margin:7px 0}.admin-hand{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}.admin-tile{padding:2px;border:0;border-radius:7px;background:transparent}.admin-tile:focus-visible{outline:2px solid #e5c678}.admin-wall{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;max-height:390px;overflow-y:auto;border:1px solid #355947;border-radius:9px;padding:7px;background:#091b19}.wall-item{display:flex;flex-direction:column;gap:2px;align-items:center}.wall-item .index{font-size:9px;color:#b6cab7}.wall-item button{padding:0;background:transparent;border:0}.admin-help{font-size:12px;color:#f0e4b8;line-height:1.7}.admin-predict{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.admin-predict .prediction{font-size:10px;background:#173f36;border-radius:7px;text-align:center;padding:5px 1px;display:flex;flex-direction:column;align-items:center;gap:4px}.meta{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--muted)}.result{border:2px solid #d4b978;background:linear-gradient(145deg,#2e553e,#1b3237);border-radius:18px;padding:18px 14px;margin-top:9px}.result h2{margin:0 0 9px;color:#f9dfa4;font-size:24px}.result .yaku{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}.result .yaku span{border:1px solid #b1a66f;border-radius:7px;padding:5px 7px;font-size:12px;background:#344b3c}.rank-table{width:100%;border-collapse:collapse;font-size:13px}.rank-table td{padding:7px 3px;border-bottom:1px solid #52614c}.footer{margin:17px 3px 0;color:#80a59c;font-size:10px;text-align:center;line-height:1.6}.rules-summary{font-size:13px;line-height:1.9;color:#c5ddd2}.rules-summary strong{color:#fff6c9}.vspace{height:8px}@media(min-width:650px){.menu-grid{grid-template-columns:repeat(3,1fr)}.hero{min-height:290px}.board{min-height:340px;padding:20px}.tile.hand{width:38px;height:58px}.tile.hand .val{font-size:23px}.river{min-height:110px;padding:11px}.scoreboard{gap:10px}.player{padding:14px 8px}.player .name{font-size:14px}.player .points{font-size:17px}.admin-wall{grid-template-columns:repeat(12,minmax(0,1fr))}}@media(max-width:360px){.shell{padding-left:7px;padding-right:7px}.tile.hand{width:calc((100vw - 33px)/14)}.tile.hand .val{font-size:14px}.tile.river-tile{min-width:18px;width:18px}.btn.small{font-size:11px}.scoreboard .points{font-size:12px}}
+
+</style>
+<style>
+/* v0.2 – full visual rework, optimized for a narrow smartphone screen */
+:root{--bg:#080f14;--bg2:#111f27;--surface:#16282e;--surface2:#1f3c3e;--edge:#4c6a62;--ink:#fff5df;--muted:#b6c5bd;--gold:#f0cb7f;--accent:#72c9ab;--red:#e95c5d;color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif}
+html{background:#090f13}body{background:radial-gradient(circle at 50% -20%,#1e4044 0,transparent 57%),radial-gradient(circle at 100% 80%,#142820 0,transparent 70%),#0b141a;color:var(--ink)}
+.shell{max-width:920px;padding:0 12px calc(24px + env(safe-area-inset-bottom))}
+.header{padding:12px 0 8px;border-bottom:1px solid #6f8b8040}.brand{font-size:20px;letter-spacing:.05em;color:#f5d698}.brand-symbol{color:inherit}.top-actions .iconbtn{min-height:37px;background:#1b3030}.crumb{margin:7px 0;font-size:11px;color:#9eada7}
+.card{background:linear-gradient(145deg,#1b3035,#112424);border:1px solid #4a625f;box-shadow:0 15px 35px #0006}
+.hero{border:1px solid #867356;background:radial-gradient(ellipse at 80% 80%,#1e715c,transparent 60%),linear-gradient(135deg,#212a35,#11282b 68%,#28312d);box-shadow:0 16px 30px #0008}
+.hero:after{opacity:.1}.hero h1{letter-spacing:.05em}.eyebrow{color:#edc98b}.menu-tile{background:linear-gradient(140deg,#233c3e,#142a2e);border-color:#69817666}.menu-tile:not([disabled]):active{transform:scale(.98)}
+.btn{border-color:#78a48d;box-shadow:0 4px 0 #0003;background:linear-gradient(#34836e,#205e53)}.btn.gold{background:linear-gradient(#f6d99c,#d3ad68);border-color:#ffe9b4;box-shadow:0 3px 0 #7e5831}
+.game-shell{max-width:920px}.game-shell>.meta{display:none}.game-shell>.crumb{margin-bottom:5px}
+.game-shell .scoreboard{margin:9px 0 11px;gap:5px}.game-shell .player{background:linear-gradient(150deg,#1f3d40,#112a30);border:1px solid #51665a;padding:8px 3px 5px;border-radius:9px}.game-shell .player.current{background:linear-gradient(145deg,#465e45,#244b40);border-color:#f4d08c;box-shadow:0 0 0 1px #997a44 inset}.game-shell .player .name{font-size:11px;color:#f3e3c2}.game-shell .player .points{font-size:13px;font-weight:800;color:#fff}.game-shell .player .status{font-size:9px;color:#b8c6bc}
+.board{min-height:392px;padding:11px 9px 12px;border:8px solid #5b4030;border-radius:28px;background:radial-gradient(ellipse at center,#147660 0,#105c4e 46%,#0c4238 87%);box-shadow:0 0 0 2px #c69e68,0 0 0 5px #291a17,0 18px 30px #0009,inset 0 0 40px #00140e;overflow:hidden}
+.table-banner{display:flex;align-items:center;gap:8px;position:relative;z-index:3;margin:0 auto 7px;background:#031e1b9c;border:1px solid #e5d59d5c;border-radius:30px;padding:4px 10px;width:max-content;max-width:95%;font-size:11px;color:#d1dfd1}.table-banner b{color:#f7d99d;font-size:13px}.table-banner em{font-style:normal;color:#f0d5a1;margin-left:8px}.light-dot{background:#a8e7c5;box-shadow:0 0 10px #5fbca2;width:7px;height:7px;border-radius:50%}
+.board-head{display:none}.river-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:96px 128px 96px;gap:4px;margin:0;min-height:328px;position:relative;align-items:stretch}
+.river{display:flex;flex-direction:column;min-height:0;padding:5px 3px;background:#002d2670;border:1px solid #c3e3b02e;border-radius:9px;overflow:hidden}.river.seat-0{grid-column:2;grid-row:3;background:#183e3480;border-color:#e5c78f72}.river.seat-1{grid-column:1;grid-row:2}.river.seat-2{grid-column:2;grid-row:1}.river.seat-3{grid-column:3;grid-row:2}.river-name{margin-bottom:3px;font-size:10px;color:#e4eadb;gap:3px}.river-name span:last-child{color:#b0d9c8}.river .tiles{display:flex;gap:1px;flex-wrap:wrap;align-content:start;overflow:hidden;flex:1}.river .seat-melds{min-height:0;margin-top:3px;gap:1px}.river .meld{gap:0;border:1px solid #b3b58c66;padding:1px}
+.center-tiles{position:absolute;z-index:2;top:44%;left:50%;transform:translate(-50%,-50%);min-width:118px;max-width:41%;width:max-content;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px solid #d0b97f91;background:linear-gradient(150deg,#164d46,#082a28);box-shadow:0 5px 14px #001a15cc,0 0 0 4px #082e2b75;border-radius:12px;padding:8px 6px}.center-tiles .meta{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;color:#fff7d3}.center-tiles .tiny{font-size:8px}.center-tiles .tile{width:25px;height:33px}
+.backs-row{display:flex;margin-top:auto;gap:1px;align-items:center;justify-content:center;overflow:hidden}.backs-row i{display:inline-block;width:9px;height:19px;border:1px solid #a7cca0;background:linear-gradient(130deg,#32735c,#1c503d);border-radius:2px;box-shadow:inset 0 0 0 2px #14583b}.backs-row span{color:#d6e1d7;font-size:9px;white-space:nowrap}
+.tile{background:linear-gradient(165deg,#fffbea,#e5ddc8);border-color:#e0ceb0;border-bottom-color:#9e947d;border-bottom-width:3px;box-shadow:1px 2px 3px #0006;min-width:23px;width:23px;height:32px;border-radius:4px;overflow:visible}.tile .val.glyph{font-family:'Apple Color Emoji','Noto Color Emoji','Segoe UI Emoji',sans-serif;font-weight:400;font-size:22px;line-height:1.08;color:#16221b;white-space:nowrap}.tile .suit{display:none}.tile.honor .val.glyph{font-size:22px}.tile.river-tile{min-width:19px;width:19px;height:25px;border-bottom-width:2px}.tile.river-tile .val.glyph{font-size:18px}.tile.sm{min-width:20px;width:20px;height:28px;border-bottom-width:2px}.tile.sm .val.glyph{font-size:19px}.tile.back{background:linear-gradient(#49816a,#1a5542);border-color:#98b89d}.tile.red{border-color:#e67354;box-shadow:0 0 0 1px #d65044,0 2px 3px #0006}
+.hand-panel{margin:13px 0 8px;padding:12px 8px 10px;border:1px solid #c29b65;background:linear-gradient(#223d38,#0b2526);box-shadow:0 8px 20px #0007;border-radius:15px}.handline{margin-bottom:5px}.handline strong{color:#ffe09c;font-size:14px}.handline .tiny{font-size:10px}.discard-guide{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 1px 8px;color:#cdddcf;font-size:11px}.discard-guide button{flex-shrink:0;min-height:34px}.hand-tiles{min-height:68px;gap:1px;align-items:flex-end;padding:3px 0 8px;overflow:visible}.tile.hand{min-width:0;width:calc((100vw - 39px)/14);max-width:48px;height:clamp(51px,13.6vw,65px);border-bottom-width:5px;touch-action:manipulation}.tile.hand .val.glyph{font-size:clamp(21px,5.8vw,32px)}.tile.hand.drawn{margin-left:3px;box-shadow:0 0 0 1px #f2c57b,0 3px 6px #0006}.tile.hand.is-chosen{transform:translateY(-9px);outline:3px solid #ffe08a;outline-offset:0;z-index:2;background:#fff9db}.tile.hand.is-chosen .val.glyph{filter:drop-shadow(0 2px 0 #cc9f5b)}.tile.hand:active{transform:translateY(-4px)}.tile.hand:disabled{opacity:.7}
+.actions{margin-top:6px;gap:6px}.actions .btn{min-height:42px;flex:1 1 90px}.actions .tiny{display:none}.events{background:#131f25;border-color:#3b5d57;color:#c8d4cd;font-size:11px;margin-top:9px;border-radius:10px}.bottom-link{gap:7px}.bottom-link .btn{padding:9px}.bottom-link [data-act='restart']{font-size:11px}.v02-back{border:1px solid #557a71;border-radius:11px;padding:9px 11px;background:#172d30;color:#d6f4e4;font-weight:750;font-size:12px;min-height:38px;cursor:pointer}
+.game-shell .footer{color:#90a499;font-size:10px}.game-shell .admin{background:#122326;border:1px solid #c99f5c;box-shadow:0 10px 22px #0008}.admin-wall{grid-template-columns:repeat(8,minmax(0,1fr));background:#091719}.private-audit{border:1px solid #687765;background:#152a29;padding:10px;border-radius:9px;color:#e6d4a5;font-size:11px}.private-audit h4{margin:0 0 8px}.private-audit div{padding:4px 0;border-bottom:1px solid #65796133}
+.watchmode .hand-panel,.watchmode .admin{display:none}.watchmode .board{min-height:380px}.watch-panel{border:1px solid #b99b62;padding:13px 10px;border-radius:13px;margin:13px 0;background:linear-gradient(135deg,#1d3036,#0d2528);box-shadow:0 10px 20px #0006}.watch-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px}.watch-toolbar h3{margin:2px 0 0;font-size:17px;color:#ffe0a7}.watch-label{color:#c9e2d2;font-size:11px}.watch-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:11px 0}.watch-controls .btn{font-size:10px;padding:5px 2px;min-height:40px}.watch-hands{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.watch-player{border:1px solid #48665f;background:#10272b;border-radius:8px;padding:8px 5px;min-width:0}.watch-player.watch-now{border-color:#f5cc80;background:#263e38}.watch-person{display:flex;justify-content:space-between;gap:3px;font-size:11px;white-space:nowrap}.watch-person span{color:#a9cabf;font-size:10px}.watch-tiles{display:flex;overflow-x:auto;gap:1px;min-height:36px;align-items:center;padding:5px 0 2px}.m-tile{display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:23px;font-family:'Apple Color Emoji','Noto Color Emoji','Segoe UI Emoji',sans-serif;line-height:1;background:#fdf9e6;border:1px solid #e6d7ad;border-bottom:3px solid #a89880;min-width:23px;width:23px;height:33px;border-radius:3px}.m-tile.is-red{box-shadow:0 0 0 1px #c64f48}.watch-meld{display:inline-flex;gap:0;border-left:2px solid #bca36b;margin-left:4px}.watch-nextline{border-top:1px solid #4a685e;margin-top:10px;padding:8px 1px;font-size:12px}.watch-nextline b{font-size:12px;color:#ffdda1}.watch-nexts{display:flex;gap:7px;margin:6px 0}.watch-next{display:flex;flex-direction:column;align-items:center;gap:3px}.watch-next small{font-size:9px;color:#acbfb4}.watch-nextline>small{font-size:10px;color:#9eb0a7}.watch-audit{color:#b2c5bd;font-size:10px}
+.admin-entry{width:100%;margin-top:10px}.v02-head{border-radius:18px;margin:15px 0;padding:24px 18px;background:radial-gradient(circle at 90% 50%,#345b46,transparent 70%),linear-gradient(140deg,#32382c,#153035);border:1px solid #9e8357}.v02-head h1{font-size:26px;line-height:1.3;margin:7px 0 10px}.v02-head p{font-size:12px;line-height:1.7;color:#e3e5d6}.v02-kicker{font-size:10px;letter-spacing:.15em;color:#edc17f;font-weight:900}.control-grid{display:grid;grid-template-columns:1fr;gap:10px}.control-tile{background:linear-gradient(140deg,#223d3e,#102729);border:1px solid #6d8f82;border-radius:13px;color:#fff0d3;display:flex;align-items:center;gap:12px;text-align:left;padding:16px;font:inherit;min-height:75px;position:relative}.control-tile span{font-size:30px}.control-tile b{font-size:15px}.control-tile small{font-size:11px;color:#b8cec4;display:block;position:absolute;left:62px;top:45px}.v02-notice{border-left:3px solid #d5ae65;padding:12px 14px;background:#322d22;color:#e3d0a4;line-height:1.7;font-size:12px;border-radius:5px}
+@media(max-width:360px){.shell{padding-left:7px;padding-right:7px}.board{padding:8px 5px 9px;border-width:6px;min-height:365px}.river-grid{grid-template-rows:88px 120px 88px;min-height:304px}.tile.hand{width:calc((100vw - 29px)/14);height:49px}.tile.hand .val.glyph{font-size:21px}.river .tiles{gap:0}.river .tile.river-tile{width:18px;min-width:18px;height:24px}.river .tile.river-tile .val.glyph{font-size:17px}.game-shell .player .name{font-size:10px}.game-shell .player .points{font-size:12px}.watch-tiles .m-tile{font-size:20px;width:21px;min-width:21px;height:29px}}
+@media(min-width:650px){.board{min-height:490px;padding:18px 35px}.river-grid{min-height:390px;grid-template-rows:115px 155px 115px;gap:12px}.river{padding:8px}.river .tiles{gap:2px}.river .tile.river-tile{width:26px;min-width:26px;height:34px}.river .tile.river-tile .val.glyph{font-size:25px}.center-tiles{min-width:170px}.hand-tiles{justify-content:center;gap:4px}.tile.hand{width:47px;height:66px}.tile.hand .val.glyph{font-size:35px}.watch-hands{grid-template-columns:repeat(4,minmax(0,1fr))}.control-grid{grid-template-columns:repeat(3,1fr)}.control-tile{min-height:125px;flex-direction:column;align-items:flex-start;justify-content:flex-start}.control-tile small{position:static}}
+
+.m-tile{flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif;color:#26342d}.m-tile .mini-num{display:block;font-weight:900;font-size:15px;line-height:1;color:#1d2b26}.m-tile .mini-suit{display:block;font-size:9px;font-weight:900;line-height:1.3;color:#426b67}.m-tile .mini-honor{display:block;font-size:15px;font-weight:900;line-height:1;color:#1f3329}.m-tile.is-red{border-color:#d15f52}.m-tile.is-red .mini-num{color:#d45c4d}
+
+</style>
+<style>
+/* YONMA v0.3 | custom tile vectors, a real 4-wall table, compact mobile-first layout. */
+:root{--v03-ivory:#f6f0e0;--v03-felt:#135644;--v03-gold:#dfb86e}
+.v03-shell{max-width:980px}
+.v03-shell .brand{color:#e9cb92;letter-spacing:.07em}
+.v03-shell .game-shell>.meta{display:none}
+.v03-shell .game-shell .scoreboard{gap:5px;margin:9px 0 9px}
+.v03-shell.game-shell .player{background:#1b3135;border-color:#496c60;border-radius:11px;min-height:58px}
+.v03-shell.game-shell .player.current{background:#325d4c;border-color:#dfb86e}
+.v03-shell .board.v03-board{margin:0;padding:0;min-height:0;background:transparent;border:0;box-shadow:none;overflow:visible;border-radius:0}
+.v03-info-strip{display:flex;gap:7px;justify-content:space-between;align-items:center;margin:0 1px 9px;color:#cfddd2;font-size:11px;flex-wrap:wrap}
+.v03-info-strip b{color:#f3d58e;font-size:14px}
+.v03-info-strip span{background:#172c2f;border:1px solid #466052;padding:6px 9px;border-radius:20px}
+.v03-table-stage{position:relative;overflow:visible;padding:5px 0 8px;min-height:360px}
+.v03-felt{position:relative;height:clamp(348px,92vw,520px);width:100%;background:radial-gradient(ellipse at 44% 38%,#1c775c 0%,#165a48 51%,#0b3a32 100%);border:9px solid #67452e;border-radius:29px;box-shadow:0 0 0 2px #c49e64,0 0 0 5px #241b16,0 10px 3px #0b1012,0 25px 28px #0009,inset 0 1px 24px #001f18aa;transform:perspective(950px) rotateX(8deg);transform-origin:50% 55%;isolation:isolate}
+.v03-felt:after{content:"";position:absolute;inset:8px;border:1px solid #b5c9a127;border-radius:18px;pointer-events:none}
+.v03-seated{position:absolute;z-index:5;font-size:10px;font-weight:800;color:#dfefde;text-shadow:0 1px 2px #071b16;white-space:nowrap;display:flex;align-items:center;gap:5px;max-width:70%}
+.v03-seated .v03-seat-badge{color:#f9ddb1;background:#10382fcb;border:1px solid #c7aa6955;border-radius:20px;padding:3px 7px}
+.v03-seated.seat-0{bottom:8px;left:50%;transform:translateX(-50%)}
+.v03-seated.seat-2{top:8px;left:50%;transform:translateX(-50%)}
+.v03-seated.seat-1{right:11px;top:17%;writing-mode:vertical-rl}
+.v03-seated.seat-3{left:11px;top:17%;writing-mode:vertical-rl}
+.v03-wall{position:absolute;z-index:4;display:flex;justify-content:space-between;gap:1px;pointer-events:none}
+.v03-wall.top{top:12%;left:20%;width:60%;height:23px}
+.v03-wall.bottom{bottom:12%;left:20%;width:60%;height:23px;flex-direction:row-reverse}
+.v03-wall.right{right:8%;top:22%;height:56%;width:21px;flex-direction:column}
+.v03-wall.left{left:8%;top:22%;height:56%;width:21px;flex-direction:column-reverse}
+.v03-stack{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:0}
+.v03-wall.left .v03-stack,.v03-wall.right .v03-stack{flex-direction:row;min-height:0;align-items:stretch}
+.v03-stacked-tile{display:block;flex:0 0 42%;border-radius:2px;border:1px solid #a3d4b8;background:linear-gradient(140deg,#2c795f 0,#205b49 70%,#163c35 100%);box-shadow:0 1px 2px #0008,inset 0 0 0 1px #4c997d88}
+.v03-stacked-tile.tower-base{background:linear-gradient(#275947,#184233);border-color:#77a98d}
+.v03-stacked-tile.dead-wall{border-color:#d6b875;background:linear-gradient(#567451,#315140)}
+.v03-stacked-tile.dragon-next{background:linear-gradient(#7bd1a0,#24624f);box-shadow:0 0 6px #d2f3b9b0}
+.v03-stacked-tile.dragon-dora{background:linear-gradient(#f2e5c9,#eee4ca);border-color:#f9d598;box-shadow:0 0 0 1px #e8c87399}
+.v03-stacked-tile.dragon-dora .v03-small-mark{font-size:6px;color:#153a31;display:block;text-align:center;line-height:8px}
+.v03-stacked-tile.removed{visibility:hidden}
+.v03-stack.v03-break:before{content:"";position:absolute;z-index:3;top:-5px;bottom:-5px;left:-4px;width:3px;background:#f0c36b;border-radius:4px;box-shadow:0 0 5px #f3d48d}
+.v03-wall.left .v03-stack.v03-break:before,.v03-wall.right .v03-stack.v03-break:before{top:-4px;bottom:auto;left:-5px;right:-5px;height:3px;width:auto}
+.v03-river{position:absolute;z-index:2;display:grid;gap:1px;grid-template-columns:repeat(6,minmax(0,1fr));align-content:start;justify-content:center;overflow:hidden;min-height:32px}
+.v03-river.seat-0{bottom:24%;left:25%;width:50%;height:20%}
+.v03-river.seat-2{top:24%;left:25%;width:50%;height:20%;transform:rotate(180deg)}
+.v03-river.seat-1{right:18%;top:34%;width:24%;height:32%;transform:rotate(-90deg)}
+.v03-river.seat-3{left:18%;top:34%;width:24%;height:32%;transform:rotate(90deg)}
+.v03-river .v03-river-tile{height:clamp(18px,5vw,27px);width:100%;max-width:21px;justify-self:center;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fffbea,#dddac7);border:1px solid #c9c0ad;border-bottom:2px solid #8f988d;border-radius:2px;box-shadow:0 1px 1px #0006;overflow:hidden}
+.v03-river-tile.called{opacity:.28}
+.v03-river-tile.riichi{transform:rotate(90deg) scale(.9)}
+.v03-river-tile .v03-face{width:95%;height:96%;display:block}
+.v03-center{position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:radial-gradient(circle at top,#193b33,#092e2a);border:2px solid #bd9c5c;border-radius:14px;box-shadow:0 4px 0 #081a18,0 9px 12px #0008;padding:9px 8px;min-height:91px;min-width:105px}
+.v03-center h3{font-size:13px;color:#f6d487;margin:0;font-weight:900;line-height:1.2}
+.v03-center p{color:#d4e9d9;font-size:9px;margin:0;white-space:nowrap}
+.v03-dice{display:flex;align-items:center;justify-content:center;gap:5px}
+.v03-die{width:22px;height:22px;background:#f1ece2;border-radius:5px;border:2px solid #c6b89e;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:2px;padding:3px;box-shadow:1px 2px 2px #000a}
+.v03-die i{display:block;background:#ad3932;border-radius:50%;opacity:0}
+.v03-die i.on{opacity:1}
+.v03-dora-line{display:flex;align-items:center;gap:3px;margin-top:4px;max-width:134px;flex-wrap:wrap;justify-content:center}
+.v03-dora-line .v03-dora-chip{height:21px;width:16px;background:linear-gradient(#fdf8e8,#ddd8c7);border-radius:3px;box-shadow:1px 2px 2px #0006;padding:0;border:1px solid #e2d5b7;display:flex;justify-content:center;align-items:center}
+.v03-dora-chip .v03-face{width:96%;height:96%}
+.v03-dora-title{font-size:8px;color:#c9dbc8;width:100%;text-align:center}
+.v03-dead-pill{display:flex;gap:5px;align-items:center;justify-content:space-between;font-size:10px;color:#c4dfd0;margin:7px 4px 3px}
+.v03-dead-pill b{color:#f9d793}
+.v03-meld-zone{position:absolute;z-index:3;left:18%;bottom:18%;display:flex;gap:2px;max-width:66%;overflow:visible}
+.v03-meld-zone .v03-small-tile{width:15px;height:22px;display:flex;justify-content:center;align-items:center;background:#f6f0dc;border:1px solid #b1aa94;border-radius:3px}
+.v03-meld-zone .v03-face{width:100%;height:100%}
+.v03-meld{display:flex;gap:0;margin:0 2px;box-shadow:0 2px 5px #0007;border-radius:3px}
+.v03-meld .v03-small-tile.flipface{background:linear-gradient(#33775d,#1b4b3b);border-color:#8bb39b}
+.v03-meld .v03-small-tile.flipface .v03-face{display:none}
+.v03-meld .v03-small-tile.turnleft{transform:rotate(-90deg)}
+.v03-kan-flip{animation:v03Flip .65s ease-in-out both;backface-visibility:hidden}
+@keyframes v03Flip{0%{transform:rotateY(0deg) scale(1)}45%{transform:rotateY(90deg) scale(1.2)}100%{transform:rotateY(0deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){.v03-kan-flip{animation:none}}
+.v03-shell .tile{border-radius:5px;background:linear-gradient(150deg,#fffdf4,#e6dfc9);border:1px solid #d4cbb8;border-bottom:4px solid #aaa28e;box-shadow:0 3px 2px #0008;overflow:hidden;padding:0}
+.v03-shell .tile.hand{height:clamp(49px,12.6vw,65px);width:calc((100vw - 33px)/14);max-width:44px;min-width:0;cursor:pointer}
+.v03-shell .tile .v03-face,.v03-shell .m-tile .v03-face,.v03-shell .admin-tile .v03-face{width:100%;height:100%;display:block;overflow:hidden}
+.v03-shell .tile.hand .v03-face{width:100%;height:98%}
+.v03-shell .tile.hand.selected{border-color:#f1bb5a;transform:translateY(-8px)}
+.v03-shell .tile.hand.is-chosen{border-color:#f1c35c;transform:translateY(-7px);box-shadow:0 4px 0 #8a603e,0 0 0 2px #f2d68f}
+.v03-shell .tile.hand.drawn{margin-left:6px}
+.v03-shell .hand-tiles{gap:1px;justify-content:center}
+.v03-shell .hand-panel{background:#122b2c;border:1px solid #aa8d61;padding:12px 7px 13px;box-shadow:0 6px 20px #0007}
+.v03-shell .watch-tiles{gap:2px;flex-wrap:wrap}
+.v03-shell .m-tile{background:linear-gradient(#fdf9e7,#ddd8c9);border:1px solid #c5bdae;border-bottom:3px solid #9e9987;border-radius:3px;width:24px;height:36px;display:inline-flex;align-items:center;justify-content:center;min-width:24px}
+.v03-shell .m-tile .v03-face{width:100%;height:98%}
+.v03-shell .admin-hand .tile.sm{width:26px;min-width:26px;height:38px}
+.v03-shell .watch-panel{background:linear-gradient(135deg,#173532,#12252b);border-color:#a58d64}
+.v03-shell .watch-player{background:#0b2225;border:1px solid #436a5d;border-radius:8px;padding:7px 6px}
+.v03-shell .watch-player.watch-now{border-color:#d8b66a;background:#244b3b}
+.v03-shell .watch-person{margin-bottom:5px}
+.v03-shell .watch-nexts .m-tile{width:27px;height:38px}
+.v03-chip-setting{border:1px solid #86754d;background:linear-gradient(140deg,#273b35,#142b2d);border-radius:13px;padding:12px 13px;margin:13px 0 5px}
+.v03-chip-setting h3{margin:0 0 8px;font-size:15px;color:#f7d898}
+.v03-chip-setting .v03-rate{display:flex;align-items:center;gap:8px}
+.v03-chip-setting input{width:100px;min-width:60px;background:#0e2423;color:#fff1d8;border:1px solid #a18b61;border-radius:7px;padding:10px;font-size:17px;font-weight:850;text-align:center}
+.v03-chip-setting p{margin:8px 0 0;color:#bdcfc4;font-size:11px;line-height:1.6}
+.v03-chip-impact{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:6px 0 0}
+.v03-chip-impact>div{text-align:center;background:#182d2d;border:1px solid #486a5b;border-radius:8px;padding:7px 2px 6px;min-width:0}
+.v03-chip-impact strong{display:block;font-size:13px;color:#f2d49a;margin:3px 0;white-space:nowrap}
+.v03-chip-impact small{font-size:9px;color:#adc7b9}
+.v03-chip-impact .minus strong{color:#eea99d}
+.v03-chip-caption{font-size:10px;color:#a9c2b3;margin-top:5px;line-height:1.45}
+.v03-shell .admin-row .admin-hand{display:flex;flex-wrap:wrap;gap:2px}
+.v03-shell .watch-player .watch-tiles{display:flex}
+.v03-shell .watch-player .watch-tiles .m-tile{margin:0}
+.v03-shell .watch-meld{display:inline-flex;gap:1px;border-left:1px solid #c6bd9077;padding-left:3px;margin-left:3px}
+.v03-tipline{margin:3px 0 9px;background:#132e2b;color:#dfd4ad;border:1px solid #7f75515b;border-radius:9px;font-size:10px;line-height:1.5;padding:8px 10px}
+@media(max-width:360px){.v03-felt{height:355px;border-width:7px}.v03-table-stage{min-height:355px}.v03-shell .tile.hand{width:calc((100vw - 27px)/14);height:46px}.v03-center{min-width:94px;min-height:85px;padding:6px 4px}.v03-center h3{font-size:12px}.v03-river.seat-0,.v03-river.seat-2{width:48%;left:26%}.v03-wall.top,.v03-wall.bottom{width:62%;left:19%}.v03-wall.left{left:6%}.v03-wall.right{right:6%}.v03-stack{gap:0}.v03-chip-impact strong{font-size:12px}}
+@media(min-width:650px){.v03-felt{height:520px;border-width:14px}.v03-wall.top,.v03-wall.bottom{height:31px}.v03-wall.left,.v03-wall.right{width:29px}.v03-river .v03-river-tile{max-width:29px;height:35px}.v03-center{width:140px;min-height:123px}.v03-center h3{font-size:20px}.v03-center p{font-size:12px}.v03-die{height:30px;width:30px}.v03-shell .tile.hand{width:46px;height:66px}.v03-meld-zone .v03-small-tile{width:23px;height:33px}.v03-chip-impact strong{font-size:15px}}
+
+</style>
+
+<style>
+.v03-meld-zone.seat-0{left:22%;bottom:18%;right:auto;top:auto;max-width:56%;transform:none}
+.v03-meld-zone.seat-2{left:22%;top:18%;bottom:auto;right:auto;max-width:56%;transform:rotate(180deg)}
+.v03-meld-zone.seat-1{right:13%;left:auto;top:37%;bottom:auto;max-width:45%;transform:rotate(-90deg);transform-origin:75% 50%}
+.v03-meld-zone.seat-3{left:13%;right:auto;top:37%;bottom:auto;max-width:45%;transform:rotate(90deg);transform-origin:25% 50%}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="shell">
+    <div class="header"><div class="brand"><span class="brand-symbol">🀄</span>夜雀 YONMA LAB</div></div>
+    <div class="card" style="margin-top:16px">
+      <h2 style="margin-top:0">ゲームを起動できておらんようじゃ</h2>
+      <p>この画面が表示され続ける場合、HTMLのプレビュー機能でJavaScriptが実行されていない可能性があるぞ。</p>
+      <p>iPhoneの「ファイル」アプリやChatGPTのファイルプレビューでは動作しない場合がある。<strong>GitHub Pagesなどに公開して、SafariでURLを開く</strong>方式なら起動できる。</p>
+      <p class="note">ゲームは端末内で動くHTML・JavaScriptで作られている。通信が必要な外部ライブラリは使っておらん。</p>
+    </div>
+  </div>
+</div>
+<noscript><p style="padding:1rem;color:#fff">JavaScriptが無効になっています。ブラウザで有効にしてください。</p></noscript>
+<script>
+/* YONMA LAB v0.1 - dependency-free riichi Mahjong test engine.
+   Player 0 is human; the three other seats are CPUs. No real-money wagering.
+   Physical tile ids 0..135 preserve four-copy invariants through admin swaps.
+   Current scope: closed hands, pon, chi, riichi; kan and multiple-ron reserved for next release.
+*/
+(function(root){
+'use strict';
+const Y = {};
+const SUITS=['萬','筒','索'];
+const HONORS=['東','南','西','北','白','發','中'];
+const YAO=[0,8,9,17,18,26,27,28,29,30,31,32,33];
+const YAO_SET=new Set(YAO);
+const RED_TYPES=new Set([4,13,22]);
+const ttype=id=>Math.floor(id/4);
+const isRed=id=>RED_TYPES.has(ttype(id))&&id%4===0;
+const isHonor=t=>t>=27;
+const rank=t=>t%9+1;
+const isTerminal=t=>t>=27||rank(t)===1||rank(t)===9;
+const count=ids=>{const c=Array(34).fill(0);for(const id of ids)c[ttype(id)]++;return c;};
+const display=t=>t>=27?HONORS[t-27]:rank(t)+SUITS[Math.floor(t/9)];
+const tileText=id=>display(ttype(id));
+const doraNext=t=>t<27?(t%9===8?t-8:t+1):t<=30?27+(t-27+1)%4:31+(t-31+1)%3;
+const round100=n=>Math.ceil(n/100)*100;
+const shuffle=(arr,rng=Math.random)=>{for(let i=arr.length-1;i>0;i--){let j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;};
+const tileArray=()=>Array.from({length:136},(_,i)=>i);
+function meldDecompose(c,want){
+  // Enumerate all legal pair / set decompositions for best-scoring form.
+  const tagged=[];
+  for(let t=0;t<34;t++)if(c[t]>=2){c[t]-=2;const part=[];function rec(){const k=c.findIndex(n=>n>0);if(k===-1){if(part.length===want)tagged.push({pair:t,groups:part.map(g=>({...g}))});return;}if(part.length>=want)return;if(c[k]>=3){c[k]-=3;part.push({kind:'pon',t:k,open:false});rec();part.pop();c[k]+=3;}if(k<27&&k%9<=6&&c[k+1]>0&&c[k+2]>0){c[k]--;c[k+1]--;c[k+2]--;part.push({kind:'chi',t:k,open:false});rec();part.pop();c[k]++;c[k+1]++;c[k+2]++;}}rec();c[t]+=2;}
+  return tagged;
+}
+// Memoized standard shanten DFS. Typical unmelded hand 13 or 14 tiles.
+function shantenStandard(arr,melds=0){
+  const c=arr.slice();let best=8;
+  const dfs=(i,ments,taatsu,pairs)=>{
+    while(i<34&&c[i]===0)i++;
+    if(i>=34){let t=Math.min(taatsu,4-melds-ments);let s=8-2*(melds+ments)-t-Math.min(1,pairs);best=Math.min(best,s);return;}
+    if(c[i]>=3){c[i]-=3;dfs(i,ments+1,taatsu,pairs);c[i]+=3;}
+    if(i<27&&i%9<7&&c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;dfs(i,ments+1,taatsu,pairs);c[i]++;c[i+1]++;c[i+2]++;}
+    if(c[i]>=2){c[i]-=2;dfs(i,ments,taatsu,pairs+1);c[i]+=2;}
+    if(i<27&&i%9<8&&c[i+1]){c[i]--;c[i+1]--;dfs(i,ments,taatsu+1,pairs);c[i]++;c[i+1]++;}
+    if(i<27&&i%9<7&&c[i+2]){c[i]--;c[i+2]--;dfs(i,ments,taatsu+1,pairs);c[i]++;c[i+2]++;}
+    c[i]--;dfs(i,ments,taatsu,pairs);c[i]++;
+  };
+  dfs(0,0,0,0);return Math.max(-1,best);
+}
+function shanten(c, melds=0){
+  let best=shantenStandard(c,melds);
+  if(!melds){const pairs=c.filter(x=>x>=2).length;const uniq=c.filter(x=>x>0).length;best=Math.min(best,6-pairs+Math.max(0,7-uniq));const y=YAO.filter(t=>c[t]>0).length;const pair=YAO.some(t=>c[t]>1);best=Math.min(best,13-y-(pair?1:0));}
+  return best;
+}
+function winningShape(c,melds=0){
+  if(!melds&&YAO.every(t=>c[t]>0)&&YAO.some(t=>c[t]>1))return true;
+  if(!melds&&c.filter(n=>n===2).length===7)return true;
+  return meldDecompose(c.slice(),4-melds).length>0;
+}
+const seatWind=(game,seat)=>27+(seat-game.dealer+4)%4;
+const prevailingWind=game=>27+game.wind;
+function canTenpai(p){const c=count(p.hand);return shanten(c,p.melds.length)===0;}
+function doraOf(game){return Array.from({length:game.kans+1},(_,i)=>doraNext(ttype(game.dead[4+i*2])));}
+function uraOf(game){return Array.from({length:game.kans+1},(_,i)=>doraNext(ttype(game.dead[5+i*2])));}
+function yakumanCheck(all, groups,pair, ctx, special){
+  const ys=[];const cs=count(all);
+  const push=(s,m=1)=>ys.push({name:s,han:13*m,yakuman:m});
+  if(special==='kokushi'){
+    push('国士無双',ctx.doubleYakuman&&cs[ttype(ctx.winTile)]===2&&ctx.singleKokushiWait?2:1);
+  }
+  const dragon=[31,32,33].filter(t=>groups.some(g=>g.kind!=='chi'&&g.t===t));
+  const wind=[27,28,29,30].filter(t=>groups.some(g=>g.kind!=='chi'&&g.t===t));
+  if(dragon.length===3)push('大三元');
+  if(wind.length===4)push('大四喜',ctx.doubleYakuman?2:1);
+  else if(wind.length===3&&pair>=27&&pair<=30)push('小四喜');
+  if(all.every(id=>ttype(id)>=27))push('字一色');
+  if(all.every(id=>ttype(id)<27 && [1,9].includes(rank(ttype(id)))))push('清老頭');
+  const GREEN=new Set([19,20,21,23,25,32]); // 2s,3s,4s,6s,8s,発
+  if(all.every(id=>GREEN.has(ttype(id))))push('緑一色');
+  if(groups.length===4&&groups.every(g=>g.kind==='pon'||g.kind==='kan')&&groups.every(g=>g.open===false)&&(ctx.tsumo||ctx.waitKind==='pair'))push('四暗刻');
+  if(groups.filter(g=>g.kind==='kan').length===4)push('四槓子');
+  if(ctx.tenhou)push('天和');
+  if(ctx.chiihou)push('地和');
+  if(ctx.local?.daisharin&&ctx.closed&&all.length===14&&all.every(id=>ttype(id)>=10&&ttype(id)<=16)&&[10,11,12,13,14,15,16].every(t=>cs[t]===2))push('大車輪');
+  if(ctx.local?.renhou&&ctx.renhou)push('人和');
+  if(ctx.closed&&all.length===14&&!ctx.melds.length){
+    const suits=[0,1,2].filter(s=>all.every(id=>ttype(id)>=s*9&&ttype(id)<s*9+9));
+    if(suits.length===1){const base=suits[0]*9;
+      if(cs[base]>=3&&cs[base+8]>=3&&[1,2,3,4,5,6,7].every(n=>cs[base+n]>=1))push('九蓮宝燈');
+    }
+  }
+  return ys;
+}
+function evaluateHand(game,seat,winTile,tsumo,from=-1){
+  const p=game.players[seat], concealed=p.hand.slice();
+  if(!tsumo)concealed.push(winTile);
+  if(concealed.length!==14-3*p.melds.length)return null;
+  const all=concealed.concat(p.melds.flatMap(m=>m.tiles));
+  const c=count(concealed),tile=ttype(winTile),closed=p.melds.every(m=>!m.open);
+  const special=[];
+  if(!p.melds.length&&YAO.every(t=>c[t]>=1)&&YAO.some(t=>c[t]>=2)) special.push({kind:'kokushi'});
+  if(!p.melds.length&&c.filter(n=>n===2).length===7)special.push({kind:'chiitoi'});
+  for(const x of meldDecompose(c.slice(),4-p.melds.length))special.push({kind:'normal',...x});
+  const ctx={seat,winTile,tsumo,closed,melds:p.melds,local:game.settings.local, doubleYakuman:game.settings.doubleYakuman,
+    tenhou:tsumo&&p.ownDrawCount===1&&p.ownDiscardCount===0&&seat===game.dealer&&!game.callMade,
+    chiihou:tsumo&&p.ownDrawCount===1&&p.ownDiscardCount===0&&seat!==game.dealer&&!game.callMade,
+    renhou:!tsumo&&p.ownDrawCount===0&&seat!==game.dealer&&!game.callMade,
+    singleKokushiWait:false};
+  let best=null;
+  for(const a of special){
+    const groups=a.kind==='normal'?[...a.groups,...p.melds.map(m=>({kind:m.kind,t:m.t,open:m.open,tiles:m.tiles}))]:[];
+    const pair=a.kind==='normal'?a.pair:-1;
+    const positions=a.kind!=='normal'?[{kind:'special'}]:[
+      ...(pair===tile?[{kind:'pair',i:-1}]:[]),
+      ...a.groups.flatMap((g,i)=>g.kind==='pon'&&g.t===tile?[{kind:'pon',i}]:g.kind==='chi'&&tile>=g.t&&tile<=g.t+2?[{kind:'chi',i}]:[])
+    ];
+    if(!positions.length)continue;
+    for(const pos of positions){
+      const y=[];const add=(name,han)=>y.push({name,han});
+      let yak=yakumanCheck(all,groups,pair,{...ctx,waitKind:pos.kind},a.kind);
+      if(yak.length){let countY=yak.reduce((n,a)=>n+a.yakuman,0);let pt=8000*countY;let r=scorePoints(pt,seat===game.dealer,tsumo);
+        const scored={name:yak.map(x=>x.name).join('・'),yaku:yak,han:13*countY,fu:0,yakuman:countY,base:pt,pay:r,score:r.total};
+        if(!best||scored.score>best.score)best=scored;continue;}
+      if(p.doubleRiichi)add('ダブル立直',2);
+      else if(p.riichi)add('立直',1);
+      if(p.riichi&&p.ippatsu)add('一発',1);
+      if(tsumo&&closed)add('門前清自摸和',1);if(tsumo&&game.rinshanActive)add('嶺上開花',1);
+      if(game.live.length===0)add(tsumo?'海底摸月':'河底撈魚',1);
+      if(all.every(id=>{let t=ttype(id);return t<27&&rank(t)!==1&&rank(t)!==9})&&(closed||game.settings.kuitan))add('断么九',1);
+      if(a.kind==='kokushi')continue;
+      let fu=20;
+      if(a.kind==='chiitoi'){add('七対子',2);fu=25;if(all.every(id=>isTerminal(ttype(id))))add('混老頭',2);}
+      if(a.kind==='normal'){
+        const seqs=groups.filter(g=>g.kind==='chi'),pons=groups.filter(g=>g.kind==='pon'||g.kind==='kan');
+        const valPair=pair===seatWind(game,seat)||pair===prevailingWind(game)||pair>=31;
+        const pinfu=closed&&seqs.length===4&&!valPair&&pos.kind==='chi'&&
+          !(tile===a.groups[pos.i].t+1 || (a.groups[pos.i].t%9===0&&tile===a.groups[pos.i].t+2) || (a.groups[pos.i].t%9===6&&tile===a.groups[pos.i].t));
+        if(pinfu)add('平和',1);
+        if(closed){const map=new Map();for(const g of a.groups.filter(g=>g.kind==='chi'))map.set(g.t,(map.get(g.t)||0)+1);
+          const duplicates=[...map.values()].filter(v=>v>=2).reduce((n,v)=>n+Math.floor(v/2),0);
+          if(duplicates>=2)add('二盃口',3);else if(duplicates>=1)add('一盃口',1);
+        }
+        for(const g of pons){if(g.t>=31)add('役牌 '+display(g.t),1);if(g.t===seatWind(game,seat))add('自風 '+display(g.t),1);if(g.t===prevailingWind(game))add('場風 '+display(g.t),1);}
+        const sig=new Set(seqs.map(g=>g.t));for(let r=0;r<7;r++)if(sig.has(r)&&sig.has(9+r)&&sig.has(18+r)){add('三色同順',closed?2:1);break;}
+        for(let s=0;s<3;s++)if(sig.has(s*9)&&sig.has(s*9+3)&&sig.has(s*9+6)){add('一気通貫',closed?2:1);break;}
+        const setP=new Set(pons.map(g=>g.t));for(let r=0;r<9;r++)if(setP.has(r)&&setP.has(9+r)&&setP.has(18+r)){add('三色同刻',2);break;}
+        if(pons.length===4)add('対々和',2);
+        const closedP=pons.filter(g=>!g.open && !(g.kind==='pon'&&!tsumo&&pos.kind==='pon'&&a.groups[pos.i]===g));
+        if(closedP.length>=3)add('三暗刻',2);
+        if(pons.filter(g=>g.kind==='kan').length>=3)add('三槓子',2);
+        const ds=pons.filter(g=>g.t>=31).length;
+        if(ds>=2&&pair>=31)add('小三元',2);
+        const groupTerm=g=>g.kind==='chi'?g.t%9===0||g.t%9===6:isTerminal(g.t);
+        if(groups.every(groupTerm)&&isTerminal(pair)&&seqs.length>0){
+          if(all.every(id=>ttype(id)<27))add('純全帯么九',closed?3:2);
+          else add('混全帯么九',closed?2:1);
+        }
+        if(groups.every(g=>g.kind!=='chi')&&all.every(id=>isTerminal(ttype(id))))add('混老頭',2);
+        // Separate Fu accounting, with 20 fu pinfu tsumo and 30 fu open pinfu-shaped ron.
+        if(closed&&!tsumo)fu+=10;
+        if(tsumo&&!pinfu)fu+=2;
+        if(pair===seatWind(game,seat))fu+=2;
+        if(pair===prevailingWind(game))fu+=2;
+        if(pair>=31)fu+=2;
+        if(pos.kind==='pair')fu+=2;
+        if(pos.kind==='chi'){
+          let start=a.groups[pos.i].t;
+          if(tile===start+1 || (start%9===0&&tile===start+2) || (start%9===6&&tile===start))fu+=2;
+        }
+        for(const g of pons){let open=g.open||(g.kind==='pon'&&!tsumo&&pos.kind==='pon'&&a.groups[pos.i]===g);
+          let value=(g.kind==='kan'?8:2)*(open?1:2)*(isTerminal(g.t)?2:1);fu+=value;}
+        if(pinfu&&tsumo)fu=20;
+        else if(fu===20&&!closed&&!tsumo)fu=30;
+        else fu=Math.ceil(fu/10)*10;
+      }
+      const colors=new Set(all.filter(id=>ttype(id)<27).map(id=>Math.floor(ttype(id)/9)));const honors=all.some(id=>ttype(id)>=27);
+      if(colors.size===1){if(honors)add('混一色',closed?3:2);else add('清一色',closed?6:5);}
+      // Dora does not provide an independent winning yaku.
+      const baseHan=y.reduce((n,x)=>n+x.han,0);
+      if(!baseHan)continue;
+      const dora=doraOf(game),ura=p.riichi?uraOf(game):[];
+      const d=all.filter(id=>dora.includes(ttype(id))).reduce((n,id)=>n+dora.filter(t=>t===ttype(id)).length,0);
+      const u=all.filter(id=>ura.includes(ttype(id))).reduce((n,id)=>n+ura.filter(t=>t===ttype(id)).length,0);
+      const reds=game.settings.red?all.filter(isRed).length:0;
+      if(d)add('ドラ',d);if(u)add('裏ドラ',u);if(reds)add('赤ドラ',reds);
+      const han=y.reduce((n,x)=>n+x.han,0);
+      let base=han>=13?8000:han>=11?6000:han>=8?4000:han>=6?3000:Math.min(2000,fu*Math.pow(2,han+2));
+      const pay=scorePoints(base,seat===game.dealer,tsumo);
+      const scored={name:y.map(x=>x.name).join('・'),yaku:y,han,fu,yakuman:0,base,pay,score:pay.total};
+      if(!best||scored.score>best.score||(scored.score===best.score&&scored.han>best.han))best=scored;
+    }
+  }
+  return best;
+}
+function scorePoints(base,dealer,tsumo){
+  if(!tsumo){const amount=round100(base*(dealer?6:4));return {ron:amount,total:amount};}
+  if(dealer){const each=round100(base*2);return {ko:each,oya:each,total:each*3};}
+  const ko=round100(base),oya=round100(base*2);return {ko,oya,total:ko*2+oya};
+}
+function winTypes(p){const out=[],c=count(p.hand);for(let t=0;t<34;t++){if(c[t]===4)continue;c[t]++;if(winningShape(c,p.melds.length))out.push(t);c[t]--;}return out;}
+function furiten(p){const waits=winTypes(p);return p.tempFuriten||p.riichiFuriten||p.river.some(x=>waits.includes(ttype(x.id)));}
+function discardCandidates(p){
+  const c=count(p.hand),uniq=[...new Set(p.hand.map(ttype))];return uniq.map(t=>{c[t]--;const s=shanten(c,p.melds.length);let eff=0;
+    for(let u=0;u<34;u++){if(c[u]>=4)continue;c[u]++;if(shanten(c,p.melds.length)<s)eff+=4-c[u]+1;c[u]--;}
+    c[t]++;return {t,s,eff};
+  });
+}
+function chooseCpuDiscard(p, level, rng=Math.random){
+  if(p.riichi)return p.hand.length-1;
+  const options=discardCandidates(p),min=Math.min(...options.map(o=>o.s));let candidates=options.filter(o=>o.s===min);
+  const precision=level>=90?.96:Math.max(.35,level/110);
+  if(rng()>precision)candidates=options;
+  candidates.sort((a,b)=>b.eff-a.eff+((a.t>=27?0:rank(a.t)===1||rank(a.t)===9?1:0)-(b.t>=27?0:rank(b.t)===1||rank(b.t)===9?1:0))*.2);
+  let pick=candidates[0];if(rng()<(.5-precision/2))pick=candidates[Math.floor(rng()*Math.min(4,candidates.length))];
+  let idx=p.hand.findIndex(id=>ttype(id)===pick.t&&!isRed(id));if(idx<0)idx=p.hand.findIndex(id=>ttype(id)===pick.t);
+  return idx;
+}
+function canRiichiDiscard(game,p,idx){
+  if(p.riichi||p.melds.some(m=>m.open)||p.score<1000||game.live.length<4)return false;
+  let ids=p.hand.slice();ids.splice(idx,1);return shanten(count(ids),p.melds.length)===0;
+}
+function makeChiOptions(p,t){
+  if(t>=27)return [];
+  const c=count(p.hand),opts=[];
+  for(let s=t-2;s<=t;s++){if(s<0||Math.floor(s/9)!==Math.floor(t/9)||s%9>6)continue;
+    const pair=[s,s+1,s+2].filter(x=>x!==t);if(c[pair[0]]>0&&c[pair[1]]>0)opts.push(pair);
+  }return opts;
+}
+class Game {
+  constructor(settings={},rng=Math.random){this.rng=rng;this.settings={length:'east',tobi:true,kuitan:true,red:true,allowCall:true,local:{daisharin:false,renhou:false},cpuMode:'random',cpuCenter:60,cpuRange:10,doubleYakuman:false,...settings};
+    this.settings.local={daisharin:false,renhou:false,...settings.local};this.events=[];
+    this.players=Array.from({length:4},(_,i)=>({seat:i,name:i===0?'あなた':'CPU '+i,score:25000,bot:i!==0,level:Math.min(100,Math.max(1,Math.round(this.settings.cpuMode==='fixed'?this.settings.cpuCenter:this.settings.cpuCenter+(this.rng()*2-1)*this.settings.cpuRange)))}));
+    this.wind=0;this.kyoku=0;this.dealer=0;this.honba=0;this.kyoutaku=0;this.roundCount=0;this.matchOver=false;this.result=null;this.startHand();
+  }
+  log(message){this.events.push(message);if(this.events.length>60)this.events.shift();}
+  startHand(){
+    this.live=shuffle(tileArray(),this.rng);this.dead=this.live.splice(-14);this.kans=0;this.callMade=false;this.turnCount=0;this.result=null;this.phase='draw';this.pending=null;this.lastDiscard=null;
+    for(const p of this.players){p.hand=[];p.melds=[];p.river=[];p.riichi=false;p.doubleRiichi=false;p.ippatsu=false;p.tempFuriten=false;p.riichiFuriten=false;p.drawn=null;p.riichiTurns=0;p.ownDrawCount=0;p.ownDiscardCount=0;}
+    for(let j=0;j<13;j++)for(let seat=0;seat<4;seat++)this.players[seat].hand.push(this.live.shift());
+    this.current=this.dealer;this.log(`${this.wind===0?'東':'南'}${this.kyoku+1}局 開始（親：${this.players[this.dealer].name}）`);
+    this.draw();
+  }
+  draw(){if(this.phase!=='draw')return false;if(!this.live.length){this.exhaustive();return false;}
+    const p=this.players[this.current];p.drawn=this.live.shift();p.hand.push(p.drawn);p.tempFuriten=false;this.phase='play';return true;}
+  active(){return this.players[this.current];}
+  possibleTsumo(){if(this.phase!=='play')return null;const p=this.active();return p.drawn===null?null:evaluateHand(this,this.current,p.drawn,true);}
+  possibleRiichi(){if(this.phase!=='play')return [];const p=this.active();return p.hand.map((_,i)=>i).filter(i=>canRiichiDiscard(this,p,i));}
+  tsumo(){const score=this.possibleTsumo();if(!score)return false;this.finishWin(this.current,-1,this.active().drawn,true,score);return true;}
+  discard(idx,declareRiichi=false){
+    if(this.phase!=='play'||!Number.isInteger(idx))return false;const p=this.active();if(idx<0||idx>=p.hand.length)return false;
+    if(p.riichi&&p.hand[idx]!==p.drawn)return false;
+    if(declareRiichi&&!canRiichiDiscard(this,p,idx))return false;
+    const tile=p.hand.splice(idx,1)[0];if(declareRiichi){p.score-=1000;this.kyoutaku++;p.riichi=true;p.doubleRiichi=p.ownDiscardCount===0&&!this.callMade;p.ippatsu=true;p.riichiTurns=0;this.log(`${p.name}がリーチ！`);}
+    else if(p.riichi&&p.riichiTurns>0)p.ippatsu=false;
+    p.drawn=null;p.ownDiscardCount++;p.river.push({id:tile,riichi:declareRiichi,called:false});this.lastDiscard={seat:p.seat,id:tile};this.turnCount++;this.log(`${p.name}：${tileText(tile)}を打牌`);
+    this._resolveDiscard();return true;
+  }
+  _resolveDiscard(){const from=this.lastDiscard.seat,id=this.lastDiscard.id,t=ttype(id);
+    const ronSeats=[];
+    for(let i=1;i<=3;i++){const seat=(from+i)%4,p=this.players[seat];if(!furiten(p)&&evaluateHand(this,seat,id,false,from))ronSeats.push(seat);}
+    // Human first receives chance to ron, otherwise nearest seat to discarder wins (head-bump).
+    if(ronSeats.includes(0)){this.pending={kind:'ron',from,id,ronSeats};this.phase='response';return;}
+    if(ronSeats.length){const seat=ronSeats[0];this.finishWin(seat,from,id,false,evaluateHand(this,seat,id,false,from));return;}
+    this._resolveCalls();
+  }
+  _resolveCalls(){if(!this.settings.allowCall||!this.live.length){this._nextAfterDiscard();return;}
+    const from=this.lastDiscard.seat,id=this.lastDiscard.id,t=ttype(id),p0=this.players[0];
+    if(from!==0&&!p0.riichi){let pon=count(p0.hand)[t]>=2;let chi=(0===(from+1)%4)?makeChiOptions(p0,t):[];
+      if(pon||chi.length){this.pending={kind:'call',from,id,pon,chi};this.phase='response';return;}}
+    this._resolveCpuCalls();
+  }
+  _resolveCpuCalls(){
+    const from=this.lastDiscard.seat,t=ttype(this.lastDiscard.id);
+    // CPU call: limited to useful value-triplet Pon; avoids opening no-yaku hands.
+    for(let i=1;i<=3;i++){let seat=(from+i)%4,p=this.players[seat];if(!p.bot||p.riichi)continue;
+      if(count(p.hand)[t]>=2&&(t>=31||t===seatWind(this,seat)||t===prevailingWind(this))&&this.rng()<p.level/400){this._call(seat,'pon',[t,t]);return;}}
+    this._nextAfterDiscard();
+  }
+  respond(action,chiIndex=0){if(this.phase!=='response'||!this.pending)return false;
+    const x=this.pending;this.pending=null;
+    if(x.kind==='ron'){
+      if(action==='ron'){this.finishWin(0,x.from,x.id,false,evaluateHand(this,0,x.id,false,x.from));return true;}
+      const p=this.players[0];p.tempFuriten=true;if(p.riichi)p.riichiFuriten=true;
+      const another=x.ronSeats.filter(s=>s!==0);if(another.length){const seat=another[0];this.finishWin(seat,x.from,x.id,false,evaluateHand(this,seat,x.id,false,x.from));return true;}
+      this._resolveCalls();return true;
+    }
+    if(action==='pon'&&x.pon){this._call(0,'pon',[ttype(x.id),ttype(x.id)]);return true;}
+    if(action==='chi'&&x.chi[chiIndex]){this._call(0,'chi',x.chi[chiIndex]);return true;}
+    this._resolveCpuCalls();return true;
+  }
+  _call(seat,kind,types){const x=this.lastDiscard,p=this.players[seat],received=[];
+    for(const t of types){const i=p.hand.findIndex(id=>ttype(id)===t);if(i<0)throw Error('副露エラー: 牌不足');received.push(p.hand.splice(i,1)[0]);}
+    p.melds.push({kind,t:kind==='pon'?ttype(x.id):Math.min(ttype(x.id),...types),open:true,tiles:[...received,x.id]});
+    const entry=this.players[x.seat].river.at(-1);entry.called=true;
+    this.current=seat;this.phase='play';p.drawn=null;this.callMade=true;
+    for(const p1 of this.players)p1.ippatsu=false;
+    this.log(`${p.name}：${kind==='chi'?'チー':'ポン'}`);
+  }
+  _nextAfterDiscard(){this.current=(this.lastDiscard.seat+1)%4;this.phase='draw';this.draw();}
+  cpuPlay(){if(this.phase!=='play'||!this.active().bot)return false;
+    const p=this.active();if(this.possibleTsumo()){this.tsumo();return true;}
+    if(!p.riichi){const candidates=this.possibleRiichi();if(candidates.length&&this.rng()<p.level/120){let pick=chooseCpuDiscard(p,p.level,this.rng);if(!candidates.includes(pick))pick=candidates[0];return this.discard(pick,true);}}
+    let idx=chooseCpuDiscard(p,p.level,this.rng);return this.discard(idx);}
+  finishWin(seat,from,id,tsumo,score){if(!score)throw Error('アガリ判定失敗');
+    const p=this.players[seat];this.phase='result';this.result={type:'win',seat,from,id,tsumo,score,detail:[]};
+    if(!tsumo){let amt=score.pay.ron+this.honba*300;this.players[from].score-=amt;p.score+=amt;this.result.detail.push(`${this.players[from].name} → ${p.name}: ${amt.toLocaleString()}点`);}
+    else {for(let i=0;i<4;i++)if(i!==seat){let amount=(i===this.dealer?score.pay.oya:score.pay.ko)+this.honba*100;this.players[i].score-=amount;p.score+=amount;this.result.detail.push(`${this.players[i].name} → ${p.name}: ${amount.toLocaleString()}点`);}}
+    if(this.kyoutaku){const award=this.kyoutaku*1000;p.score+=award;this.result.detail.push('供託：'+award.toLocaleString()+'点');this.kyoutaku=0;}
+    this.log(`${p.name}が${tsumo?'ツモ':'ロン'}！ ${score.han}翻 ${score.fu}符`);
+    this._queueNext(seat===this.dealer);
+  }
+  exhaustive(){this.phase='result';const tenpai=this.players.map(p=>canTenpai(p)),n=tenpai.filter(Boolean).length,delta=Array(4).fill(0);
+    if(n>0&&n<4){for(let i=0;i<4;i++){let d=tenpai[i]?3000/n:-3000/(4-n);this.players[i].score+=d;delta[i]=d;}}
+    this.result={type:'draw',tenpai,delta,detail:tenpai.map((v,i)=>`${this.players[i].name}: ${v?'テンパイ':'ノーテン'} ${delta[i]>0?'+':''}${delta[i]}`)};
+    this.log('流局（荒牌平局）');this._queueNext(tenpai[this.dealer]);}
+  _queueNext(renchan){this.nextRenchan=renchan;this.matchOver=this.settings.tobi&&this.players.some(p=>p.score<0);}
+  nextHand(){if(this.phase!=='result'||this.matchOver)return false;
+    if(this.nextRenchan)this.honba++;else {this.honba=0;this.dealer=(this.dealer+1)%4;this.kyoku++;if(this.kyoku>=4){this.kyoku=0;this.wind++;}}
+    const maxWind=this.settings.length==='east'?1:2;
+    if(this.wind>=maxWind){this.matchOver=true;this.result.matchEnd=true;return false;}
+    this.roundCount++;this.startHand();return true;
+  }
+  isAdminSwapAvailable(){return this.phase==='play'||this.phase==='response';}
+  swapOwnWith(source,targetIndex,ownIndex){if(!this.isAdminSwapAvailable()||!Number.isInteger(ownIndex)||ownIndex<0||ownIndex>=this.players[0].hand.length)return false;
+    let target=source==='wall'?this.live:source==='cpu1'?this.players[1].hand:source==='cpu2'?this.players[2].hand:source==='cpu3'?this.players[3].hand:null;
+    if(!target||!Number.isInteger(targetIndex)||targetIndex<0||targetIndex>=target.length)return false;
+    const me=this.players[0],old=me.hand[ownIndex],replacement=target[targetIndex];
+    [me.hand[ownIndex],target[targetIndex]]=[replacement,old];
+    if(me.drawn===old)me.drawn=replacement;
+    if(source.startsWith('cpu')){const cp=this.players[Number(source.slice(-1))];if(cp.drawn===replacement)cp.drawn=old;}
+    this.log('管理者検証：牌を交換');return true;
+  }
+  assertConservation(){const ids=[...this.live,...this.dead,...this.players.flatMap(p=>[...p.hand,...p.river.filter(r=>!r.called).map(r=>r.id),...p.melds.flatMap(m=>m.tiles)])];
+    return ids.length===136&&new Set(ids).size===136;}
+}
+Y.Game=Game;Y.count=count;Y.shanten=shanten;Y.winningShape=winningShape;Y.meldDecompose=meldDecompose;Y.evaluateHand=evaluateHand;Y.chooseCpuDiscard=chooseCpuDiscard;Y.scorePoints=scorePoints;Y.canTenpai=canTenpai;Y.winTypes=winTypes;Y.furiten=furiten;Y.tileText=tileText;Y.type=ttype;Y.isRed=isRed;Y.isTerminal=isTerminal;Y.doraOf=doraOf;Y.uraOf=uraOf;Y.makeChiOptions=makeChiOptions;Y.display=display;Y.SUITS=SUITS;Y.HONORS=HONORS;
+if(typeof module!=='undefined'&&module.exports)module.exports=Y;
+root.Yonma=Y;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
+/* Mahjong v0.2 extension: four CPU observation and kan, all local/offline. */
+(function(root){
+'use strict';
+const Y=root.Yonma, Base=Y.Game;
+class MahjongGameV02 extends Base {
+ constructor(settings={},rng=Math.random){
+  super(settings,rng);
+  this.allCpu=!!settings.allCpu;
+  if(this.allCpu){this.players.forEach((p,i)=>{p.bot=true;p.name='CPU '+(i+1);});}
+  this.adminAudit=[];
+ }
+ startHand(){
+  this.rinshanActive=false;this.rinshanDraws=0;
+  super.startHand();
+ }
+ draw(){
+  const p=this.players[this.current];
+  const ok=super.draw();
+  if(ok){p.ownDrawCount=(p.ownDrawCount||0)+1;this.rinshanActive=false;}
+  return ok;
+ }
+ discard(i,riichi=false){
+  const p=this.active();
+  this.rinshanActive=false;
+  const ok=super.discard(i,riichi);
+  if(ok&&p.riichi&&!riichi){p.ippatsu=false;p.riichiTurns=(p.riichiTurns||0)+1;}
+  return ok;
+ }
+ possibleKans(){
+  if(this.phase!=='play'||this.kans>=4||this.live.length===0)return [];
+  const p=this.active();
+  if(p.riichi||p.drawn==null)return []; // riichi ankan restrictions deferred
+  const c=Y.count(p.hand),out=[];
+  for(let t=0;t<34;t++){
+    if(c[t]===4)out.push({kind:'ankan',t});
+    if(c[t]>=1&&p.melds.some(m=>m.kind==='pon'&&m.open&&m.t===t))out.push({kind:'kakan',t});
+  }
+  return out;
+ }
+ _drawRinshan(){
+  if(this.rinshanDraws>=4||this.live.length===0||this.kans>=4)return false;
+  const p=this.active(),i=this.rinshanDraws++;
+  const next=this.dead[i];
+  this.dead[i]=this.live.pop(); // preserve 14-tile dead wall and physical tile conservation
+  this.kans++;
+  p.hand.push(next);p.drawn=next;
+  p.ownDrawCount=(p.ownDrawCount||0)+1;
+  this.rinshanActive=true;
+  this.phase='play';this.callMade=true;
+  this.players.forEach(q=>q.ippatsu=false);
+  this.log(p.name+'：カン（嶺上牌をツモ）');
+  return true;
+ }
+ kan(kind,t){
+  const option=this.possibleKans().find(x=>x.kind===kind&&x.t===t);
+  if(!option)return false;
+  const p=this.active();
+  if(kind==='ankan'){
+    const picked=[];
+    for(let i=p.hand.length-1;i>=0&&picked.length<4;i--)if(Y.type(p.hand[i])===t)picked.push(p.hand.splice(i,1)[0]);
+    p.melds.push({kind:'kan',t,open:false,tiles:picked.reverse()});
+  }else{
+    const i=p.hand.findIndex(id=>Y.type(id)===t);
+    const m=p.melds.find(x=>x.kind==='pon'&&x.t===t&&x.open);
+    m.kind='kan';m.tiles.push(p.hand.splice(i,1)[0]);
+  }
+  p.drawn=null;
+  return this._drawRinshan();
+ }
+ _daiminkan(seat){
+  if(this.kans>=4||!this.live.length)return false;
+  const x=this.lastDiscard,t=Y.type(x.id),p=this.players[seat];
+  if(Y.count(p.hand)[t]<3)return false;
+  const tiles=[];
+  for(let i=0;i<3;i++){let idx=p.hand.findIndex(id=>Y.type(id)===t);tiles.push(p.hand.splice(idx,1)[0]);}
+  p.melds.push({kind:'kan',t,open:true,tiles:[...tiles,x.id]});
+  this.players[x.seat].river.at(-1).called=true;
+  this.current=seat;p.drawn=null;
+  return this._drawRinshan();
+ }
+ _resolveDiscard(){
+  const from=this.lastDiscard.seat,id=this.lastDiscard.id,ronSeats=[];
+  for(let i=1;i<=3;i++){
+   const seat=(from+i)%4,p=this.players[seat];
+   if(!Y.furiten(p)&&Y.evaluateHand(this,seat,id,false,from))ronSeats.push(seat);
+  }
+  if(ronSeats.includes(0)&&!this.players[0].bot){this.pending={kind:'ron',from,id,ronSeats};this.phase='response';return;}
+  if(ronSeats.length){const seat=ronSeats[0];this.finishWin(seat,from,id,false,Y.evaluateHand(this,seat,id,false,from));return;}
+  this._resolveCalls();
+ }
+ _resolveCalls(){
+  if(!this.settings.allowCall||!this.live.length){this._nextAfterDiscard();return;}
+  const from=this.lastDiscard.seat,id=this.lastDiscard.id,t=Y.type(id),p=this.players[0];
+  if(!p.bot&&from!==0&&!p.riichi){
+   const c=Y.count(p.hand),pon=c[t]>=2,kan=c[t]>=3&&this.kans<4;
+   const chi=(from+1)%4===0?Y.makeChiOptions(p,t):[];
+   if(pon||kan||chi.length){this.pending={kind:'call',from,id,pon,kan,chi};this.phase='response';return;}
+  }
+  this._resolveCpuCalls();
+ }
+ _resolveCpuCalls(){
+  if(!this.settings.allowCall){this._nextAfterDiscard();return;}
+  const from=this.lastDiscard.seat,t=Y.type(this.lastDiscard.id);
+  for(let i=1;i<=3;i++){
+   const seat=(from+i)%4,p=this.players[seat];
+   if(!p.bot||p.riichi)continue;
+   if(this.kans<4&&this.live.length>0&&Y.count(p.hand)[t]>=3&&this.rng()<(p.level/280)){
+    this._daiminkan(seat);return;
+   }
+   if(Y.count(p.hand)[t]>=2&&(t>=31||t===27+(seat-this.dealer+4)%4||t===27+this.wind)&&this.rng()<p.level/400){this._call(seat,'pon',[t,t]);return;}
+  }
+  this._nextAfterDiscard();
+ }
+ respond(action,chiIndex=0){
+  if(action==='kan'&&this.phase==='response'&&this.pending?.kind==='call'&&this.pending.kan){
+   const from=this.pending.from;this.pending=null;return this._daiminkan(0);
+  }
+  return super.respond(action,chiIndex);
+ }
+ cpuPlay(){
+  if(this.phase!=='play'||!this.active().bot)return false;
+  if(this.possibleTsumo())return this.tsumo();
+  const p=this.active(),opts=this.possibleKans();
+  if(opts.length&&this.rng()<Math.min(.7,p.level/170))return this.kan(opts[0].kind,opts[0].t);
+  return super.cpuPlay();
+ }
+ swapOwnWith(source,target,own){
+  const last=this.events.length;
+  const mine=this.players[0].hand[own];
+  const ok=super.swapOwnWith(source,target,own);
+  if(ok){
+   if(this.events.at(-1)==='管理者検証：牌を交換')this.events.pop(); // never announce admin debug operations to public log
+   this.adminAudit.push({seq:this.adminAudit.length+1,hand:this.roundCount+1,from:'自分の手牌',to:source,old:mine==null?'':Y.tileText(mine),timestamp:new Date().toISOString()});
+  }
+  return ok;
+ }
+}
+Y.Game=MahjongGameV02;
+})(window);
+
+</script>
+<script>
+/* YONMA v0.3: four physical walls and dice-selected break, preserving all 136 tile IDs.
+ * The browser-only sandbox has no online wagering or privileged server authentication.
+ */
+(function(root){
+'use strict';
+const Y=root.Yonma, Parent=Y.Game;
+const SIDES=['自家','下家','対面','上家'];
+const positions=[];
+// Relative screen seats: bottom (0), left (3), top (2), right (1).
+// The physical draw direction is clockwise around the rectangle, starting
+// from the column just beyond the dice-selected break on the selected wall.
+for(const side of [0,3,2,1])for(let slot=0;slot<17;slot++)positions.push({side,slot});
+function shuffled(rng){
+ const ids=Array.from({length:136},(_,i)=>i);
+ for(let i=ids.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[ids[j],ids[i]]=[ids[i],ids[j]];}
+ return ids;
+}
+class MahjongGameV03 extends Parent {
+ startHand(){
+  this.rinshanActive=false;this.rinshanDraws=0;this.kanFlips=0;
+  this.dice=[Math.floor(this.rng()*6)+1,Math.floor(this.rng()*6)+1];
+  const sum=this.dice[0]+this.dice[1];
+  this.diceSum=sum;this.openSide=(this.dealer+sum-1)%4;
+  this.openSlot=sum; // count this many columns in from the player's right edge
+  this.wallSlots=Array.from({length:4},()=>Array.from({length:17},()=>[null,null]));
+  const ids=shuffled(this.rng);
+  let i=0;
+  for(const pos of positions){
+   this.wallSlots[pos.side][pos.slot][0]=ids[i++]; // upper
+   this.wallSlots[pos.side][pos.slot][1]=ids[i++]; // lower
+  }
+  const first=positions.findIndex(p=>p.side===this.openSide&&p.slot===this.openSlot);
+  if(first<0)throw Error('開門位置の指定が不正です');
+  this.drawPlaces=Array.from({length:136},(_,j)=>{
+   const pos=positions[(first+Math.floor(j/2))%positions.length];
+   return {side:pos.side,slot:pos.slot,layer:j%2};
+  });
+  const order=this.drawPlaces.map(p=>this.wallSlots[p.side][p.slot][p.layer]);
+  this.initialTileOrder=order.slice();
+  this.live=order.slice(0,-14);
+  this.dead=order.slice(-14);
+  this.kans=0;this.callMade=false;this.turnCount=0;this.result=null;
+  this.phase='draw';this.pending=null;this.lastDiscard=null;
+  for(const p of this.players){
+   p.hand=[];p.melds=[];p.river=[];p.riichi=false;p.doubleRiichi=false;
+   p.ippatsu=false;p.tempFuriten=false;p.riichiFuriten=false;
+   p.drawn=null;p.riichiTurns=0;p.ownDrawCount=0;p.ownDiscardCount=0;
+  }
+  for(let j=0;j<13;j++)for(let seat=0;seat<4;seat++)this.players[seat].hand.push(this.live.shift());
+  this.current=this.dealer;
+  this.log(`${this.wind===0?'東':'南'}${this.kyoku+1}局：サイコロ${this.dice[0]}・${this.dice[1]}（計${sum}）、${SIDES[(this.openSide-this.dealer+4)%4]}の山を開門`);
+  this.draw();
+ }
+ _drawRinshan(){
+  const ok=super._drawRinshan();
+  if(ok)this.kanFlips++;
+  return ok;
+ }
+ swapOwnWith(source,targetIndex,ownIndex){
+  const oldWall=source==='wall'?this.live[targetIndex]:null;
+  const oldHand=this.players[0].hand[ownIndex];
+  const ok=super.swapOwnWith(source,targetIndex,ownIndex);
+  if(ok&&source==='wall'){
+   let fromWall=null,fromHand=null;
+   for(const wall of this.wallSlots)for(const stack of wall)for(let layer=0;layer<2;layer++){
+    if(stack[layer]===oldWall)fromWall=[stack,layer];
+    if(stack[layer]===oldHand)fromHand=[stack,layer];
+   }
+   if(fromWall&&fromHand){fromWall[0][fromWall[1]]=oldHand;fromHand[0][fromHand[1]]=oldWall;}
+  }
+  return ok;
+ }
+ physicalWallCorrect(){
+  const physical=this.wallSlots.flat(2),there=new Set([...this.live,...this.dead]);
+  const all=new Set(physical);
+  return physical.length===136&&all.size===136&&[...there].every(id=>all.has(id));
+ }
+}
+Y.Game=MahjongGameV03;
+Y.wallSides=SIDES;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
+(function(){
+'use strict';
+const Y=window.Yonma;
+const DEFAULT={length:'east',chipsPer100:0,tobi:true,kuitan:true,red:true,allowCall:true,doubleYakuman:false,cpuMode:'random',cpuCenter:60,cpuRange:10,local:{daisharin:false,renhou:false}};
+let persisted={};try{persisted=JSON.parse(localStorage.getItem('yonma_lab_settings')||'{}');}catch{}
+const ui={screen:'home',settings:{...DEFAULT,...persisted,local:{...DEFAULT.local,...persisted.local}},game:null,admin:false,selected:null,riichi:false,wallAll:false,scheduled:false,toast:'',timer:null};
+const $=id=>document.getElementById(id);
+const esc=str=>String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('ja-JP');
+const timeName=g=>(g.wind===0?'東':'南')+(g.kyoku+1)+'局';
+const seatName=(g,i)=>['東','南','西','北'][(i-g.dealer+4)%4];
+const turnsAhead=g=>g.phase==='draw'?g.current:g.phase==='response'?(g.lastDiscard.seat+1)%4:g.phase==='play'?(g.current+1)%4:g.current;
+const testScope='この管理者パネルは端末内のCPU検証専用です。公開オンライン対戦時にはサーバー認証が必要になります。';
+function tile(id,klass=''){
+ if(id==null)return '<span class="tile back">?</span>';
+ const type=Y.type(id),honor=type>=27,suit=honor?'':Math.floor(type/9);
+ const mark=honor?Y.HONORS[type-27]:String(type%9+1);
+ const suffix=honor?'':Y.SUITS[suit];
+ const red=Y.isRed(id)&&ui.settings.red;
+ return `<span class="tile ${klass} ${honor?'honor':'suit'+suit} ${red?'red':''}" aria-label="${esc(Y.tileText(id))}"><span class="val">${mark}</span>${honor?'':`<span class="suit">${suffix}</span>`}</span>`;
+}
+const btn=(text,act,klass='secondary',extra='')=>`<button class="btn ${klass}" data-act="${act}" ${extra}>${text}</button>`;
+function header(sub=''){
+ return `<div class="header"><div class="brand"><span class="brand-symbol">🀄</span><span>夜雀 <span class="tiny">YONMA LAB</span></span></div><div class="top-actions">${ui.screen==='home'?'':`<button class="iconbtn" data-act="home">⌂ ホーム</button>`}</div></div>${sub?`<div class="crumb">ゲームセンター <span>›</span> ${sub}</div>`:''}`;
+}
+function menu(name,icon,tag,target,enabled=true){return `<button class="menu-tile" data-act="${target}" ${enabled?'':'disabled'}><span class="emoji">${icon}</span><strong>${name}</strong><span class="sub">${tag}</span></button>`;}
+function home(){return `${header()}<section class="hero"><div class="eyebrow">CASINO & GAME NETWORK</div><h1>遊びたいゲームを、<br>ここから。</h1><p class="lead">無料ブラウザゲームセンター構想。現在は四人麻雀のCPU試作を先行公開。スマホで操作できるぞ。</p>${btn('カジノへ進む　→','casino','gold')}</section><h2 class="section-title">ゲームジャンル</h2><div class="menu-grid">${menu('カジノ','♠️','麻雀を試せる','casino')}${menu('心理戦','🌙','人狼：別プロジェクト','noop',false)}${menu('頭脳対決','♟️','将棋・オセロ：構想中','noop',false)}${menu('クイズ','🧩','対戦・協力：構想中','noop',false)}${menu('カードバトル','🐉','永続購入：構想中','noop',false)}${menu('協力脱出','🔐','ランダム謎解き：構想中','noop',false)}</div><p class="footer">試作版 v0.1 — 仮想コイン・オンラインアカウントはまだ未接続</p>`;}
+function casino(){return `${header('カジノ')}<section class="hero" style="min-height:190px"><div class="eyebrow">THE CASINO</div><h1>カジノ</h1><p class="lead">牌を読み、流れを見極める。まずはCPUとの四人麻雀から始めるのじゃ。</p></section><div class="menu-grid">${menu('四人麻雀','🀄','CPU3人・管理者牌山検証','mahjong')}${menu('5枚ポーカー','♠️','別の試作版で実装済み','noop',false)}${menu('大富豪','👑','制作予定','noop',false)}${menu('ルーレット','🎡','制作予定','noop',false)}${menu('競馬もどき','🏇','制作予定','noop',false)}</div><div class="bottom-link">${btn('← ゲームセンターへ','home')}${btn('⚙ 管理者CPU設定','adminSettings','secondary small')}</div>`;}
+function field(label,html){return `<div class="field"><label>${label}</label>${html}</div>`;}
+function select(name,values){return `<select data-set="${name}">${values.map(x=>`<option value="${x[0]}" ${String(ui.settings[name])===String(x[0])?'selected':''}>${x[1]}</option>`).join('')}</select>`;}
+function checkbox(label,name){return `<div class="field check"><input type="checkbox" id="c-${name}" data-set="${name}" ${ui.settings[name]?'checked':''}><label for="c-${name}">${label}</label></div>`;}
+function localCheckbox(label,name){return `<div class="field check"><input type="checkbox" id="l-${name}" data-local="${name}" ${ui.settings.local[name]?'checked':''}><label for="l-${name}">${label}</label></div>`;}
+function adminSettings(){return `${header('管理者 › CPU設定')}<div class="card"><h2>⚙ カジノCPU管理</h2><p class="note">管理者が固定の実力、または基準値±幅を指定する。今は一人用試作のため、誰でも開けるローカル検証画面じゃ。オンライン化の際は管理者認証が必要。</p><div class="form-grid">${field('CPUの実力の決め方',select('cpuMode',[["random","ランダム（基準±幅）"],["fixed","全CPU固定"]]))}${field('固定値／基準値',`<input type="number" min="1" max="100" inputmode="numeric" data-set="cpuCenter" value="${ui.settings.cpuCenter}">`)}${field('ランダム幅（±）',`<input type="number" min="0" max="50" inputmode="numeric" data-set="cpuRange" value="${ui.settings.cpuRange}">`)}</div><p class="warning">強さ1〜100は現時点では戦術の選択精度を調整する試作値で、本物のプロ級AIを保証する数値ではない。設定は次の新規対局から適用される。</p><div class="two-buttons">${btn('← カジノへ','casino')}${btn('麻雀の設定へ →','mahjong','gold')}</div></div>`;}
+function mahjong(){return `${header('カジノ › 四人麻雀')}<div class="card"><h2 style="margin:0 0 9px">🀄 四人リーチ麻雀</h2><p class="note">あなたは東家から開始。CPU3人と東風戦または東南戦を遊べる、端末内で完結するテスト版じゃ。</p><div class="form-grid">${field('対局の長さ',select('length',[['east','東風戦'],['south','東南戦']]))}${field('飛びの有無',select('tobi',[[true,'飛びあり（0点未満で終了）'],[false,'飛びなし']]))}${checkbox('赤ドラを使用','red')}${checkbox('喰いタンあり','kuitan')}${checkbox('チー・ポンあり','allowCall')}${checkbox('ダブル役満（一部）','doubleYakuman')}</div><div class="setting-group"><p class="note">CPU実力：${ui.settings.cpuMode==='fixed'?ui.settings.cpuCenter:'基準'+ui.settings.cpuCenter+'±'+ui.settings.cpuRange}（管理者設定）　${btn('変更','adminSettings','small')}</p><h3 style="margin:0 0 9px;font-size:15px">ローカル役（任意）</h3><div class="form-grid">${localCheckbox('大車輪（清一色・筒子2〜8の七対子）','daisharin')}${localCheckbox('人和（第一巡目のロン）','renhou')}</div><p class="note">採用基準が統一されない役は、初期設定で無効。今回はこの2種類のみ試験実装。</p></div><div class="warning">現バージョンで<strong>カン、複数同時ロン、九種九牌・四風連打などの途中流局、流し満貫、細かなオーラス終了判定</strong>は未対応。点数計算は標準的な役を実装してテスト中で、公式の完全準拠版ではないぞ。</div><div class="two-buttons">${btn('← カジノへ','casino')}${btn('対局開始 →','start','gold')}</div></div><div class="card"><h3>管理者検証でできること</h3><p class="note">全員の手牌・捨て牌・牌山の順序を表示する。自分の牌と、CPUの牌または牌山内の好きな牌を交換できる。普通のオンライン対局では利用できないローカル試験機能じゃ。</p></div>`;}
+function scoreboard(g){return `<div class="scoreboard">${g.players.map((p,i)=>`<div class="player ${g.current===i&&g.phase!=='result'?'current':''}"><div class="name">${i===g.dealer?'♛ ':''}${p.name}</div><div class="points">${fmt(p.score)}<small>点</small></div><div class="status">${seatName(g,i)}家 ${p.riichi?'・立直':''}${p.bot?'':'・本人'}</div></div>`).join('')}</div>`;}
+function board(g){const dora=Array.from({length:g.kans+1},(_,i)=>g.dead[4+i*2]);return `<section class="board"><div class="board-head"><div><strong>${timeName(g)}</strong> <span class="tiny">${g.honba}本場・供託${g.kyoutaku}本</span></div><span>山残り ${g.live.length}枚</span></div><div class="river-grid">${g.players.map((p,i)=>`<div class="river"><div class="river-name"><span>${p.name}　${seatName(g,i)}</span><span>${p.river.length}枚</span></div><div class="tiles">${p.river.map(r=>tile(r.id,`river-tile ${r.called?'called':''}`)).join('')}</div>${p.melds.length?`<div class="seat-melds">${p.melds.map(m=>`<div class="meld">${m.tiles.map(id=>tile(id,'sm')).join('')}</div>`).join('')}</div>`:''}</div>`).join('')}</div><div class="center-tiles"><div class="meta"><span>ドラ表示</span><span>${dora.map(id=>tile(id,'sm')).join('')}</span></div><span class="tiny">${g.settings.allowCall?'チー・ポン可':'門前のみ'}</span></div></section>`;}
+function myHand(g){const p=g.players[0];const drawn=g.current===0&&g.phase==='play'?p.drawn:null;
+ let hand=p.hand.map((id,index)=>({id,index}));let last=drawn===null?null:hand.pop();hand.sort((a,b)=>Y.type(a.id)-Y.type(b.id)||(Y.isRed(a.id)?1:0)-(Y.isRed(b.id)?1:0));if(last)hand.push(last);
+ const moves=ui.riichi?g.possibleRiichi():null;
+ const interactive=g.phase==='play'&&g.current===0;
+ return `<div class="hand-panel"><div class="handline"><span><strong>あなたの手牌</strong> ${p.riichi?'<span class="pill">立直</span>':''}</span><span class="tiny">${interactive?ui.riichi?'光っている牌を選んでリーチ':'牌をタップして捨てる':g.phase==='response'?'鳴き・ロンの確認':g.phase==='result'?'局終了':'CPUが思考中…'}</span></div><div class="hand-tiles">${hand.map(x=>`<button type="button" class="tile hand ${x.id===drawn?'drawn':''} ${moves?.includes(x.index)?'can-riichi':''}" data-act="discard" data-index="${x.index}" ${!interactive||(ui.riichi&&!moves.includes(x.index))?'disabled':''}>${tileInside(x.id)}</button>`).join('')}</div><div class="actions">${controls(g)}</div></div>`;}
+function tileInside(id){const t=Y.type(id),honor=t>=27;return `<span class="val" style="${Y.isRed(id)&&ui.settings.red?'color:#c34a42':''}">${honor?Y.HONORS[t-27]:t%9+1}</span>${honor?'':`<span class="suit" style="${Math.floor(t/9)===1?'color:#bd514c':Math.floor(t/9)===2?'color:#357e5a':''}">${Y.SUITS[Math.floor(t/9)]}</span>`}`;}
+function controls(g){if(g.phase==='result')return '';
+ if(g.phase==='response'&&g.pending){const x=g.pending;
+ if(x.kind==='ron')return btn('ロン！','ron','gold')+btn('見送る','pass');
+ return `${x.pon?btn('ポン','pon','gold'):''}${x.chi.map((op,i)=>btn('チー '+op.map(Y.display).join('・'),'chi','secondary',`data-index="${i}"`)).join('')}${btn('パス','pass')}`;
+ }
+ if(g.current===0&&g.phase==='play'){
+  const canTsumo=!!g.possibleTsumo(),riichi=g.possibleRiichi().length>0;
+  return `${canTsumo?btn('ツモ！','tsumo','gold'):''}${riichi?btn(ui.riichi?'立直を取消':'リーチ','riichi',ui.riichi?'gold':'secondary'):''}<span class="tiny" style="align-self:center">${ui.riichi?'リーチしたい捨て牌を選択':g.players[0].riichi?'ツモ切りのみ':'手牌から捨て牌を選択'}</span>`;
+ }
+ return '<span class="note">他家の打牌を処理しているぞ…</span>';
+}
+function result(g){const r=g.result;if(!r)return '';
+ if(r.type==='win'){
+  let p=g.players[r.seat],s=r.score;
+  return `<section class="result"><div class="eyebrow">HAND RESULT</div><h2>${p.name}　${r.tsumo?'ツモ':'ロン'}！</h2><div style="font-size:21px;font-weight:900">${s.yakuman?s.yakuman+'倍役満':s.han+'翻 '+s.fu+'符'}　${fmt(s.pay.total)}点</div><div class="yaku">${s.yaku.map(y=>`<span>${esc(y.name)} ${y.yakuman?'役満':y.han+'翻'}</span>`).join('')}</div><div class="events">${r.detail.map(esc).join('<br>')}</div>${resultBtns(g)}</section>`;
+ }
+ return `<section class="result"><div class="eyebrow">EXHAUSTIVE DRAW</div><h2>流局</h2><p>山の牌を引き終えたのじゃ。</p><div class="events">${r.detail.map(esc).join('<br>')}</div>${resultBtns(g)}</section>`;
+}
+function resultBtns(g){let ranks=[...g.players].sort((a,b)=>b.score-a.score);let scores=g.matchOver||g.result.matchEnd?`<h3>対局終了</h3><table class="rank-table">${ranks.map((p,i)=>`<tr><td>${i+1}位</td><td>${p.name}</td><td>${fmt(p.score)}点</td></tr>`).join('')}</table>`:'';
+ return `${scores}<div class="two-buttons">${btn('新しく始める','restart')}${btn(g.matchOver||g.result.matchEnd?'対局終了':'次の局へ →','next','gold',g.matchOver||g.result.matchEnd?'disabled':'')}</div>`;}
+function projected(g){const start=turnsAhead(g);return `<div class="admin-predict">${Array.from({length:4},(_,i)=>{let first=((i-start+4)%4);const id=g.live[first];return `<div class="prediction"><b>${g.players[i].name}</b>${id!==undefined?tile(id,'sm'):'—'}<small>${first+1}番目</small></div>`;}).join('')}</div><p class="tiny">※ この予測は鳴きがなく、通常順に進んだ場合じゃ。鳴き・流局・和了で順番が変わる。</p>`;}
+function admin(g){let mine=g.players[0];const mineRows=mine.hand.map((id,i)=>`<button type="button" class="admin-tile ${ui.selected===i?'selected':''}" data-act="selectMine" data-index="${i}" title="自分の牌${i+1}">${tile(id,'sm')}</button>`).join('');
+ const cpu=g.players.slice(1).map((p,i)=>`<div class="admin-row"><div class="meta"><b>${p.name}</b><span>実力 ${p.level}/100</span><span>${Y.shanten(Y.count(p.hand),p.melds.length)}シャンテン</span></div><div class="admin-hand">${p.hand.map((id,j)=>`<button type="button" class="admin-tile" data-act="swap" data-source="cpu${i+1}" data-index="${j}" ${ui.selected==null?'disabled':''}>${tile(id,'sm')}</button>`).join('')}</div><p class="tiny">鳴き：${p.melds.map(m=>m.kind==='chi'?'チー':'ポン').join('・')||'なし'} ／ リーチ：${p.riichi?'あり':'なし'}</p></div>`).join('');
+ const wall=g.live.slice(0,ui.wallAll?g.live.length:32).map((id,i)=>`<div class="wall-item"><span class="index">${i+1}</span><button type="button" data-act="swap" data-source="wall" data-index="${i}" ${ui.selected==null?'disabled':''}>${tile(id,'sm')}</button></div>`).join('');
+ return `<section class="admin"><h3>🛠 管理者検証モード</h3><p class="admin-help">${testScope}</p><h4>あなたの牌（まず交換元を1枚選択）</h4><div class="admin-hand">${mineRows}</div><p class="admin-help">${ui.selected==null?'① 自分の牌を1枚選ぶ':`① ${Y.tileText(mine.hand[ui.selected])} を選択中 → ② CPUの牌または牌山をタップして交換`}</p><h4>全プレイヤーの手牌</h4>${cpu}<h4>次のツモ予測（鳴きなしの順序）</h4>${projected(g)}<h4>牌山（左上からツモ順）</h4><div class="admin-wall">${wall}</div>${g.live.length>32?`<div style="margin-top:9px">${btn(ui.wallAll?'先頭32枚だけ表示':'残りの牌山も表示','wallAll','small')}</div>`:''}<div class="warning">管理者による牌交換は検証用チート操作じゃ。交換した局の結果は公式記録・ランキングに使わない設計を想定しておる。</div>${btn('管理者画面を閉じる','adminToggle','secondary block')}</section>`;
+}
+function table(g){return `${header('カジノ › 四人麻雀 › 対局')}<div class="meta"><span>あなた＋CPU3人</span><span>実力 ${g.settings.cpuMode==='fixed'?g.settings.cpuCenter:g.settings.cpuCenter+'±'+g.settings.cpuRange}</span><span>${g.settings.tobi?'飛びあり':'飛びなし'}</span><span>${g.settings.length==='east'?'東風戦':'東南戦'}</span></div>${scoreboard(g)}${board(g)}${g.phase==='result'?result(g):myHand(g)}<div class="events"><b>対局ログ</b><br>${g.events.slice(-4).reverse().map(esc).join('<br>')}</div><div class="bottom-link">${btn(ui.admin?'🔐 検証パネルを閉じる':'🛠 管理者検証パネル','adminToggle','secondary small')}${btn('新規対局','restart','ghost small')}</div>${ui.admin?admin(g):''}${ui.toast?`<div class="warning">${esc(ui.toast)}</div>`:''}<p class="footer">🀄 夜雀 v0.1 — オフラインCPU試作・端末内でのみ進行<br>カン / 複数ロン / 流し満貫 / 特殊流局は今後実装予定</p>`;}
+function render(){let body=ui.screen==='home'?home():ui.screen==='casino'?casino():ui.screen==='mahjong'?mahjong():ui.screen==='adminSettings'?adminSettings():ui.game?table(ui.game):home();$('app').innerHTML=`<div class="shell">${body}</div>`;if(ui.screen==='table'&&ui.game)scheduleCPU();}
+function scheduleCPU(){const g=ui.game;if(ui.scheduled||ui.admin||g.phase==='result'||g.phase==='response'||g.current===0)return;
+ ui.scheduled=true;ui.timer=setTimeout(()=>{ui.scheduled=false;if(ui.screen!=='table'||ui.admin||!ui.game||ui.game!==g)return;
+  try {if(g.phase==='play'&&g.active().bot){g.cpuPlay();ui.riichi=false;}else if(g.phase==='draw')g.draw();}catch(e){ui.toast='CPUエラー: '+String(e.message||e);console.error(e);ui.admin=true;}
+  render();},520);
+}
+function storeSettings(){try{localStorage.setItem('yonma_lab_settings',JSON.stringify(ui.settings));}catch{}}
+function goto(screen){clearTimeout(ui.timer);ui.scheduled=false;ui.screen=screen;ui.admin=false;ui.riichi=false;ui.toast='';render();window.scrollTo(0,0);}
+$('app').addEventListener('change',e=>{let field=e.target;
+ if(field.dataset.set){let key=field.dataset.set,v=field.type==='checkbox'?field.checked:field.type==='number'?Number(field.value):field.value;
+  if(key==='tobi')v=v==='true';if(key==='cpuCenter')v=Math.min(100,Math.max(1,Number(v)||60));if(key==='cpuRange')v=Math.min(50,Math.max(0,Number(v)||0));ui.settings[key]=v;storeSettings();}
+ if(field.dataset.local){ui.settings.local[field.dataset.local]=field.checked;storeSettings();}
+});
+$('app').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const action=b.dataset.act,g=ui.game;
+ try{
+  if(['home','casino','mahjong','adminSettings'].includes(action)){goto(action);return;}
+  if(action==='start'||action==='restart'){ui.game=new Y.Game(JSON.parse(JSON.stringify(ui.settings)));ui.screen='table';ui.admin=false;ui.selected=null;ui.riichi=false;ui.toast='';window.scrollTo(0,0);render();return;}
+  if(!g)return;
+  if(action==='discard'){let idx=Number(b.dataset.index);if(!g.discard(idx,ui.riichi))ui.toast='今はその牌を捨てられないぞ。';ui.riichi=false;}
+  if(action==='riichi'){ui.riichi=!ui.riichi;}
+  if(action==='tsumo'){g.tsumo();ui.riichi=false;}
+  if(action==='ron'){g.respond('ron');}
+  if(action==='pass'){g.respond('pass');}
+  if(action==='pon'){g.respond('pon');}
+  if(action==='chi'){g.respond('chi',Number(b.dataset.index));}
+  if(action==='next'){if(!g.nextHand())ui.toast=g.matchOver?'対局終了じゃ。新しく始められるぞ。':'';ui.riichi=false;}
+  if(action==='adminToggle'){ui.admin=!ui.admin;ui.selected=null;}
+  if(action==='wallAll'){ui.wallAll=!ui.wallAll;}
+  if(action==='selectMine'){ui.selected=ui.selected===Number(b.dataset.index)?null:Number(b.dataset.index);}
+  if(action==='swap'){if(g.swapOwnWith(b.dataset.source,Number(b.dataset.index),ui.selected)){ui.selected=null;ui.toast='牌を交換したぞ（この対局の検証記録）。';}else ui.toast='牌を交換できない局面じゃ。';}
+  render();
+ }catch(err){console.error(err);ui.toast=String(err?.message||err);render();}
+});
+render();
+window.YonmaAppDebug={ui,render,goto};
+})();
+
+</script>
+<script>
+/* YONMA v0.2: mobile table and private local admin sandbox UI. */
+(function(){
+'use strict';
+const debug=window.YonmaAppDebug,ui=debug.ui,Y=window.Yonma,root=document.getElementById('app');
+if(!debug||!Y||!root)return;
+let hub=false, chosen=null, loopStarted=false;
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const glyph=id=>{
+ const t=Y.type(id);
+ return String.fromCodePoint(t<9?0x1f007+t:t<18?0x1f019+t-9:t<27?0x1f010+t-18:0x1f000+t-27);
+};
+const tTile=(id,cls='')=>{
+ const t=Y.type(id),hon=t>=27;
+ const label=hon?`<strong class="mini-honor">${esc(Y.HONORS[t-27])}</strong>`:`<strong class="mini-num">${t%9+1}</strong><small class="mini-suit">${esc(Y.SUITS[Math.floor(t/9)])}</small>`;
+ return `<span class="m-tile ${cls} ${Y.isRed(id)?'is-red':''}" title="${esc(Y.tileText(id))}">${label}</span>`;
+};
+function convertTiles(el){
+ for(const val of el.querySelectorAll('.tile .val:not(.glyph)')){
+  const suit=val.parentElement.querySelector('.suit')?.textContent?.trim()||'';
+  const v=val.textContent.trim();let code=null;
+  if(suit==='萬'&&/^\d$/.test(v))code=0x1f007+Number(v)-1;
+  if(suit==='筒'&&/^\d$/.test(v))code=0x1f019+Number(v)-1;
+  if(suit==='索'&&/^\d$/.test(v))code=0x1f010+Number(v)-1;
+  const honors={'東':0x1f000,'南':0x1f001,'西':0x1f002,'北':0x1f003,'中':0x1f004,'發':0x1f005,'白':0x1f006};
+  if(code==null)code=honors[v];
+  if(code!=null){val.textContent=String.fromCodePoint(code);val.classList.add('glyph');val.parentElement.title=(v+(suit||''));}
+ }
+}
+function hubHTML(){
+ const g=ui.game;
+ return `<div class="shell v02-shell"><div class="header"><div class="brand">🀄 <span>夜雀 <small>ADMIN STUDIO</small></span></div></div><div class="v02-head"><span class="v02-kicker">LOCAL TEST CONTROL</span><h1>管理者検証センター</h1><p>CPUだけの対局を観察し、牌山や全員の手牌を確認するための開発用画面。<strong>このHTML版にはログイン認証はなく、実際の公開対戦管理者画面ではない。</strong></p></div><div class="control-grid"><button data-v02="watch" class="control-tile"><span>👁</span><b>CPU 4人の対局を観戦</b><small>全員の手牌・ツモ順・自動進行</small></button><button data-v02="inspect" class="control-tile"><span>🀄</span><b>${g&&!g.allCpu?'今の対局を検証':'検証用対局を始める'}</b><small>牌山・全員の手牌・牌交換</small></button><button data-v02="cpuSettings" class="control-tile"><span>⚙</span><b>CPUの思考設定</b><small>固定値または60±10など</small></button></div><p class="v02-notice">管理者による牌交換は一般の対局ログには表示せず、非公開の操作履歴に記録する。将来の掛け金あり対人戦では、こうした操作を禁止するか、検証卓であることを参加者に明示する必要がある。</p><button class="v02-back" data-v02="casino">← カジノへ戻る</button></div>`;
+}
+function watcherPanel(g){
+ const speed=ui.watchSpeed||1;
+ const hs=g.players.map((p,i)=>`<div class="watch-player ${g.current===i&&g.phase!=='result'?'watch-now':''}"><div class="watch-person"><b>${esc(p.name)}</b><span>${p.score.toLocaleString()}点　${i===g.dealer?'親　':''}${p.riichi?'立直':''}</span></div><div class="watch-tiles">${p.hand.map(id=>tTile(id)).join('')}${p.melds.map(m=>`<span class="watch-meld">${m.tiles.map(id=>tTile(id)).join('')}</span>`).join('')}</div></div>`).join('');
+ const who=g.phase==='draw'?g.current:g.phase==='play'?g.current:(g.lastDiscard?.seat+1)%4||0;
+ const next=g.live.slice(0,5).map((id,i)=>`<span class="watch-next"><small>${i+1}</small>${tTile(id)}</span>`).join('');
+ return `<section class="watch-panel"><div class="watch-toolbar"><div><span class="v02-kicker">CPU VS CPU</span><h3>4人の対局を観戦</h3></div><span class="watch-label">${esc(g.players[who]?.name||'')}の手番</span></div><div class="watch-controls"><button data-v02="pause" class="btn small ${ui.watchPaused?'gold':'secondary'}">${ui.watchPaused?'▶ 再開':'Ⅱ 一時停止'}</button><button data-v02="step" class="btn small secondary">⏭ 1手進める</button><button data-v02="speed" class="btn small secondary">速度 ×${speed}</button><button data-v02="hub" class="btn small secondary">終了</button></div><div class="watch-hands">${hs}</div><div class="watch-nextline"><b>次のツモ（鳴きなしの場合）</b><div class="watch-nexts">${next||'牌山がない'}</div><small>表示は現在の牌山の順序。カン・鳴き・アガリで順序は変わる。</small></div><div class="watch-audit"><b>非公開の操作履歴</b>：${(g.adminAudit||[]).length}件</div></section>`;
+}
+function enhance(){
+ const shell=root.querySelector('.shell');if(!shell||shell.dataset.v02Enhanced==='1')return;
+ shell.dataset.v02Enhanced='1';shell.classList.add('v02-shell');
+ document.title='夜雀 | 麻雀 v0.2';
+ if(hub&&ui.screen==='casino'){root.innerHTML=hubHTML();root.firstElementChild.dataset.v02Enhanced='1';return;}
+ if(ui.screen==='mahjong'){
+  const warn=shell.querySelector('.warning');if(warn)warn.innerHTML='<b>試験対応：</b>暗槓・加槓・大明槓を追加。嶺上開花は判定。<br>槍槓・四開槓流局・複数ロン・九種九牌などの細かい規則はまだ未対応で、点数計算は引き続き検証中。';
+ }
+ if(ui.screen==='casino'){
+  const slot=shell.querySelector('.bottom-link');if(slot){const b=document.createElement('button');b.type='button';b.className='btn gold admin-entry';b.dataset.v02='hub';b.textContent='◈ 管理者検証センター';slot.after(b);}
+ }
+ if(ui.screen!=='table'||!ui.game)return;
+ const g=ui.game;
+ shell.classList.add('game-shell');
+ if(ui.watch)shell.classList.add('watchmode');
+ if(ui.inspect)shell.classList.add('inspectmode');
+ convertTiles(shell);
+ const board=shell.querySelector('.board');
+ if(board){
+  const banner=document.createElement('div');banner.className='table-banner';banner.innerHTML=`<span class="light-dot"></span><b>${g.wind===0?'東':'南'}${g.kyoku+1}局</b><span>${g.honba}本場</span><em>${g.live.length}枚</em>`;
+  board.prepend(banner);
+  const rivers=board.querySelectorAll('.river');
+  rivers.forEach((e,i)=>{
+   e.classList.add('seat-'+i);
+   const backs=document.createElement('div');backs.className='backs-row';
+   if(!ui.watch&&i>0){const remaining=g.players[i].hand.length;backs.innerHTML=Array(Math.min(remaining,8)).fill('<i></i>').join('')+`<span>${remaining}枚</span>`;e.appendChild(backs);}
+  });
+ }
+ const hand=shell.querySelector('.hand-panel');
+ if(hand){
+  if(!ui.watch){
+   const actions=hand.querySelector('.actions');
+   if(actions){
+    if(g.phase==='play'&&g.current===0&&typeof g.possibleKans==='function')for(const k of g.possibleKans()){
+     const b=document.createElement('button');b.className='btn gold';b.dataset.v02='kan';b.dataset.kind=k.kind;b.dataset.type=k.t;
+     b.textContent=(k.kind==='ankan'?'暗槓 ':'加槓 ')+Y.display(k.t);actions.prepend(b);
+    }
+    if(g.phase==='response'&&g.pending?.kind==='call'&&g.pending.kan){const b=document.createElement('button');b.className='btn gold';b.dataset.v02='daiminkan';b.textContent='カン（大明槓）';actions.prepend(b);}
+   }
+   const line=hand.querySelector('.handline');
+   const msg=document.createElement('div');msg.className='discard-guide';
+   const interactive=g.current===0&&g.phase==='play';
+   msg.innerHTML=`<span>${interactive?'牌を選択してから「打牌」を押す':'相手の手番を処理中'}</span>${interactive?`<button type="button" class="btn gold small" data-v02="discardConfirm" ${chosen==null?'disabled':''}>${ui.riichi?'立直して打牌':'選択した牌を打牌'}</button>`:''}`;
+   line.after(msg);
+   for(const b of hand.querySelectorAll('[data-act="discard"]')){if(chosen!==null&&Number(b.dataset.index)===chosen)b.classList.add('is-chosen');}
+  }
+ }
+ // The local administrator is entered via the separate control centre,
+ // never via a visible button on the ordinary player table.
+ const toggle=shell.querySelector('.bottom-link [data-act="adminToggle"]');if(toggle)toggle.remove();
+ const foot=shell.querySelector('.bottom-link');
+ if(foot){const back=document.createElement('button');back.className='v02-back';back.dataset.v02=ui.watch||ui.inspect?'hub':'casino';back.textContent=ui.watch||ui.inspect?'← 管理者センター':'← カジノへ';foot.prepend(back);}
+ const footer=shell.querySelector('.footer');if(footer)footer.innerHTML='🀄 夜雀 v0.2 — オフラインCPU試作／端末内のみで進行<br>カン（暗槓・加槓・大明槓）試験実装・公開オンライン対戦は未実装';
+ if(ui.watch){
+  const panel=document.createElement('div');panel.innerHTML=watcherPanel(g);
+  board?.after(panel.firstElementChild);
+ }
+ if(ui.inspect){
+  const admin=shell.querySelector('.admin');
+  if(admin){
+   const p=document.createElement('div');p.className='private-audit';p.innerHTML=`<h4>非公開の操作履歴</h4>${(g.adminAudit||[]).length?(g.adminAudit||[]).slice(-8).reverse().map(x=>`<div>操作 #${x.seq}　${esc(x.old)} ⇄ ${esc(x.to)}</div>`).join(''):'<small>まだ変更はない</small>'}`;admin.appendChild(p);
+   const close=admin.querySelector('[data-act="adminToggle"]');if(close){close.dataset.v02='hub';delete close.dataset.act;close.textContent='管理者センターへ戻る';}
+  }
+ }
+}
+const observer=new MutationObserver(()=>enhance());observer.observe(root,{childList:true,subtree:false});enhance();
+function render(){debug.render();}
+function showHub(){
+ hub=true;ui.watch=false;ui.inspect=false;ui.watchPaused=true;ui.admin=false;ui.toast='';chosen=null;
+ clearTimeout(ui.timer);ui.scheduled=false;
+ debug.goto('casino');enhance();
+}
+function beginWatch(){
+ hub=false;chosen=null;ui.game=new Y.Game({...ui.settings,allCpu:true});ui.screen='table';ui.admin=true;ui.watch=true;ui.inspect=false;ui.watchPaused=false;ui.watchSpeed=1;ui.toast='';
+ clearTimeout(ui.timer);ui.scheduled=false;render();startLoop();
+}
+function beginInspect(){
+ hub=false;chosen=null;if(!ui.game||ui.game.allCpu)ui.game=new Y.Game({...ui.settings,allCpu:false});
+ ui.screen='table';ui.admin=true;ui.watch=false;ui.inspect=true;ui.toast='';
+ clearTimeout(ui.timer);ui.scheduled=false;render();
+}
+function step(){
+ if(!ui.watch||ui.screen!=='table'||!ui.game)return;
+ const g=ui.game;
+ try{
+  if(g.phase==='result'){
+   if(g.matchOver||!g.nextHand()){ui.watchPaused=true;return;}
+  }else if(g.phase==='play'&&g.active().bot)g.cpuPlay();
+  else if(g.phase==='response'&&g.pending)g.respond('pass');
+  else if(g.phase==='draw')g.draw();
+ }catch(e){console.error(e);ui.watchPaused=true;ui.toast='観戦エラー: '+String(e.message||e);}
+ render();
+}
+function startLoop(){
+ if(loopStarted)return;loopStarted=true;
+ function go(){
+  if(ui.watch&&ui.screen==='table'&&!ui.watchPaused)step();
+  setTimeout(go,ui.watchSpeed===8?105:ui.watchSpeed===4?210:850);
+ }
+ setTimeout(go,850);
+}
+root.addEventListener('click',e=>{
+ const el=e.target.closest('[data-v02]');
+ if(el){
+  e.preventDefault();e.stopImmediatePropagation();
+  const act=el.dataset.v02;
+  if(act==='hub')showHub();
+  if(act==='casino'){hub=false;ui.watch=false;ui.inspect=false;ui.admin=false;ui.toast='';debug.goto('casino');}
+  if(act==='watch')beginWatch();
+  if(act==='inspect')beginInspect();
+  if(act==='cpuSettings'){hub=false;ui.watch=false;debug.goto('adminSettings');}
+  if(act==='pause'){ui.watchPaused=!ui.watchPaused;render();}
+  if(act==='speed'){ui.watchSpeed=({1:4,4:8,8:1})[ui.watchSpeed||1];render();}
+  if(act==='step'){ui.watchPaused=true;step();}
+  if(act==='kan'){const g=ui.game;if(g&&g.kan(el.dataset.kind,Number(el.dataset.type))){chosen=null;render();}}
+  if(act==='daiminkan'){if(ui.game?.respond('kan'))render();}
+  if(act==='discardConfirm'){
+   const g=ui.game;if(g&&chosen!==null){if(!g.discard(chosen,ui.riichi))ui.toast='今はその牌を捨てられないぞ。';chosen=null;ui.riichi=false;render();}
+  }
+  return;
+ }
+ const original=e.target.closest('[data-act]');
+ if(original?.dataset.act==='discard'&&!ui.watch){
+  e.preventDefault();e.stopImmediatePropagation();
+  const g=ui.game,idx=Number(original.dataset.index);
+  if(!g||g.current!==0||g.phase!=='play'||original.disabled)return;
+  if(ui.riichi&&!g.possibleRiichi().includes(idx))return;
+  if(chosen===idx){if(!g.discard(chosen,ui.riichi))ui.toast='打牌できない局面じゃ。';chosen=null;ui.riichi=false;render();}
+  else{chosen=idx;render();}
+  return;
+ }
+ if(original&&['start','restart','home','casino','mahjong'].includes(original.dataset.act)){
+  hub=false;ui.watch=false;ui.inspect=false;ui.watchPaused=true;chosen=null;
+ }
+ if(original?.dataset.act==='adminToggle'&&!ui.inspect){
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+},true);
+window.YonmaV02={openHub:showHub,watch:beginWatch,inspect:beginInspect,step,enhance};
+})();
+
+</script>
+<script>
+/* YONMA v0.3: artwork-free vector tile faces, accurate visual wall tracking,
+ * admin hand sorting and points-to-test-chips preview. No live funds.
+ */
+(function(){
+'use strict';
+const Y=window.Yonma, debug=window.YonmaAppDebug;
+const root=document.getElementById('app');
+if(!Y||!debug||!root)return;
+const ui=debug.ui;
+const nameForSide=['自家（下）','下家（右）','対面（上）','上家（左）'];
+const kanji=['一','二','三','四','五','六','七','八','九'];
+const honors=['東','南','西','北','白','發','中'];
+const faceCache=new Map();
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function typeLabel(label){
+ const t=String(label||'').replace(/\s/g,'');
+ const hon=honors.indexOf(t);
+ if(hon>=0)return hon+27;
+ const m=t.match(/^([1-9])([萬筒索])$/);
+ return m?(m[2]==='萬'?0:m[2]==='筒'?9:18)+Number(m[1])-1:-1;
+}
+function circle(x,y,r,fill){
+ return `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="#16534c" stroke-width="1.25"/><circle cx="${x}" cy="${y}" r="${r*.47}" fill="#f4eee0" opacity=".9"/><circle cx="${x}" cy="${y}" r="${r*.24}" fill="${fill}"/>`;
+}
+function bamboo(x,y,color,scale=1){
+ return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M0 -9 Q4 -9 4 -6 L4 6 Q0 10 -4 6 L-4 -6 Q-4 -9 0 -9Z" fill="${color}" stroke="#23543e" stroke-width=".8"/><path d="M-3 -4H3 M-3 2H3" stroke="#e9d9a9" stroke-width="1" opacity=".85"/><path d="M0 -11V-9 M0 9V11" stroke="#175344" stroke-width="1.4"/></g>`;
+}
+function face(type,red=false){
+ const key=type+':'+(red?'r':'n');if(faceCache.has(key))return faceCache.get(key);
+ const n=type%9+1;
+ let inner='';
+ if(type<9){
+  const fg=red?'#c53a32':'#25382f';
+  inner=`<text x="30" y="38" text-anchor="middle" font-size="39" font-weight="700" font-family="Yu Mincho,Hiragino Mincho ProN,serif" fill="${fg}">${kanji[n-1]}</text><text x="30" y="68" text-anchor="middle" font-size="25" font-weight="750" font-family="Yu Mincho,Hiragino Mincho ProN,serif" fill="#b23b34">萬</text>`;
+ }else if(type<18){
+  let pos;
+  if(n===1)pos=[[30,38]];
+  else if(n===2)pos=[[30,21],[30,54]];
+  else if(n===3)pos=[[18,16],[30,37],[42,58]];
+  else if(n===4)pos=[[18,20],[42,20],[18,54],[42,54]];
+  else if(n===5)pos=[[17,17],[43,17],[30,37],[17,57],[43,57]];
+  else {pos=[];const rows=n===7?3:n===8?4:3,cols=n===9?3:2;
+    for(let i=0;i<Math.min(n,rows*cols);i++)pos.push([(cols===3?14+i%3*16:19+i%2*22),13+Math.floor(i/cols)*(n===8?16:22)]);
+    if(n===7)pos.push([30,37]);
+  }
+  const rad=n===1?17:n<=3?9:n<=5?7.4:6.4;
+  inner=pos.map((p,i)=>circle(p[0],p[1],rad,red?'#c7473d':i%3===0?'#c94d46':i%3===1?'#2a7a64':'#36588e')).join('');
+ }else if(type<27){
+  if(n===1){
+   inner='<path d="M13 52Q18 23 31 18Q45 20 47 34Q41 32 35 33Q36 42 43 49Q33 44 30 38Q24 53 13 52Z" fill="#267b61" stroke="#194c42" stroke-width="2"/><path d="M28 28 Q35 8 46 18 L35 33" fill="#b23e39" stroke="#1d4f47" stroke-width="2"/><circle cx="37" cy="21" r="2" fill="#f9eddc"/><path d="M19 53L38 58" stroke="#1a6857" stroke-width="4"/>';
+  }else{
+   let pts=[];
+   if(n===2)pts=[[20,28],[40,49]];
+   else if(n===3)pts=[[30,14],[19,44],[41,44]];
+   else if(n===4)pts=[[19,24],[41,24],[19,51],[41,51]];
+   else if(n===5)pts=[[16,16],[44,16],[30,36],[16,58],[44,58]];
+   else if(n===6)pts=[[19,16],[41,16],[19,37],[41,37],[19,58],[41,58]];
+   else if(n===7)pts=[[30,11],[19,26],[41,26],[19,43],[41,43],[19,60],[41,60]];
+   else if(n===8)pts=[[19,13],[41,13],[19,28],[41,28],[19,44],[41,44],[19,59],[41,59]];
+   else pts=[[13,13],[30,13],[47,13],[13,37],[30,37],[47,37],[13,61],[30,61],[47,61]];
+   inner=pts.map((p,i)=>bamboo(p[0],p[1],red?'#bb4d42':i%4===0?'#b74840':'#287657',n>=8?.67:n>=5?.8:.97)).join('');
+  }
+ }else{
+  const text=honors[type-27],fg=type===33?'#c14236':type===32?'#247254':type===31?'#2d5791':'#263e40';
+  inner=`<text x="30" y="54" text-anchor="middle" font-size="49" font-weight="800" font-family="Yu Mincho,Hiragino Mincho ProN,serif" fill="${fg}">${text}</text>`;
+ }
+ const svg=`<svg class="v03-face" viewBox="0 0 60 78" width="60" height="78" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+ faceCache.set(key,svg);return svg;
+}
+function faceId(id){return face(Y.type(id),Y.isRed(id)&&ui.settings.red);}
+function retrofitFaces(shell){
+ for(const t of shell.querySelectorAll('.tile:not(.back),.m-tile')){
+  if(t.dataset.v03Face==='yes')continue;
+  const label=t.getAttribute('title')||t.getAttribute('aria-label')||'';
+  const type=typeLabel(label);
+  if(type<0)continue;
+  t.innerHTML=face(type,t.classList.contains('red')||t.classList.contains('is-red'));
+  t.dataset.v03Face='yes';
+  t.setAttribute('aria-label',Y.display(type));
+ }
+}
+function dice(n){
+ const pips={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+ return `<div class="v03-die" aria-label="サイコロ${n}">${Array.from({length:9},(_,i)=>`<i class="${pips[n].includes(i)?'on':''}"></i>`).join('')}</div>`;
+}
+function boardRivers(g){
+ return g.players.map((p,seat)=>`<div class="v03-river seat-${seat}" aria-label="${esc(p.name)}の捨て牌">${p.river.map(r=>`<span class="v03-river-tile ${r.called?'called':''} ${r.riichi?'riichi':''}" title="${esc(Y.tileText(r.id))}">${faceId(r.id)}</span>`).join('')}</div>`).join('');
+}
+function wallHTML(g){
+ const live=new Set(g.live),dead=new Set(g.dead),current=g.live[0];
+ const dora=new Set(Array.from({length:Math.min(g.kans+1,5)},(_,i)=>g.dead[4+i*2]));
+ const seatClass=['bottom','right','top','left'];
+ return g.wallSlots.map((wall,seat)=>`<div class="v03-wall ${seatClass[seat]}" role="img" aria-label="${nameForSide[seat]}の17幢の牌山">${wall.map((stack,j)=>{
+   const two=stack.map((id,layer)=>{
+    const present=live.has(id)||dead.has(id);
+    const cls=['v03-stacked-tile',layer===1?'tower-base':'tower-top',present?'':'removed',dead.has(id)?'dead-wall':'',id===current?'dragon-next':'',dora.has(id)?'dragon-dora':''].join(' ');
+    return `<span class="${cls}" ${id===current?'title="次にツモる牌"':''}>${dora.has(id)?'<span class="v03-small-mark">●</span>':''}</span>`;
+   }).join('');
+   return `<span class="v03-stack ${g.openSide===seat&&g.openSlot===j?'v03-break':''}" data-seat="${seat}" data-slot="${j}">${two}</span>`;
+  }).join('')}</div>`).join('');
+}
+let lastKanGame=null,lastKanCount=0;
+function meldHTML(g){
+ const reanimate=g!==lastKanGame || g.kanFlips!==lastKanCount;
+ if(g!==lastKanGame){lastKanGame=g;lastKanCount=g.kanFlips;}
+ else if(reanimate)lastKanCount=g.kanFlips;
+ return g.players.map((p,seat)=>{
+  if(!p.melds.length)return '';
+  const melds=p.melds.map(m=>{
+   const cells=m.tiles.map((id,j)=>{
+    const faceDown=m.kind==='kan'&&!m.open&&(j===0||j===3);
+    return `<span class="v03-small-tile ${faceDown?'flipface':''} ${reanimate&&m.kind==='kan'?'v03-kan-flip':''}" title="${faceDown?'裏向き':esc(Y.tileText(id))}">${faceDown?'':faceId(id)}</span>`;
+   }).join('');
+   return `<span class="v03-meld" title="${esc(p.name)} ${m.kind==='kan'?'カン':m.kind==='chi'?'チー':'ポン'}">${cells}</span>`;
+  }).join('');
+  return `<div class="v03-meld-zone seat-${seat}">${melds}</div>`;
+ }).join('');
+}
+function createBoard(g){
+ const newFlip=g===lastKanGame&&g.kans>0&&g.kanFlips!==lastKanCount;
+ const dora=Array.from({length:Math.min(g.kans+1,5)},(_,i)=>g.dead[4+i*2]);
+ return `<div class="v03-info-strip"><span><b>${g.wind===0?'東':'南'}${g.kyoku+1}局</b>　${g.honba}本場</span><span>王牌 14枚 / ツモ残り ${g.live.length}枚</span></div>
+  <div class="v03-table-stage"><div class="v03-felt">
+  ${g.players.map((p,i)=>`<div class="v03-seated seat-${i}"><span class="v03-seat-badge">${esc(p.name)}</span>${i===g.dealer?'親':''}${g.current===i&&g.phase!=='result'?' ●':''}</div>`).join('')}
+  ${wallHTML(g)}
+  ${boardRivers(g)}
+  <div class="v03-center"><h3>${g.wind===0?'東':'南'}${g.kyoku+1}局</h3><div class="v03-dice">${g.dice.map(dice).join('')}</div><p>開門 ${nameForSide[g.openSide]}・${g.diceSum}幢</p><div class="v03-dora-line"><div class="v03-dora-title">ドラ表示牌 ${g.kans?'／カンドラ '+g.kans+'枚':''}</div>${dora.map((id,i)=>`<span class="v03-dora-chip ${newFlip&&i===dora.length-1?'v03-kan-flip':''}">${faceId(id)}</span>`).join('')}</div></div>
+  <div class="v03-meld-zone">${meldHTML(g)}</div>
+  </div></div>
+  <div class="v03-dead-pill"><span>🎲 ${g.dice[0]} + ${g.dice[1]} = <b>${g.diceSum}</b>　／ ${nameForSide[g.openSide]}の山から配牌</span><span>残り <b>${g.live.length}</b></span></div>`;
+}
+function maxChipRate(level){return level<=20?1:level<=40?2:level<=60?5:level<=80?10:level<=90?20:level<=99?50:100;}
+function limitAtSettings(){const s=ui.settings;const min=s.cpuMode==='fixed'?Number(s.cpuCenter):Number(s.cpuCenter)-Number(s.cpuRange);return maxChipRate(Math.max(1,Math.round(min||1)));}
+function settingsUI(shell){
+ const form=shell.querySelector('.form-grid');
+ if(!form)return;
+ const limit=limitAtSettings();
+ const rate=Math.max(0,Math.round(Number(ui.settings.chipsPer100)||0));
+ const section=document.createElement('div');
+ section.className='v03-chip-setting';
+ section.innerHTML=`<h3>♢ 対局のチップ換算</h3><div class="v03-rate"><span>100点 ＝</span><input type="number" inputmode="numeric" min="0" max="${limit}" step="1" value="${Math.min(rate,limit)}" data-set="chipsPer100" aria-label="100点当たりチップ数"><span>チップ</span></div><p>0なら賭けなし。結果の得失点をチップに換算する方式じゃ。いまは残高を動かさないローカル試算のみ。</p><p class="v03-allowance">今回のCPU実力条件での上限：<b>${limit}チップ / 100点</b>（試験用の暫定表）</p>`;
+ const settingBlock=shell.querySelector('.setting-group');
+ if(settingBlock)settingBlock.before(section); else form.after(section);
+ // Correct persistent invalid rates imported from an older browser setting.
+ if(rate>limit){ui.settings.chipsPer100=limit;try{localStorage.setItem('yonma_lab_settings',JSON.stringify(ui.settings));}catch{}}
+}
+function chipsPreview(g){
+ const rate=Math.max(0,Number(g.settings.chipsPer100)||0);
+ const out=g.players.map(p=>({name:p.name,score:p.score,chips:Math.round((p.score-25000)*rate/100)}));
+ return `<section class="v03-chip-preview"><div class="v03-dead-pill"><span>チップ換算 <b>100点＝${rate}チップ</b></span><span>${rate?'仮の収支':'賭けなし'}</span></div>${rate?`<div class="v03-chip-impact">${out.map(x=>`<div class="${x.chips<0?'minus':''}"><small>${esc(x.name)}</small><strong>${x.chips>0?'+':''}${x.chips.toLocaleString('ja-JP')}</strong><small>${x.score.toLocaleString('ja-JP')}点</small></div>`).join('')}</div>`:''}<div class="v03-chip-caption">仮想チップの参考換算のみ。プレイヤー残高への入出金やオンラインの賭けはまだ実装していない。${g.kyoutaku?'供託'+g.kyoutaku*1000+'点は現在未精算。':''}</div></section>`;
+}
+function sortTiles(parent,selector,readLabel){
+ const kids=[...parent.querySelectorAll(selector)];
+ if(kids.length<2)return;
+ kids.sort((a,b)=>{
+  const u=typeLabel(readLabel(a)),v=typeLabel(readLabel(b));
+  return u-v;
+ });
+ for(const k of kids)parent.appendChild(k);
+}
+function sortAdmin(shell){
+ for(const row of shell.querySelectorAll('.admin-row .admin-hand')){
+  sortTiles(row,':scope > .admin-tile',el=>el.querySelector('.tile')?.getAttribute('title')||el.querySelector('.tile')?.getAttribute('aria-label')||'');
+ }
+ for(const row of shell.querySelectorAll('.watch-player .watch-tiles')){
+  // Sort just the concealed tiles, not the already exposed meld groups.
+  const hs=[...row.children].filter(x=>x.classList.contains('m-tile'));
+  hs.sort((a,b)=>typeLabel(a.title)-typeLabel(b.title));
+  const meld=row.querySelector('.watch-meld');for(const h of hs)row.insertBefore(h,meld);
+ }
+}
+function enhance(){
+ const shell=root.querySelector('.shell');
+ if(!shell||shell.dataset.v03Enhanced==='1'||shell.dataset.v02Enhanced!=='1')return;
+ shell.dataset.v03Enhanced='1';shell.classList.add('v03-shell');
+ document.title='夜雀 | 麻雀 v0.3';
+ if(ui.screen==='mahjong')settingsUI(shell);
+ if(ui.screen!=='table'||!ui.game)return;
+ const g=ui.game;const board=shell.querySelector('.board');
+ if(board){board.classList.add('v03-board');board.innerHTML=createBoard(g);}
+ retrofitFaces(shell);sortAdmin(shell);
+ const hand=shell.querySelector('.hand-panel');
+ if(hand&&!ui.watch){
+  const hint=document.createElement('div');hint.className='v03-tipline';
+  hint.textContent='手牌をタップで選択 →「打牌」で確定。カン時は暗槓・明槓の表示が切り替わる。';
+  hand.prepend(hint);
+ }
+ const panel=shell.querySelector('.watch-panel');if(panel)panel.after(document.createRange().createContextualFragment(chipsPreview(g)));
+ else if(hand)hand.after(document.createRange().createContextualFragment(chipsPreview(g)));
+ else board?.after(document.createRange().createContextualFragment(chipsPreview(g)));
+ const foot=shell.querySelector('.footer');if(foot)foot.textContent='夜雀 v0.3 — ブラウザ内のCPU試験版。通常の対局と管理者検証を分離。実際のカジノ通貨とは未接続。';
+}
+const watch=new MutationObserver(()=>enhance());watch.observe(root,{childList:true,subtree:false});
+enhance();
+root.addEventListener('change',e=>{
+ const t=e.target;
+ if(t?.dataset?.set!=='chipsPer100')return;
+ const limit=limitAtSettings();
+ const n=Math.min(limit,Math.max(0,Math.floor(Number(t.value)||0)));
+ t.value=n;ui.settings.chipsPer100=n;
+ try{localStorage.setItem('yonma_lab_settings',JSON.stringify(ui.settings));}catch{}
+},false);
+// A public debugging API used by automated UI tests; not an authorization mechanism.
+window.YonmaV03={enhance,face,maxChipRate};
+})();
+
+</script>
+</body>
+</html>
