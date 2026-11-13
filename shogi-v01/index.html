@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102522">
+<meta name="description" content="将棋をブラウザで遊べる、スマホ対応の独立試作版。CPU対戦、成り、持ち駒、王手、二歩に対応。">
+<title>棋道｜スマホ将棋・CPU対戦</title>
+<style>
+:root{color-scheme:dark;--bg:#0e201e;--bg2:#091a18;--panel:#17302c;--panel2:#1e3933;--border:#385b52;--text:#f4f3e9;--muted:#b0c7bc;--gold:#f0cf88;--wood:#d5ab66;--woodlight:#edd099;--danger:#fa9d86;--green:#a4dfb9;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg2)}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(ellipse at 50% -20%,#285146 0,transparent 60%),linear-gradient(160deg,#112723,#091a18 70%);font-size:15px}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.46;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}input,select{color:var(--text);background:#0e2722;border:1px solid #547366;border-radius:10px;padding:10px;width:100%;min-height:42px}select option{background:#10312b}.app-shell{max-width:1200px;padding:0 16px 40px;margin:auto}.site-header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:71px;border-bottom:1px solid #51726755}.brand{display:flex;align-items:center;gap:12px}.monogram{width:42px;height:42px;border:1.5px solid #dfc38f;border-radius:13px;color:#f9e7b9;display:grid;place-items:center;font-size:26px;font-family:serif;background:#294138}.brand-name{font-family:serif;font-weight:bold;letter-spacing:.22em;font-size:24px;line-height:1.1}.brand-caption{font-size:10px;color:var(--muted);letter-spacing:.23em;margin-top:5px}.head-actions{display:flex;gap:8px;align-items:center}.btn{background:linear-gradient(155deg,#dab676,#b88c48);border:1px solid #e9d49f;color:#1f2824;font-weight:750;border-radius:12px;padding:10px 15px;min-height:43px;box-shadow:0 3px 0 #71533040}.btn:active{transform:translateY(1px)}.btn.secondary{background:#234138;border-color:#587b67;color:#f4f0dc;box-shadow:none}.btn.ghost{background:transparent;color:var(--muted);border:1px solid #4b6c5e;box-shadow:none}.btn.danger{background:#583126;color:#ffddcd;border-color:#bb6e5c;box-shadow:none}.btn.small{padding:7px 10px;min-height:34px;font-size:13px}.btn.wide{width:100%}.btn-inline{display:flex;gap:8px;align-items:center;justify-content:center}.eyebrow{font-size:11px;letter-spacing:.19em;color:var(--gold);font-weight:700}.muted{color:var(--muted)}.hint{font-size:12px;color:var(--muted);line-height:1.65}.panel{background:linear-gradient(145deg,rgba(32,65,54,.88),rgba(18,42,36,.96));border:1px solid #51726596;border-radius:17px;padding:17px;box-shadow:inset 0 1px 0 #ffffff15}.panel-title{font-size:16px;font-weight:750;margin:0 0 13px}.page-heading{font-size:clamp(29px,6vw,47px);font-family:serif;line-height:1.25;letter-spacing:.07em;margin:8px 0 12px}.page-lead{color:#d2e3d7;line-height:1.8;max-width:530px;font-size:14px}.welcome{padding-top:32px;display:grid;grid-template-columns:minmax(270px,1fr) minmax(270px,450px);gap:30px;align-items:center}.welcome-left{padding:0 0 15px}.welcome-art{max-width:440px;margin:20px auto 0;border-radius:22px;background:radial-gradient(circle at 50% 30%,#4c6a5d,#18312b 68%);border:1px solid #547366;min-height:245px;display:grid;place-items:center;position:relative;overflow:hidden}.welcome-art:before{content:"";position:absolute;inset:-70px 0 0;background:repeating-linear-gradient(125deg,transparent 0 35px,#dbcb9533 36px 37px);opacity:.18}.art-board{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,60px);transform:perspective(420px)rotateX(30deg)rotateZ(-7deg);border:10px solid #805938;box-shadow:0 24px 25px #05181299,0 0 0 1px #a68551;border-radius:6px;position:relative}.art-square{background:linear-gradient(140deg,#e7c58e,#cfa268);border:1px solid #986e4388;display:grid;place-items:center;color:#33291e;font-weight:bold;font-family:serif;font-size:26px}.art-piece{clip-path:polygon(50% 3%,95% 25%,95% 100%,5% 100%,5% 25%);background:linear-gradient(140deg,#fff1c5,#bc8851);border-radius:2px;width:40px;height:45px;display:grid;place-items:center}.art-piece.inv{transform:rotate(180deg)}.settings-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.setting-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:125px}.setting-field label{color:#c9dbce;font-size:12px}.segmented{display:flex;border:1px solid #507365;border-radius:11px;padding:3px;gap:3px;background:#102a26}.segmented button{flex:1;border:0;color:var(--muted);padding:10px 6px;border-radius:8px;background:transparent;font-size:13px}.segmented button.active{background:#e7ca8f;color:#253127;font-weight:800}.field-note{font-size:12px;color:#d2e2d5;border:1px solid #6d7f5b;padding:11px;border-radius:10px;background:#4c583b28;margin-top:10px}.section-caption{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gold);margin:18px 0 5px}.footnote{border-top:1px solid #49645755;margin-top:25px;padding-top:15px;font-size:12px;line-height:1.75;color:var(--muted)}.pills{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.pill{border:1px solid #587566;padding:5px 9px;font-size:11px;color:#d4e2d6;border-radius:100px;background:#29443b}.game-layout{display:grid;grid-template-columns:minmax(180px,240px) minmax(310px,530px) minmax(180px,260px);gap:16px;margin:18px auto;justify-content:center;align-items:start}.game-center{min-width:0}.player-panel{display:flex;align-items:center;gap:10px;justify-content:space-between}.avatar{display:grid;place-items:center;width:47px;height:47px;border-radius:14px;border:1px solid #d5c18c;background:linear-gradient(135deg,#29483f,#0c2824);color:#f0d79a;font-family:serif;font-size:25px;flex:none}.player-meta{flex:1;min-width:0}.player-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-title{color:var(--muted);font-size:11px;margin-top:2px}.status-pill{background:#234a3c;color:#c9f2d7;border:1px solid #65907c;padding:4px 8px;border-radius:30px;font-size:11px;white-space:nowrap}.status-pill.check{background:#65382d;color:#ffd2c7;border-color:#be775c}.top-player,.bottom-player{padding:10px 13px;background:#17332e;border:1px solid #4e7964;border-radius:14px}.top-player{margin-bottom:9px}.bottom-player{margin-top:11px}.board-wrap{position:relative;background:linear-gradient(135deg,#8b6138,#c1965b 28%,#6b4c2e 95%);padding:11px;border-radius:11px;box-shadow:0 14px 25px #020f0cbc,inset 0 2px 0 #e9ca90;border:2px solid #d8b47b}.board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));width:100%;aspect-ratio:1/1;box-shadow:0 0 0 2px #6f4a24,0 2px 8px #3b211c55;background:var(--wood)}.cell{border:0;outline:1px solid #98754b;border-radius:0;display:grid;place-items:center;background:radial-gradient(circle at 35% 35%,#eed19d 5%,#ddb578 90%);padding:0;min-width:0;min-height:0;position:relative;aspect-ratio:1/1}.cell.last{background:#e5bd85}.cell.king-in-check{background:#d58165}.cell.target{background:#e5d297}.cell.target:after{content:"";position:absolute;inset:28%;border-radius:50%;background:#44844c99;z-index:1;pointer-events:none}.cell.target.occupied:after{inset:3px;border:3px solid #2b7651;background:transparent;border-radius:4px}.cell.selected{background:#f5d986;box-shadow:inset 0 0 0 3px #419462;z-index:1}.cell:focus-visible{z-index:3;outline:3px solid #fff5c4}.koma{display:grid;place-items:center;clip-path:polygon(50% 1%,95% 23%,95% 98%,5% 98%,5% 23%);background:linear-gradient(120deg,#ffeac0 0%,#e7c18b 62%,#c69c61 100%);width:81%;height:89%;color:#2b241d;filter:drop-shadow(0 1px 1px #4b302b);font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:900;font-size:clamp(14px,2.2vw,26px);line-height:1;user-select:none;position:relative;z-index:2}.koma.opp{transform:rotate(180deg)}.koma.promoted{color:#a43f32}.koma.selected-koma{background:linear-gradient(135deg,#fff0bf,#f2d27c)}.turn-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 11px;gap:8px}.turn-line{font-weight:bold;color:#f1e1b9;font-size:15px}.role-caption{font-size:12px;color:#c8dccc}.hands{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:49px}.hand-piece{padding:5px 7px;display:flex;gap:4px;align-items:center;background:linear-gradient(160deg,#ddba84,#a87b48);border:1px solid #e1c396;border-radius:8px;color:#30261a;min-width:40px;min-height:38px;justify-content:center;font-family:"Yu Mincho",serif;font-weight:bold;font-size:18px}.hand-piece em{font:700 11px sans-serif;color:#513c23}.hand-piece.selected{box-shadow:0 0 0 2px #8bcf86,0 0 0 4px #12332c}.hand-piece:disabled{opacity:.6}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions>*{flex:1}.side-stack{display:flex;flex-direction:column;gap:12px}.record{font-size:12px;color:#c6ddcd;overflow:auto;max-height:350px;display:grid;grid-template-columns:1fr 1fr;gap:6px}.record-item{padding:7px;background:#102b26;border:1px solid #44655755;border-radius:7px;white-space:nowrap}.record-item.latest{border-color:#d5ad74;color:#f5dcb6}.detail-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #5a726148;font-size:13px}.detail-row:last-child{border:0}.chip-number{color:var(--gold);font-weight:bold}.empty-label{color:#a2bcb0;font-size:12px;padding:7px 0}.help-list{font-size:13px;line-height:1.9;color:#cbded3}.callout{padding:12px;border-radius:11px;background:#3c56392e;border:1px solid #82976f70;font-size:12px;line-height:1.65;color:#e6e2ca}.notice{padding:10px 12px;background:#183b34;border:1px solid #678f74;border-radius:10px;color:#e3f0e3;font-size:13px}.notice.warning{background:#613d31;border-color:#b97d60;color:#ffe7d3}.modal-backdrop{position:fixed;inset:0;background:#061614cc;display:grid;place-items:center;z-index:40;padding:18px;overscroll-behavior:contain}.modal{border:1px solid #7a967f;background:linear-gradient(140deg,#23453b,#0c241f);border-radius:17px;padding:20px;max-width:520px;width:100%;max-height:calc(100vh - 38px);overflow:auto;box-shadow:0 30px 70px #0009}.modal h2{font-family:serif;font-size:23px;margin:0 0 9px}.modal .actions{margin-top:17px}.tiny{font-size:11px;color:#bdd1c3}.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.admin-grid label{font-size:12px;color:#c2d2c3;display:block;margin-bottom:5px}.admin-row{margin:10px 0}.admin-range{display:flex;gap:8px;align-items:center}.admin-range input[type=range]{padding:0}.admin-level{font-size:18px;color:var(--gold);font-weight:bold;min-width:40px;text-align:right}.bottom-banner{font-size:11px;text-align:center;color:#90b0a0;line-height:1.6;margin:22px 0}.ui-error{color:#ffdbcc;background:#513327;padding:14px;border-radius:8px}.checkmate{font-size:19px;color:var(--gold);font-weight:800}.wideboard{max-width:530px;margin:auto}.loading-fallback{padding:35vh 20px;text-align:center;color:var(--gold);font:700 30px serif}.loading-fallback small{display:block;font:14px sans-serif;margin-top:15px;color:#c9ddd2}.no-script{padding:15px;color:#f8e2b7}.testing-tag{font-size:10px;color:#eddfb3;border:1px solid #847350;padding:3px 7px;border-radius:100px}.split-mode{display:grid;gap:8px;margin-bottom:12px}.result-big{font-size:40px;font-weight:800;color:var(--gold);font-family:serif}.mini-divider{border-top:1px solid #51725d55;margin:12px 0}
+@media(max-width:990px){.game-layout{grid-template-columns:minmax(0,570px);max-width:580px;margin:12px auto}.game-center{order:1}.side-left{order:2}.side-right{order:3}.side-stack{display:flex;flex-direction:column;gap:12px}.side-left .panel,.side-right .panel{margin-top:7px}.welcome{grid-template-columns:1fr;max-width:680px;margin:auto;gap:12px}.welcome-left{padding:0}.welcome-art{min-height:180px}.art-board{transform:perspective(440px)rotateX(30deg)rotateZ(-7deg)scale(.8)}.board-wrap{max-width:520px;margin:auto}}
+@media(max-width:450px){.app-shell{padding:0 9px 28px}.site-header{min-height:58px}.brand-name{font-size:19px}.brand-caption{font-size:8px}.monogram{width:36px;height:36px;font-size:22px}.btn.small{min-height:34px;font-size:11px;padding:7px 8px}.page-heading{font-size:29px}.welcome{padding-top:19px}.panel{padding:12px;border-radius:13px}.board-wrap{padding:7px;border-width:2px}.koma{font-size:clamp(12px,5.1vw,22px)}.top-player,.bottom-player{padding:8px 9px}.avatar{width:35px;height:35px;font-size:20px;border-radius:11px}.player-name{font-size:13px}.player-title{font-size:10px}.turn-line{font-size:13px}.game-layout{gap:9px}.cell.target.occupied:after{border-width:2px}.hand-piece{min-height:36px;font-size:16px}.btn{font-size:13px;padding:10px}.record{max-height:160px}.modal{padding:15px}}
+
+</style>
+</head>
+<body>
+<div id="app"><div class="loading-fallback">棋道 SHOGI LAB<br><small>将棋を読み込んでいます…</small></div></div>
+<noscript><p class="no-script">この将棋ゲームはJavaScriptが必要です。SafariやChromeで開いてください。</p></noscript>
+<script>
+/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const TYPES=['R','B','G','S','N','L','P'];
+const NAMES={K:'玉',R:'飛',B:'角',G:'金',S:'銀',N:'桂',L:'香',P:'歩'};
+const PROMOTED={R:'龍',B:'馬',S:'全',N:'圭',L:'杏',P:'と'};
+const PRICE={K:20000,R:1020,B:890,G:580,S:490,N:320,L:290,P:105};
+const rc=i=>[Math.floor(i/9),i%9];const idx=(r,c)=>r*9+c;const inside=(r,c)=>r>=0&&r<9&&c>=0&&c<9;
+const piece=(t,s,p=false)=>({t,s,p});
+const clone=s=>({board:s.board.map(p=>p?{...p}:null),hands:{1:{...s.hands[1]},'-1':{...s.hands[-1]}},turn:s.turn,ply:s.ply,trail:s.trail?s.trail.slice():[]});
+function newGame(){
+ const b=Array(81).fill(null),top=['L','N','S','G','K','G','S','N','L'];
+ for(let c=0;c<9;c++){b[idx(0,c)]=piece(top[c],-1);b[idx(8,c)]=piece(top[c],1);b[idx(2,c)]=piece('P',-1);b[idx(6,c)]=piece('P',1);}
+ b[idx(1,1)]=piece('R',-1);b[idx(1,7)]=piece('B',-1);
+ b[idx(7,1)]=piece('B',1);b[idx(7,7)]=piece('R',1);
+ return {board:b,hands:{1:{},'-1':{}},turn:1,ply:0,trail:[]};
+}
+const gold=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,0]];
+const silver=[[1,-1],[1,0],[1,1],[-1,-1],[-1,1]];
+const king=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1]];
+const knight=[[2,-1],[2,1]];
+const diagonal=[[1,-1],[1,1],[-1,-1],[-1,1]];
+const orthogonal=[[1,0],[-1,0],[0,-1],[0,1]];
+const forward=[[1,0]];
+function directions(p){
+ const t=p.p&&['P','L','N','S'].includes(p.t)?'G':p.t;
+ let step=[],slide=[],jump=[];
+ switch(t){case 'K':step=king;break;case 'G':step=gold;break;case 'S':step=silver;break;case 'N':jump=knight;break;case 'L':slide=forward;break;case 'P':step=forward;break;case 'B':slide=diagonal;if(p.p)step=orthogonal;break;case 'R':slide=orthogonal;if(p.p)step=diagonal;break;}
+ return {step,slide,jump};
+}
+function eachTarget(s,from,p,fn){
+ const [r,c]=rc(from),{step,slide,jump}=directions(p),dr0=-p.s;
+ for(const [dr,dc] of [...step,...jump]){const rr=r+dr*dr0,cc=c+dc;if(inside(rr,cc)){const q=s.board[idx(rr,cc)];if(!q||q.s!==p.s)fn(idx(rr,cc));}}
+ for(const [dr,dc] of slide){let rr=r+dr*dr0,cc=c+dc;while(inside(rr,cc)){const j=idx(rr,cc),q=s.board[j];if(q?.s===p.s)break;fn(j);if(q)break;rr+=dr*dr0;cc+=dc;}}
+}
+function attacks(s,to,by){for(let f=0;f<81;f++){const p=s.board[f];if(!p||p.s!==by)continue;let a=false;eachTarget(s,f,p,t=>{if(t===to)a=true;});if(a)return true;}return false;}
+function kingIndex(s,side){return s.board.findIndex(p=>p&&p.t==='K'&&p.s===side);}
+function inCheck(s,side=s.turn){const k=kingIndex(s,side);return k<0||attacks(s,k,-side);}
+function zone(row,side){return side===1?row<=2:row>=6;}
+function lastRow(side){return side===1?0:8;}
+function lastTwo(row,side){return side===1?row<=1:row>=7;}
+function mustPromote(t,row,side){return (t==='P'||t==='L')&&row===lastRow(side)||t==='N'&&lastTwo(row,side);}
+function promotable(t){return t!=='K'&&t!=='G';}
+function apply(s,m){
+ const n=clone(s),side=s.turn;
+ if(m.drop){n.board[m.to]=piece(m.drop,side);n.hands[side][m.drop]--;if(n.hands[side][m.drop]===0)delete n.hands[side][m.drop];}
+ else{const moving=n.board[m.from],taken=n.board[m.to];n.board[m.from]=null;
+  if(taken){n.hands[side][taken.t]=(n.hands[side][taken.t]||0)+1;}
+  n.board[m.to]={...moving,p:m.promote||moving.p};
+ }
+ n.turn=-side;n.ply=s.ply+1;n.trail=[...(s.trail||[]),{...m,side}];return n;
+}
+function pseudo(s){
+ const out=[],side=s.turn;
+ for(let i=0;i<81;i++){
+  const p=s.board[i];if(!p||p.s!==side)continue;
+  eachTarget(s,i,p,to=>{
+   if(s.board[to]?.t==='K')return;
+   const [fr]=rc(i),[tr]=rc(to);
+   if(!p.p&&promotable(p.t)&&(zone(fr,side)||zone(tr,side))){
+     if(!mustPromote(p.t,tr,side))out.push({from:i,to,promote:false});
+     out.push({from:i,to,promote:true});
+   }else out.push({from:i,to,promote:false});
+  });
+ }
+ const hand=s.hands[side];for(const t of TYPES){if(!hand[t])continue;for(let to=0;to<81;to++){
+  if(s.board[to])continue;const [r,c]=rc(to);if(mustPromote(t,r,side))continue;
+  if(t==='P'){
+    let found=false;for(let rr=0;rr<9;rr++){const p=s.board[idx(rr,c)];if(p?.t==='P'&&p.s===side&&!p.p){found=true;break;}}
+    if(found)continue;
+  }
+  out.push({drop:t,to});
+ }}
+ return out;
+}
+function sameMove(a,b){return a.to===b.to&&a.from===b.from&&a.drop===b.drop&&!!a.promote===!!b.promote;}
+function legalMoves(s,options={}){
+ const side=s.turn;const moves=[];
+ for(const m of pseudo(s)){
+  const after=apply(s,m);if(inCheck(after,side))continue;
+  if(m.drop==='P'&&!options.skipPawnMate){
+   // If a pawn drop is checkmate, the drop is illegal (打ち歩詰め).
+   if(inCheck(after,-side)&&legalMoves(after,{skipPawnMate:true}).length===0)continue;
+  }
+  moves.push(m);
+ }
+ return moves;
+}
+function posKey(s){
+ return s.turn+'|'+s.board.map(p=>p?p.s+':'+p.t+(p.p?'+':''):'_').join(',')+'|'+[1,-1].map(side=>TYPES.map(t=>s.hands[side][t]||0).join('.')).join('|');
+}
+function evaluateEnd(state,history=[],moveLog=[]){
+ const moves=legalMoves(state);
+ if(moves.length===0)return {done:true,winner:-state.turn,reason:inCheck(state)?'詰み':'合法手なし'};
+ const key=posKey(state),matches=history.map((s,i)=>posKey(s)===key?i:-1).filter(i=>i>=0);
+ if(matches.length>=4){
+  const a=matches[matches.length-4],b=matches[matches.length-1];let perp=null;
+  for(const side of [1,-1]){
+   const seq=moveLog.slice(a,b).filter(m=>m.side===side);
+   if(seq.length&&seq.every(m=>m.gaveCheck))perp=side;
+  }
+  return perp?{done:true,winner:-perp,reason:'連続王手の千日手'}:{done:true,winner:0,reason:'千日手（引き分け）'};
+ }
+ return {done:false,winner:null,reason:''};
+}
+function moveText(s,m){
+ const c=9-(m.to%9),r=Math.floor(m.to/9)+1,nums='１２３４５６７８９',kan='一二三四五六七八九',t=m.drop?m.drop:s.board[m.from].t;
+ const hand=m.drop?'打':m.promote?'成':'';
+ return (s.turn===1?'▲':'△')+nums[c-1]+kan[r-1]+(NAMES[t]||'')+hand;
+}
+function pieceValue(p){return p?PRICE[p.t]*(p.p?(p.t==='P'?4.7:p.t==='L'?1.75:p.t==='N'?1.65:p.t==='S'?1.35:1.3):1):0;}
+function totalPieces(s){const count={};for(const p of s.board)if(p)count[p.t]=(count[p.t]||0)+1;for(const side of [1,-1])for(const [t,n]of Object.entries(s.hands[side]))count[t]=(count[t]||0)+n;return count;}
+function serialize(s){return JSON.stringify(s);}
+function deserialize(raw){try{const s=JSON.parse(raw);if(s.board?.length!==81||![-1,1].includes(s.turn)||!s.hands?.[1]||!s.hands?.[-1]||kingIndex(s,1)<0||kingIndex(s,-1)<0)throw Error('Invalid shogi position');return s;}catch{return null;}}
+return {TYPES,NAMES,PROMOTED,PRICE,newGame,clone,rc,idx,inside,eachTarget,attacks,kingIndex,inCheck,zone,mustPromote,legalMoves,pseudo,apply,sameMove,posKey,evaluateEnd,moveText,pieceValue,totalPieces,serialize,deserialize};
+});
+
+</script>
+<script>
+(function(root,factory){const engine=root.ShogiEngine||(typeof require!=='undefined'?require('./engine.js'):null),api=factory(engine);if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiAI=api;})(typeof globalThis!=='undefined'?globalThis:this,function(E){
+'use strict';
+const now=()=>typeof performance!=='undefined'?performance.now():Date.now();
+const VALUES={K:24000,R:1050,B:930,G:610,S:510,N:320,L:300,P:110};
+const random=(arr)=>arr[Math.floor(Math.random()*arr.length)];
+const focus=(p,row,col)=>{
+ const adv=p.s===1?8-row:row;
+ const center=4-Math.abs(col-4);
+ return (p.t==='P'?adv*9:p.t==='S'||p.t==='N'?adv*4:p.t==='R'||p.t==='B'?center*8:0)+(p.p?65:0);
+};
+function score(s,side){let a=0;
+ for(let i=0;i<81;i++){const p=s.board[i];if(!p)continue;
+ const row=i/9|0,col=i%9;
+ const v=VALUES[p.t]*(p.p?({P:4.7,L:1.65,N:1.55,S:1.42,B:1.35,R:1.3}[p.t]||1):1)+focus(p,row,col);
+ a+=(p.s===side?1:-1)*v;
+ }
+ for(const sign of [1,-1])for(const [t,n] of Object.entries(s.hands[sign]))a+=(sign===side?1:-1)*(VALUES[t]||0)*n*1.1;
+ return a;
+}
+function moveOrder(s,m){
+ let n=0;if(m.drop){n=(VALUES[m.drop]||0)*0.05;}
+ else{
+  const before=s.board[m.from],captured=s.board[m.to];
+  if(captured)n+=VALUES[captured.t]*2.4-VALUES[before.t]*0.10;
+  if(m.promote)n+=before.t==='P'?440:before.t==='B'||before.t==='R'?330:155;
+ }
+ return n;
+}
+function bestMove(s,skill=60){
+ const possible=E.legalMoves(s);if(!possible.length)return null;
+ skill=Math.max(1,Math.min(100,Math.round(Number(skill)||1)));
+ if(skill<=12)return random(possible);
+ const depth=skill<59?1:skill<83?2:3;
+ const maxMs=skill<59?80:skill<83?230:skill<95?470:850;
+ const width=skill<60?0:skill<83?9:skill<95?12:17;
+ const deadline=now()+maxMs;
+ let best=possible[0],bestVal=-Infinity;
+ const quick=(state,m)=>{
+  const after=E.apply(state,m);
+  return -score(after,after.turn)+moveOrder(state,m);
+ };
+ let ranked=possible.map(m=>({m,v:quick(s,m)})).sort((a,b)=>b.v-a.v);
+ if(skill<45){
+  // Beginner: deliberately imperfect but never makes an illegal move.
+  return ranked[Math.min(ranked.length-1,Math.floor(Math.pow(Math.random(),skill/30)*Math.min(ranked.length,15)))].m;
+ }
+ if(skill<59){const candidates=ranked.slice(0,Math.min(7,ranked.length));const jitter=(59-skill)*13;return candidates.map(x=>({...x,k:x.v+(Math.random()-.5)*jitter})).sort((a,b)=>b.k-a.k)[0].m;}
+ best=ranked[0].m;bestVal=ranked[0].v;
+ let stopped=false,nodes=0;
+ function search(state,remaining,alpha,beta,ply){
+  if(++nodes%32===0&&now()>deadline){stopped=true;return 0;}
+  const moves=E.legalMoves(state,{skipPawnMate:false});
+  if(moves.length===0)return -1000000+ply;
+  if(remaining<=0)return score(state,state.turn);
+  const ordered=moves.map(m=>({m,w:moveOrder(state,m)})).sort((a,b)=>b.w-a.w).slice(0,width);
+  let local=-Infinity;
+  for(const {m}of ordered){
+   const next=E.apply(state,m);const value=-search(next,remaining-1,-beta,-alpha,ply+1);
+   if(stopped)return 0;
+   if(value>local)local=value;
+   if(local>alpha)alpha=local;
+   if(alpha>=beta)break;
+  }
+  return local;
+ }
+ for(let d=1;d<=depth;d++){
+  let complete=true,roundBest=null,roundValue=-Infinity;
+  const candidate=ranked.slice(0,Math.max(12,Math.min(ranked.length,width*2))).map(x=>x.m);
+  for(const m of candidate){
+   if(now()>deadline){complete=false;break;}
+   const next=E.apply(s,m);const value=-search(next,d-1,-Infinity,Infinity,1)+moveOrder(s,m)*0.02;
+   if(stopped){complete=false;break;}
+   if(value>roundValue){roundValue=value;roundBest=m;}
+  }
+  if(complete&&roundBest){best=roundBest;bestVal=roundValue;}
+  if(!complete)break;
+ }
+ return best;
+}
+return {bestMove,score};
+});
+
+</script>
+<script>
+(function(){
+'use strict';
+const E=window.ShogiEngine,A=window.ShogiAI;
+const root=document.querySelector('#app');
+if(!E||!A){root.innerHTML='<p class="ui-error">将棋の読み込みに失敗しました。再読み込みするか、Safari・Chromeから開いてください。</p>';return;}
+const DEFAULT_ADMIN={mode:'random',level:60,center:60,range:10,caps:[10,50,200,1000,3000,6000,10000],watchDelay:750};
+const tiers=[[1,20],[21,40],[41,60],[61,80],[81,90],[91,99],[100,100]];
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+const read=(k)=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}};
+const clean=(v)=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
+const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+function parseAdmin(raw){
+ const d={...DEFAULT_ADMIN,...(raw||{})};d.mode=d.mode==='fixed'?'fixed':'random';d.level=clamp(Math.round(Number(d.level)||60),1,100);d.center=clamp(Math.round(Number(d.center)||60),1,100);d.range=clamp(Math.round(Number(d.range)||0),0,49);
+ d.caps=Array.isArray(d.caps)&&d.caps.length===7?d.caps.map((x,i)=>clamp(Math.floor(Number(x)||DEFAULT_ADMIN.caps[i]),1,999999)):DEFAULT_ADMIN.caps.slice();d.watchDelay=clamp(Math.floor(Number(d.watchDelay)||750),300,2000);return d;
+}
+let admin=parseAdmin(read('shogi-admin-v01'));
+let home={side:'random',stake:0};
+let session=null;
+let view='home',modal=null,pendingPromotion=null,selected=null,notice='';
+let thinking=false,thinkingId=null,epoch=0,watchAuto=false;
+const humanSide=()=>session?.side||1;
+const viewingSide=()=>session?.mode==='watch'?1:humanSide();
+function randLevel(){if(admin.mode==='fixed')return admin.level;return clamp(admin.center+Math.floor((Math.random()*2-1)*(admin.range+0.5)),1,100);}
+function chipCap(level){for(let i=0;i<tiers.length;i++)if(level<=tiers[i][1])return admin.caps[i];return admin.caps[6];}
+function fmt(n){return Number(n).toLocaleString('ja-JP');}
+function sideName(side){return side===1?'先手':'後手';}
+function roomInfo(){return '<div class="pills"><span class="pill">9×9盤</span><span class="pill">持ち駒・成り対応</span><span class="pill">CPU戦</span><span class="pill">スマホ対応</span></div>';}
+function rollSide(){return home.side==='random'?(Math.random()<.5?1:-1):Number(home.side);}
+function savedAvailable(){const raw=read('shogi-session-v01');return !!(raw&&raw.s&&E.deserialize(raw.s)&&Array.isArray(raw.history));}
+function loadSession(){const raw=read('shogi-session-v01');if(!raw||!E.deserialize(raw.s))return false;
+ try{session={...raw,s:E.deserialize(raw.s),history:raw.history.map(x=>E.deserialize(x)).filter(Boolean),mode:raw.mode==='watch'?'watch':'cpu',level:raw.level,levels:raw.levels||null,side:[1,-1].includes(raw.side)?raw.side:1,stake:Number(raw.stake)||0,logs:Array.isArray(raw.logs)?raw.logs:[],done:!!raw.done,winner:raw.winner??null,reason:raw.reason||''};if(!session.history.length)session.history=[session.s];session.s=session.history[session.history.length-1];return true;}catch{return false;}
+}
+function saveSession(){if(!session)return;store('shogi-session-v01',{s:E.serialize(session.s),history:session.history.map(E.serialize),mode:session.mode,level:session.level,levels:session.levels,side:session.side,stake:session.stake,logs:session.logs,done:session.done,winner:session.winner,reason:session.reason});}
+function clearCPU(){epoch++;clearTimeout(thinkingId);thinkingId=null;thinking=false;}
+function launch(mode){clearCPU();const side=mode==='watch'?1:rollSide(),levels={1:randLevel(),'-1':randLevel()};const lvl=mode==='watch'?null:levels[-side];const cap=mode==='watch'?0:chipCap(lvl);
+ session={s:E.newGame(),history:[E.newGame()],logs:[],mode,side,levels,level:lvl,stake:mode==='cpu'?Math.min(Number(home.stake)||0,cap):0,done:false,winner:null,reason:''};session.history=[session.s];selected=null;pendingPromotion=null;modal=null;view='game';watchAuto=false;notice='';saveSession();render();scheduleCPU();}
+function renderHeader(){return `<header class="site-header"><div class="brand"><div class="monogram">棋</div><div><div class="brand-name">棋 道</div><div class="brand-caption">SHOGI LAB · β</div></div></div><div class="head-actions"><span class="testing-tag">独立試作</span>${view==='game'?'<button class="btn small ghost" data-act="home">入口へ</button>':'<button class="btn small secondary" data-act="admin">管理者テスト</button>'}</div></header>`;}
+function previewBoard(){let arr=['香','桂','銀','金','玉','金','銀','桂','香'];return `<div class="welcome-art"><div class="art-board">${[arr[2],arr[3],arr[4],'','歩','','',arr[5],arr[6]].map((p,i)=>`<div class="art-square">${p?`<span class="art-piece ${i<3?'inv':''}">${p}</span>`:''}</div>`).join('')}</div></div>`;}
+function renderHome(){
+ const lv=admin.mode==='fixed'?String(admin.level):`${Math.max(1,admin.center-admin.range)}〜${Math.min(100,admin.center+admin.range)}`;
+ const cap=chipCap(admin.mode==='fixed'?admin.level:admin.center);
+ return `<section class="welcome"><div class="welcome-left"><div class="eyebrow">JAPANESE CHESS · BROWSER EDITION</div><h1 class="page-heading">一手ごとに、<br>盤面が変わる。</h1><p class="page-lead">将棋をブラウザで。盤駒と持ち駒をタップして指せる、スマホ向けの独立試作版じゃ。まずはCPUとの対局で操作やルールを検証しよう。</p>${roomInfo()}${previewBoard()}</div><div class="panel"><div class="eyebrow">CREATE MATCH</div><h2 class="panel-title" style="margin-top:7px;font-size:21px">対局を始める</h2><div class="section-caption">先手・後手</div><div class="segmented" role="group" aria-label="先後の選択"><button data-act="side" data-value="1" class="${home.side==='1'?'active':''}">先手</button><button data-act="side" data-value="-1" class="${home.side==='-1'?'active':''}">後手</button><button data-act="side" data-value="random" class="${home.side==='random'?'active':''}">ランダム</button></div><div class="section-caption">対戦相手</div><div class="field-note">CPUは管理者テスト設定に従って実力を抽選。現在の設定：<b>${lv}</b> / 100</div><div class="section-caption">仮想掛け金（試算のみ）</div><div class="settings-row"><div class="setting-field"><label>1局あたりのチップ数</label><input aria-label="仮想掛け金" type="number" id="home-stake" value="${home.stake}" min="0" step="1" max="999999"></div><div class="setting-field"><label>CPUの上限目安</label><div style="padding:12px;border:1px solid #567964;border-radius:10px;color:var(--gold);font-weight:750">${fmt(cap)} チップ</div></div></div><p class="hint">勝敗によるコイン・チップの増減は未実装じゃ。正式版ではCPU実力に応じた上限をサーバー側で適用し、対人戦の掛け金は親が決める。</p><button class="btn wide" data-act="launch">CPUと対局する</button>${savedAvailable()?'<button style="margin-top:9px" class="btn wide secondary" data-act="resume">前回の局面から再開</button>':''}<div class="mini-divider"></div><button class="btn wide ghost" data-act="admin">管理者テスト設定 / CPU同士の観戦</button></div></section><div class="footnote">本作は開発中の単体ゲームじゃ。現在は端末内の練習対局で、オンライン部屋・共通アカウント・実際の賭け・報酬の付与には未対応。強さ100も現時点ではプロ棋士相当ではない。</div>`;
+}
+function selectedLegal(){if(!session||session.done||session.mode==='watch')return [];if(session.s.turn!==session.side||thinking||modal||pendingPromotion)return [];const all=E.legalMoves(session.s);if(!selected)return [];return all.filter(m=>selected.kind==='board'?m.from===selected.i:!!m.drop&&m.drop===selected.t);}
+function boardMarkup(){const s=session.s,viewing=viewingSide(),moves=selectedLegal(),check=E.inCheck(s,s.turn),k=check?E.kingIndex(s,s.turn):-1,last=s.trail?.[s.trail.length-1];
+ return `<div class="board-wrap"><div class="board" role="grid" aria-label="将棋盤">${Array.from({length:81},(_,j)=>{
+  const i=viewing===1?j:80-j,p=s.board[i],chosen=selected?.kind==='board'&&selected.i===i,target=moves.some(m=>m.to===i),checked=i===k,previous=last&&(i===last.to||i===last.from);
+  const char=p?(p.p?E.PROMOTED[p.t]:E.NAMES[p.t]):'';
+  const label=(p?(p.s===viewing?'自分の':'相手の')+(p.p?'成':'')+E.NAMES[p.t]:'空き')+' '+(9-i%9)+'筋'+(Math.floor(i/9)+1)+'段';
+  return `<button type="button" data-act="cell" data-square="${i}" role="gridcell" class="cell ${chosen?'selected':''} ${target?'target':''} ${p?'occupied':''} ${checked?'king-in-check':''} ${previous?'last':''}" aria-label="${label}" ${!session.done?'':'disabled'}>${p?`<span class="koma ${p.s===viewing?'':'opp'} ${p.p?'promoted':''} ${chosen?'selected-koma':''}">${char}</span>`:''}</button>`;}).join('')}</div></div>`;
+}
+function handMarkup(side,selectable=false){const h=session.s.hands[side]||{},moves=selectedLegal();let all=E.TYPES.filter(t=>h[t]>0);if(!all.length)return '<div class="empty-label">持ち駒なし</div>';
+ return `<div class="hands">${all.map(t=>`<button type="button" data-act="hand" data-piece="${t}" class="hand-piece ${selected?.kind==='hand'&&selected.t===t?'selected':''}" ${selectable&&session.s.turn===session.side&&!session.done&&!thinking?'':'disabled'} aria-label="${E.NAMES[t]} ${h[t]}枚">${E.NAMES[t]} <em>×${h[t]}</em></button>`).join('')}</div>`;
+}
+function userPanel(side){const s=session,viewing=viewingSide();const yours=side===viewing;const playerName=s.mode==='watch'?side===1?'CPU 先手':'CPU 後手':yours?'あなた':'CPU 対戦相手';const title=s.mode==='watch'?`思考設定 Lv.${s.levels[side]}`:yours?'挑戦者 · 練習対局':`思考設定 Lv.${s.levels[side]}`;
+ const badge=s.s.turn===side&&!s.done?(E.inCheck(s.s,side)?'<span class="status-pill check">王手</span>':'<span class="status-pill">手番</span>'):'';
+ return `<div class="player-panel"><div class="avatar">${side===1?'先':'後'}</div><div class="player-meta"><div class="player-name">${playerName}　<small style="font-weight:400;color:#bdd3c5">${sideName(side)}</small></div><div class="player-title">${title}</div></div>${badge}</div>`;
+}
+function renderLogs(){const logs=session.logs.slice(-32);return `<div class="record">${logs.length?logs.map((o,i)=>`<div class="record-item ${i===logs.length-1?'latest':''}">${fmt(session.logs.length-logs.length+i+1)}. ${clean(o.text)}${o.gaveCheck?' 王手':''}</div>`).join(''):'<span class="empty-label">まだ指し手がないぞ。</span>'}</div>`;}
+function turnStatus(){if(session.done)return session.winner===0?'千日手・引き分け':session.winner===session.side||session.mode==='watch'?'対局終了':'対局終了';return thinking?'CPUが思考中…':session.mode==='watch'?'CPU同士の対局を観戦中':session.s.turn===session.side?'あなたの手番':'CPUの手番';}
+function renderGame(){const s=session,side=viewingSide(),oppo=-side,possible=selectedLegal(),cap=s.mode==='watch'?0:chipCap(s.level);
+ return `<div class="game-layout"><aside class="side-stack side-left"><div class="panel"><div class="panel-title">対局情報</div><div class="detail-row"><span>手数</span><b>${s.s.ply} 手</b></div><div class="detail-row"><span>対局</span><b>${s.mode==='watch'?'CPU観戦':'CPU練習'}</b></div><div class="detail-row"><span>CPUレベル</span><b>${s.mode==='watch'?`${s.levels[1]} / ${s.levels[-1]}`:s.level}</b></div><div class="detail-row"><span>掛け金の試算</span><b class="chip-number">${fmt(s.stake)} C</b></div><div class="detail-row"><span>CPU上限</span><b>${s.mode==='watch'?'—':fmt(cap)+' C'}</b></div><p class="tiny">勝ち負けによる所持コインの変動はまだ発生しない。</p></div><div class="panel"><h3 class="panel-title">指し手</h3>${renderLogs()}</div></aside><section class="game-center"><div class="turn-head"><div><div class="eyebrow">LIVE MATCH · ${session.mode==='watch'?'SPECTATOR':'PRACTICE'}</div><div class="turn-line">${turnStatus()}</div></div><button class="btn small secondary" data-act="help">遊び方</button></div><div class="top-player">${userPanel(oppo)}<div style="margin-top:7px">${handMarkup(oppo)}</div></div>${boardMarkup()}<div class="bottom-player">${userPanel(side)}<div style="margin-top:8px">${handMarkup(side,true)}</div></div>${session.mode==='cpu'&&!session.done?`<div class="notice" style="margin-top:9px">${notice?clean(notice):'自分の駒か持ち駒を選び、移動先をタップするのじゃ。成れる場合は選択画面が出るぞ。'}</div>`:''}${session.done?`<div class="panel" style="margin-top:10px"><div class="eyebrow">MATCH FINISHED</div><div class="result-big">${s.winner===0?'引き分け':s.winner===side?'勝利':'敗北'}</div><div class="muted">${clean(s.reason)}</div><button class="btn wide" style="margin-top:12px" data-act="retry">もう一局</button></div>`:''}<div class="actions">${s.mode==='cpu'?`<button class="btn secondary" data-act="undo" ${s.s.ply<1||s.done?'disabled':''}>待った（練習）</button><button class="btn ghost" data-act="resign" ${s.done?'disabled':''}>投了する</button>`:`<button class="btn secondary" data-act="watch-toggle">${watchAuto?'自動停止':'自動再開'}</button><button class="btn ghost" data-act="watch-step" ${watchAuto||s.done?'disabled':''}>1手進む</button>`}</div></section><aside class="side-stack side-right"><div class="panel"><h3 class="panel-title">操作のヒント</h3><div class="help-list">① 駒をタップして選ぶ<br>② 緑のマスへ移動する<br>③ 成るか成らないか選択<br>④ 持ち駒は駒台から選択</div><div class="mini-divider"></div><p class="hint">二歩・打ち歩詰め・行き所のない駒・王手放置を禁止している。千日手は対局終了判定に対応。</p></div><div class="panel"><h3 class="panel-title">練習版について</h3><p class="hint">CPUの強さは試作の思考レベル。公式の棋力段級位とは対応しない。将来の掛け金対戦ではサーバー側で精算する。</p><button class="btn wide ghost" data-act="admin">管理者テスト設定</button></div></aside></div><div class="bottom-banner">SHOGI LAB v0.1 · 将棋ルール検証用 · 実際の賭け機能なし</div>`;
+}
+function promotionModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-label="成りを選ぶ"><div class="eyebrow">PROMOTION</div><h2>駒を成りますか？</h2><p class="hint">敵陣に入るとき、または敵陣から移動するときは、成る・成らないを選択できるぞ。</p><div class="actions"><button class="btn" data-act="promotion" data-value="yes">成る</button><button class="btn secondary" data-act="promotion" data-value="no">成らない</button></div></div></div>`;}
+function adminModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-label="管理者テスト設定"><div class="eyebrow">LOCAL ADMIN · DEVELOPMENT</div><h2>管理者テスト設定</h2><div class="callout">これは端末内の開発者用設定じゃ。正式版の管理者権限・オンライン認証は未実装。対局でコインを増やすこともできない。</div><div class="admin-row"><label class="muted">CPU実力の決め方</label><div class="segmented"><button data-act="admin-mode" data-value="random" class="${admin.mode==='random'?'active':''}">基準 ± 幅</button><button data-act="admin-mode" data-value="fixed" class="${admin.mode==='fixed'?'active':''}">固定値</button></div></div>${admin.mode==='fixed'?`<div class="admin-row"><div class="admin-range"><span>CPU実力</span><input type="range" id="admin-level" min="1" max="100" value="${admin.level}"><b class="admin-level" id="level-readout">${admin.level}</b></div></div>`:`<div class="admin-row"><div class="admin-range"><span>基準実力</span><input type="range" id="admin-center" min="1" max="100" value="${admin.center}"><b class="admin-level" id="center-readout">${admin.center}</b></div></div><div class="admin-row"><div class="admin-range"><span>ランダム幅</span><input type="range" id="admin-range" min="0" max="49" value="${admin.range}"><b class="admin-level" id="range-readout">±${admin.range}</b></div></div>`}<div class="section-caption">CPU強さ別・掛けチップ上限</div><div class="admin-grid">${tiers.map(([lo,hi],i)=>`<div><label>${lo}${lo===hi?'':'〜'+hi} Lv.</label><input type="number" id="cap-${i}" value="${admin.caps[i]}" min="1" max="999999"></div>`).join('')}</div><div class="actions"><button class="btn" data-act="admin-save">設定を保存</button><button class="btn ghost" data-act="modal-close">閉じる</button></div><div class="mini-divider"></div><button class="btn wide secondary" data-act="watch-start">CPU 4人ではなく、CPU同士の将棋を観戦する（2人）</button><p class="hint">将棋は2人用じゃ。CPU2人の対局を1手ずつ進めたり、自動観戦できるぞ。</p></div></div>`;}
+function helpModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-label="遊び方"><h2>将棋の遊び方</h2><p class="help-list">盤の駒をタップすると、移動できる場所が緑で表示される。持ち駒を選ぶと空きマスへ打てるぞ。成りが可能な手は「成る／成らない」を選択する。</p><p class="help-list">歩を同じ筋に2枚置く二歩、歩打ちによる詰み、王手放置はできない。自分の玉が詰んだら敗北。CPUは非公開情報を見ているわけではなく、盤面と持ち駒から指し手を考える。</p><p class="hint">千日手と連続王手の千日手は判定対応。ただし持将棋の宣言・駒落ち・公式棋譜形式・対人オンラインは未対応じゃ。</p><button class="btn wide" data-act="modal-close">盤に戻る</button></div></div>`;}
+function resignModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><h2>投了しますか？</h2><p class="hint">投了するとこの対局は終了するぞ。掛けチップは試算のみで、実際の残高は減らない。</p><div class="actions"><button class="btn danger" data-act="resign-yes">投了する</button><button class="btn secondary" data-act="modal-close">続ける</button></div></div></div>`;}
+function render(){
+ const y=window.scrollY;
+ root.innerHTML=`<div class="app-shell">${renderHeader()}<main>${view==='game'&&session?renderGame():renderHome()}</main></div>${pendingPromotion?promotionModal():modal==='admin'?adminModal():modal==='help'?helpModal():modal==='resign'?resignModal():''}`;
+ if(window.scrollY!==y)window.scrollTo(0,y);
+}
+function scheduleCPU(force=false){
+ clearTimeout(thinkingId);thinkingId=null;
+ if(!session||session.done||pendingPromotion||modal)return;
+ const side=session.s.turn;
+ const shouldRun=session.mode==='watch'?watchAuto||force:side!==session.side;
+ if(!shouldRun)return;
+ thinking=true;render();const stamp=++epoch;
+ thinkingId=setTimeout(()=>{if(stamp!==epoch||!session||session.done||modal)return;const level=session.levels[session.s.turn];let move;try{move=A.bestMove(session.s,level);}catch(err){console.error(err);move=E.legalMoves(session.s)[0];}thinking=false;if(move)commitMove(move);else{session.done=true;session.winner=-session.s.turn;session.reason='合法手なし';saveSession();render();}},session.mode==='watch'?admin.watchDelay:470);
+}
+function commitMove(move){
+ if(!session||session.done)return false;
+ const legal=E.legalMoves(session.s);const m=legal.find(x=>E.sameMove(x,move));if(!m)return false;
+ const before=session.s,txt=E.moveText(before,m),after=E.apply(before,m),gaveCheck=E.inCheck(after,after.turn);
+ session.s=after;session.history.push(after);session.logs.push({text:txt,side:before.turn,gaveCheck});
+ const status=E.evaluateEnd(after,session.history,session.logs);
+ if(status.done){session.done=true;session.winner=status.winner;session.reason=status.reason;watchAuto=false;}
+ selected=null;pendingPromotion=null;notice='';saveSession();render();if(!session.done)scheduleCPU();return true;
+}
+function cellClick(i){
+ if(!session||session.done||session.mode==='watch'||thinking||modal||pendingPromotion||session.s.turn!==session.side)return;
+ const p=session.s.board[i],moves=selectedLegal().filter(m=>m.to===i);
+ if(moves.length){if(moves.length===2&&moves.some(m=>m.promote)){pendingPromotion=moves;render();}else commitMove(moves[0]);return;}
+ if(p&&p.s===session.side){selected=selected?.kind==='board'&&selected.i===i?null:{kind:'board',i};notice='';render();return;}
+ selected=null;notice='そのマスには動かせないぞ。緑で表示された移動先を選ぼう。';render();
+}
+function undo(){if(!session||session.mode!=='cpu'||session.done||session.history.length<2)return;clearCPU();let removed=0;
+ while(session.history.length>1){session.history.pop();session.logs.pop();removed++;const tail=session.history[session.history.length-1];if(tail.turn===session.side)break;}
+ session.s=session.history[session.history.length-1];session.done=false;session.reason='';session.winner=null;selected=null;pendingPromotion=null;notice='練習の「待った」で戻したぞ。';saveSession();render();if(session.s.turn!==session.side)scheduleCPU();
+}
+root.addEventListener('click',e=>{
+ const btn=e.target.closest('button[data-act]');if(!btn)return;const act=btn.dataset.act;
+ if(act==='cell'){cellClick(Number(btn.dataset.square));return;}
+ if(act==='hand'){const t=btn.dataset.piece;selected=selected?.kind==='hand'&&selected.t===t?null:{kind:'hand',t};notice='';render();return;}
+ if(act==='promotion'){const m=pendingPromotion?.find(m=>!!m.promote===(btn.dataset.value==='yes'));if(m)commitMove(m);return;}
+ if(act==='admin'){clearTimeout(thinkingId);thinkingId=null;thinking=false;modal='admin';render();return;}
+ if(act==='admin-mode'){admin.mode=btn.dataset.value==='fixed'?'fixed':'random';render();return;}
+ if(act==='admin-save'){
+  admin.mode=admin.mode==='fixed'?'fixed':'random';const lvl=document.getElementById('admin-level'),c=document.getElementById('admin-center'),range=document.getElementById('admin-range');
+  if(lvl)admin.level=Number(lvl.value);if(c)admin.center=Number(c.value);if(range)admin.range=Number(range.value);
+  admin.caps=tiers.map((_,i)=>Number(document.getElementById(`cap-${i}`)?.value)||admin.caps[i]);admin=parseAdmin(admin);store('shogi-admin-v01',admin);modal=null;notice='CPUの設定を保存したぞ。次の対局から適用される。';render();if(view==='game')scheduleCPU();return;
+ }
+ if(act==='watch-start'){modal=null;launch('watch');return;}
+ if(act==='launch'){home.stake=clamp(Math.floor(Number(document.getElementById('home-stake')?.value)||0),0,999999);launch('cpu');return;}
+ if(act==='resume'){clearCPU();if(loadSession()){modal=null;view='game';selected=null;pendingPromotion=null;watchAuto=false;render();scheduleCPU();}return;}
+ if(act==='side'){home.side=btn.dataset.value;render();return;}
+ if(act==='home'){clearCPU();view='home';modal=null;selected=null;pendingPromotion=null;watchAuto=false;render();return;}
+ if(act==='modal-close'){modal=null;render();scheduleCPU();return;}
+ if(act==='help'){modal='help';render();return;}
+ if(act==='resign'){modal='resign';render();return;}
+ if(act==='resign-yes'){modal=null;session.done=true;session.winner=-session.side;session.reason='投了';clearCPU();saveSession();render();return;}
+ if(act==='undo'){undo();return;}
+ if(act==='retry'){launch(session.mode);return;}
+ if(act==='watch-toggle'){if(session.mode==='watch'){watchAuto=!watchAuto;if(watchAuto)scheduleCPU();else {clearCPU();render();}}return;}
+ if(act==='watch-step'){if(session.mode==='watch'&&!watchAuto)scheduleCPU(true);return;}
+});
+root.addEventListener('input',e=>{if(e.target?.id==='home-stake'){home.stake=clamp(Math.floor(Number(e.target.value)||0),0,999999);}if(e.target?.id?.startsWith('cap-')){const i=Number(e.target.id.slice(4));if(Number.isInteger(i)&&i>=0&&i<7)admin.caps[i]=clamp(Number(e.target.value)||1,1,999999);}if(e.target?.id==='admin-level'){document.getElementById('level-readout').textContent=e.target.value;}if(e.target?.id==='admin-center'){document.getElementById('center-readout').textContent=e.target.value;}if(e.target?.id==='admin-range'){document.getElementById('range-readout').textContent='±'+e.target.value;}});
+// Explicitly no authority for editing user balances or online match results.
+window.ShogiLabDebug={engine:E,ai:A,getGame:()=>session?.s,getAdmin:()=>({...admin}),launch,commitMove};
+render();
+})();
+
+</script>
+</body>
+</html>
