@@ -114,6 +114,12 @@ function acceptGuest(c,mark){
    }
    try{E.move(full,assigned,data.ids);afterMutation();}
    catch(e){try{c.send({t:'reject',reason:String(e?.message||'カードが出せません。')});}catch{}sendStateTo(assigned);}
+  }else if(data.t==='special'){
+   if(!full||full.phase!=='playing'||!full.pending||full.pending.owner!==assigned||data.seq!==full.seq||!Array.isArray(data.ids)){
+    sendStateTo(assigned);return;
+   }
+   try{E.resolveSpecial(full,assigned,data.ids);afterMutation();}
+   catch(e){try{c.send({t:'reject',reason:String(e?.message||'カードの選択が不正です。')});}catch{}sendStateTo(assigned);}
   }else if(data.t==='pass'){
    if(!full||full.turn!==assigned||data.seq!==full.seq){sendStateTo(assigned);return;}
    try{E.pass(full,assigned);afterMutation();}
@@ -233,8 +239,19 @@ function play(ids){
   catch(e){error=e.message;render();}
  }
 }
+function resolveLocal(ids){
+ if(!display||!display.pending||display.pending.owner!==mySeat)return;
+ if(mode==='guest'){
+  if(!linked||!guestConn?.open)return;
+  try{guestConn.send({t:'special',ids,seq:display.seq});chosen.clear();message='特殊効果を送信しています…';render();}
+  catch{error='カードを送信できませんでした。';render();}
+ }else{
+  try{E.resolveSpecial(full,0,ids);afterMutation();}
+  catch(e){error=e.message;render();}
+ }
+}
 function pass(){
- if(!display||display.phase!=='playing'||display.turn!==mySeat||!display.table)return;
+ if(!display||display.pending||display.phase!=='playing'||display.turn!==mySeat||!display.table)return;
  if(mode==='guest'){
   if(!linked||!guestConn?.open)return;
   try{guestConn.send({t:'pass',seq:display.seq});chosen.clear();message='送信しています…';render();}
@@ -255,9 +272,13 @@ function scheduleCPU(){
   if(mark!==generation||!full||full.phase!=='playing'||full.seq!==seq)return;
   if(mode==='host'&&connections.get(seat)?.open)return;
   try{
-   const ids=E.pickCPU(full,seat,cpuSkill);
-   if(ids)E.move(full,seat,ids);
-   else E.pass(full,seat);
+   if(full.pending){
+    E.resolveSpecial(full,seat,E.pickCPUSpecial(full,seat));
+   }else{
+    const ids=E.pickCPU(full,seat,cpuSkill);
+    if(ids)E.move(full,seat,ids);
+    else E.pass(full,seat);
+   }
    afterMutation();
   }catch(e){
    console.error('CPU turn failed',e);
@@ -272,10 +293,16 @@ function nextRound(){
 }
 function selectionStatus(){
  if(!display)return {ok:false,text:''};
+ if(display.pending?.owner===mySeat){
+  const effect=display.pending,kind=effect.type==='give'?'渡す':'捨てる';
+  if(chosen.size!==effect.max)return {ok:false,text:kind+'カードを '+effect.max+' 枚選んでください（現在 '+chosen.size+' 枚）'};
+  if(display.hand.filter(c=>chosen.has(c.id)).length!==chosen.size)return {ok:false,text:'手札からカードを選んでください。'};
+  return {ok:true,text:kind+'カード '+effect.max+' 枚を選択しました'};
+ }
  if(chosen.size===0)return {ok:false,text:'カードを選択してください。'};
  const cards=display.hand.filter(c=>chosen.has(c.id));
  if(cards.length!==chosen.size)return {ok:false,text:'カードを選択してください。'};
- const context={table:display.table,bound:display.bound,rules:display.ruleSummary,revolution:display.revolution,elevenBack:display.elevenBack};
+ const context={table:display.table,bound:display.bound,rules:display.ruleSummary,revolution:display.revolution,elevenBack:display.elevenBack,sixBack:display.sixBack};
  const comb=E.choose(context,cards);
  if(!comb)return {ok:false,text:'この組み合わせは出せません。'};
  return {ok:true,text:comb.type==='run'?'階段 '+cards.length+'枚':cards.length===1?'1枚':cards.length+'枚組'};
@@ -305,16 +332,18 @@ function gameMarkup(){
  const other=[1,2,3].map(i=>v.players[(mySeat+i)%4]);
  const sel=selectionStatus(),allow=isTurn&&(mode!=='guest'||linked);
  const table=v.table,owner=table?v.players[table.owner]:null;
- const status=v.phase==='results'?'対局終了':!linked&&mode==='guest'?'通信が切れています':isTurn?'あなたの手番':v.players[v.turn]?.name+'の手番';
- const chips=[v.revolution?'革命中':'通常',v.elevenBack?'11バック':'',v.bound?'縛り '+v.bound:''].filter(Boolean);
+ const status=v.phase==='results'?'対局終了':!linked&&mode==='guest'?'通信が切れています':v.pending?(v.pending.owner===mySeat?'特殊効果のカードを選択':v.players[v.pending.owner]?.name+' がカードを選択中'):isTurn?'あなたの手番':v.players[v.turn]?.name+'の手番';
+ const chips=[v.revolution?'革命中':'通常',v.elevenBack?'11バック':'',v.sixBack?'6戻し':'',v.direction===-1?'逆回り':'',v.bound?'縛り '+v.bound:''].filter(Boolean);
+ const special=v.pending?.owner===mySeat?v.pending:null;
+ const prompt=special?(special.type==='give'?'7渡し：'+v.players[special.target]?.name+' に渡すカードを '+special.max+' 枚選択':'10捨て：捨てるカードを '+special.max+' 枚選択'):null;
  return '<div class="game-shell"><section class="board-main"><div class="game-title"><div><div class="eyebrow">'+(mode==='solo'?'CPU対戦':'オンライン対戦')+' ・ 第'+v.round+'回戦</div><h2>'+esc(status)+'</h2></div><button class="small-button" data-act="home">退出</button></div>'+
  '<div class="players-top">'+other.map((p,i)=>participant(p,i)).join('')+'</div>'+
  '<div class="table-area"><div class="table-head"><span>'+(table?esc(owner?.name||'')+' が出したカード':'場は空です')+'</span><span>'+chips.map(x=>'<em>'+esc(x)+'</em>').join('')+'</span></div>'+
  '<div class="played-area">'+(table?table.cards.map(tableCard).join(''):'<div class="empty-table">新しい場</div>')+'</div>'+
  '<div class="table-meta">'+(table?(table.type==='run'?'階段':'同じ数字')+' ・ '+table.count+'枚':'好きなカードから出せます')+'</div></div>'+
- '<div class="my-zone"><div class="my-zone-head"><div><strong>'+esc(myName)+'</strong><span>'+mine.count+'枚</span></div><small>'+(isTurn?'カードを選んで「出す」を押してください':'手番を待っています')+'</small></div>'+
+ '<div class="my-zone">'+(prompt?'<div class="special-banner">'+esc(prompt)+'</div>':'')+'<div class="my-zone-head"><div><strong>'+esc(myName)+'</strong><span>'+mine.count+'枚</span></div><small>'+(special?'指定された枚数のカードを選んで確定':isTurn?'カードを選んで「出す」を押してください':'手番を待っています')+'</small></div>'+
  '<div class="myhand">'+v.hand.map(c=>card(c,chosen.has(c.id),!allow)).join('')+'</div>'+
- '<div class="my-action"><div class="validation '+(sel.ok?'ok':'')+'">'+esc(sel.text)+'</div><div class="play-buttons"><button data-act="play" class="action-primary" '+(!allow||!sel.ok?'disabled':'')+'>出す</button><button data-act="pass" class="action-secondary" '+(!allow||!table?'disabled':'')+'>パス</button><button data-act="clear-select" class="action-quiet" '+(!chosen.size?'disabled':'')+'>選択解除</button></div></div></div>'+
+ '<div class="my-action"><div class="validation '+(sel.ok?'ok':'')+'">'+esc(sel.text)+'</div><div class="play-buttons"><button data-act="play" class="action-primary" '+(!allow||!sel.ok?'disabled':'')+'>'+(special?(special.type==='give'?'渡す':'捨てる'):'出す')+'</button>'+(special?'':'<button data-act="pass" class="action-secondary" '+(!allow||!table?'disabled':'')+'>パス</button>')+'<button data-act="clear-select" class="action-quiet" '+(!chosen.size?'disabled':'')+'>選択解除</button></div></div></div>'+
  (v.phase==='results'?resultsMarkup(v):'')+'</section>'+
  '<aside class="side-bar"><section class="panel"><div class="panel-head">対局情報</div><div class="info-item"><span>手番</span><strong>'+esc(status)+'</strong></div><div class="info-item"><span>場</span><strong>'+(table?table.count+'枚':'なし')+'</strong></div>'+
  '<div class="info-item"><span>ルール</span><strong>'+chips.join(' / ')+'</strong></div>'+
@@ -333,7 +362,9 @@ function resultsMarkup(v){
 function homeMarkup(){
  const rules=[
  ['revolution','革命'],['eightCut','8切り'],['shibari','縛り'],['stairs','階段'],['elevenBack','11バック'],
- ['stairRevolution','階段革命'],['spadeThree','スペ3返し'],['exchange','順位によるカード交換']
+ ['stairRevolution','階段革命'],['spadeThree','スペ3返し'],['exchange','順位によるカード交換'],
+ ['fiveSkip','5飛ばし'],['sixBack','6戻し'],['sevenGive','7渡し'],['nineReverse','9リバース'],
+ ['tenDiscard','10捨て'],['capitalFall','都落ち']
  ];
  return '<section class="home-content"><div class="home-header"><h1>大富豪</h1></div>'+
  '<div class="mode-grid"><section class="panel mode-card"><div class="mode-title">CPU対戦</div><p>4人で対局。自分以外はCPUが操作します。</p><button class="action-primary" data-act="solo">CPUと対局する</button></section>'+
@@ -342,7 +373,7 @@ function homeMarkup(){
  '<div class="setting-line"><label class="field-label" for="skill">CPUの強さ</label><strong id="skill-label">'+cpuSkill+'</strong></div><input id="skill" type="range" min="1" max="100" value="'+cpuSkill+'">'+
  '<div class="setting-line"><span class="field-label">ジョーカー</span><select id="jokers"><option value="0" '+(options.jokers===0?'selected':'')+'>0枚</option><option value="1" '+(options.jokers===1?'selected':'')+'>1枚</option><option value="2" '+(options.jokers===2?'selected':'')+'>2枚</option></select></div>'+
  '<div class="rule-grid">'+rules.map(([id,label])=>'<label class="rule-option"><input type="checkbox" data-rule="'+id+'" '+(options[id]?'checked':'')+'><span>'+label+'</span></label>').join('')+'</div>'+
- '<div class="soft-note">カードの強さは通常 3〜2 の順。ジョーカーは最強です。ルール設定は次に開始する対局から適用します。</div></section></section>';
+ '<div class="soft-note">7渡し：出した7の枚数分を次の相手に渡す。10捨て：出した10の枚数分を手札から捨てる。5飛ばし：出した枚数分の次の手番を飛ばす。6戻し：場が流れるまで強さが反転。9リバース：順番を反転。都落ち：前回の大富豪が次の対局で1位を逃すと最下位。採用するルールにチェックを入れてください。</div></section></section>';
 }
 function waitingMarkup(){
  if(mode==='guest'){
@@ -391,7 +422,7 @@ root.addEventListener('click',event=>{
   render();return;
  }
  if(action==='clear-select'){chosen.clear();render();return;}
- if(action==='play'){const s=selectionStatus();if(s.ok)play([...chosen]);return;}
+ if(action==='play'){const s=selectionStatus();if(s.ok){if(display?.pending)resolveLocal([...chosen]);else play([...chosen]);}return;}
  if(action==='pass'){pass();return;}
  if(action==='next-round'){nextRound();return;}
 });
@@ -408,7 +439,7 @@ root.addEventListener('change',event=>{
 window.DaifugoDebug={
  view:()=>display,screen:()=>screen,mode:()=>mode,room:()=>roomCode,seat:()=>mySeat,
  full:()=>mode==='guest'?null:full,
- startSolo,play,pass
+ startSolo,play,pass,resolveLocal
 };
 const invitation=fromHash();
 if(invitation)beginJoin(invitation);else render();
