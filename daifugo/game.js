@@ -164,7 +164,7 @@ function move(s,playerId,ids){
   &&previous.signature===combo.signature?combo.signature:oldBound;
  player.hand=player.hand.filter(c=>!ids.includes(c.id));
  s.table={...combo,cards:chosen.map(c=>({...c})),owner:playerId};
- s.bound=newBound||'';s.passes=[];
+ s.bound=newBound||''; // Passes remain until this trick is cleared.
  if(s.rules.revolution&&(combo.fourNatural||(s.rules.stairRevolution&&combo.stairRevolution)))s.revolution=!s.revolution;
  if(s.rules.elevenBack&&combo.hasEleven)s.elevenBack=true;
  s.seq++;
@@ -175,7 +175,11 @@ function move(s,playerId,ids){
  if((s.rules.eightCut&&combo.hasEight)||spadeCut){
   resetTable(s,playerId);
   s.log.push({kind:'event',who:playerId,text:spadeCut?'スペ3返し':'8切り'});
- } else s.turn=nextPlayer(s,playerId,id=>!s.passes.includes(id));
+ } else {
+  const next=nextPlayer(s,playerId,id=>!s.passes.includes(id));
+  if(next===null||next===playerId)resetTable(s,playerId);
+  else s.turn=next;
+ }
  return s;
 }
 function pass(s,playerId){
