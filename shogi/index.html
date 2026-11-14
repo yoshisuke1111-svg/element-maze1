@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#112521">
+<title>将棋｜対局メニュー</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;color:#f5efe2;background:#10251f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -10%,#2b5141 0,transparent 60%),linear-gradient(155deg,#122a25,#0b1a19)}
+.shell{max-width:890px;margin:auto;padding:18px 17px 35px}
+.brand{font-family:serif;letter-spacing:.15em;font-weight:bold;font-size:25px;border-bottom:1px solid #57726070;padding:10px 0 17px}.sub{color:#b7cebd;font-size:12px;font-weight:normal;letter-spacing:.04em;margin:5px 0}
+header{padding:35px 0 20px}h1{font-family:serif;line-height:1.27;font-weight:700;font-size:clamp(30px,6vw,46px);letter-spacing:.06em;margin:0 0 10px}header p{max-width:650px;color:#d6e2d7;font-size:14px;line-height:1.8}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:14px 0}
+.card{display:flex;flex-direction:column;align-items:stretch;border-radius:19px;border:1px solid #597766;padding:22px;background:linear-gradient(150deg,#21473b,#18342e);min-height:265px}
+.tag{font-size:11px;letter-spacing:.18em;color:#e3c88a;font-weight:800}.card h2{font-size:22px;margin:9px 0 5px;color:#faf1d9}.card p{color:#c6dbce;line-height:1.8;font-size:13px;flex:1}.btn{display:block;text-align:center;text-decoration:none;border:1px solid #d6b87d;border-radius:12px;color:#17271f;background:linear-gradient(145deg,#f0d797,#c59e5e);font-weight:800;padding:12px 10px;min-height:46px}
+.btn.alt{background:#254b3c;color:#f3e6c7;border-color:#709179}.foot{border-top:1px solid #65806b58;padding:17px 0;color:#afc6b8;font-size:12px;line-height:1.8}
+@media(max-width:590px){.grid{grid-template-columns:1fr}.card{min-height:220px;padding:18px}header{padding-top:21px}}
+</style></head>
+<body><main class="shell"><div class="brand">将棋</div>
+<header><h1>対局を選択</h1></header>
+<div class="grid">
+<section class="card"><h2>オンライン対局</h2><p>部屋を作成して招待URLを共有します。相手の入室を待てます。</p><a class="btn" href="../shogi-v05/online.html?ui=clean-20261114">フリー対局室を作る</a></section>
+<section class="card"><h2>CPUと対局</h2><p>CPUの強さを1〜100から選択できます。</p><a class="btn alt" href="../shogi-v04/?ui=clean-20261114">CPU対局を始める</a></section>
+</div><div class="foot">オンライン対局では、部屋主がページを開いたままにしてください。</div>
+</main></body></html>
