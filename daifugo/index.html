@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#10251f">
-<meta name="description" content="ブラウザで遊べる大富豪。4人CPU対戦と招待URLによるオンライン対戦。">
+<meta name="description" content="ブラウザで遊べる大富豪。人数やルール、初期手札枚数を部屋主が設定できるオンライン対戦。">
 <title>大富豪</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:#f3efe1;--bg:#0a1d1b;--panel:#19382f;--panel2:#234738;--line:#53745e;--gold:#edc883;--muted:#b1cbbc;--red:#c43b48;--black:#263038}
@@ -46,6 +46,7 @@ h3{font-size:18px}
 .setting-line strong{font-size:18px;color:var(--gold)}
 #skill{accent-color:#e5c786;min-height:20px;padding:0;margin:6px 0 16px}
 .rule-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+.name-panel{margin-bottom:16px}.name-panel .field-label{margin-top:0}.room-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:4px 0 16px}.room-config-grid .field-label{margin:0}.room-config-grid select{max-width:none;display:block;margin-top:8px}.rules-title{margin-top:19px;margin-bottom:7px}.lobby>.panel{margin-bottom:13px}.lobby>.panel .start-button{margin-top:3px}.lobby>.panel .action-quiet[data-act=home]{margin-top:9px}
 .rule-option{display:flex;align-items:center;gap:8px;border:1px solid #52765f;background:#183b30;border-radius:10px;padding:11px 8px;line-height:1.45;font-size:12px;cursor:pointer}
 .rule-option input{width:18px;min-height:18px;height:18px;margin:0;accent-color:#d6ba76;flex:none}
 .soft-note,.hint{color:var(--muted);font-size:12px;line-height:1.75}
@@ -65,7 +66,7 @@ h3{font-size:18px}
 .game-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 0 13px}
 .eyebrow{letter-spacing:.13em;font-size:10px;font-weight:700;color:#e9c88b;margin-bottom:6px}
 .game-title h2{font-size:18px;margin:0;color:#f1e6c8}
-.players-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:11px}
+.players-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:9px;margin-bottom:11px}
 .opponent{display:flex;align-items:center;gap:7px;min-width:0;position:relative;background:#1a3b30;border:1px solid #507964;border-radius:12px;padding:9px 10px;min-height:62px}
 .opponent.now{border-color:#eac47f;box-shadow:0 0 0 1px #eac47f66,inset 0 0 16px #ffc96612}
 .avatar{width:33px;height:33px;display:grid;place-items:center;flex:none;border-radius:10px;background:#315846;color:#ffe1aa;border:1px solid #738c6d;font-family:serif;font-weight:800}
@@ -122,7 +123,7 @@ h3{font-size:18px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:20;background:#285440;border:1px solid #a0c09a;border-radius:11px;max-width:90vw;padding:10px 15px;box-shadow:0 6px 20px #0007;font-size:12px}
 .toast.error{background:#61382d;border-color:#bf806e}
 @media(max-width:900px){.game-shell{grid-template-columns:minmax(0,760px);max-width:760px}.side-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:620px){.mode-grid{grid-template-columns:1fr}.mode-card{min-height:145px}.rule-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-area{min-height:216px;border-width:7px;border-radius:39px;padding:14px}.played-area{min-height:133px}.game-title h2{font-size:16px}.opponent{padding:7px;gap:5px;min-height:57px}.opponent strong{font-size:11px}.opponent .avatar{height:29px;width:29px}.card-count{font-size:10px}.my-zone{padding:10px}.my-zone-head{align-items:flex-start}.my-zone-head small{max-width:160px}.side-bar{grid-template-columns:1fr}}
+@media(max-width:620px){.room-config-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mode-grid{grid-template-columns:1fr}.mode-card{min-height:145px}.rule-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-area{min-height:216px;border-width:7px;border-radius:39px;padding:14px}.played-area{min-height:133px}.game-title h2{font-size:16px}.opponent{padding:7px;gap:5px;min-height:57px}.opponent strong{font-size:11px}.opponent .avatar{height:29px;width:29px}.card-count{font-size:10px}.my-zone{padding:10px}.my-zone-head{align-items:flex-start}.my-zone-head small{max-width:160px}.side-bar{grid-template-columns:1fr}}
 @media(max-width:425px){.app-shell{padding:0 8px 32px}.top{min-height:57px}.logo{font-size:19px}.home-content{margin:17px auto}.panel{padding:12px}.players-top{gap:5px}.opponent{padding:5px;flex-wrap:wrap}.opponent .avatar{height:25px;width:25px;font-size:12px}.opponent-info{min-width:40px}.card-count{margin-left:auto}.play-card{width:43px;height:70px;border-width:1px;padding:3px}.play-card .center-suit{font-size:22px}.myhand{gap:4px}.table-card{width:46px;height:70px}.table-card span{font-size:22px}.room-actions button{font-size:12px;padding:8px}.play-buttons button{padding:8px;min-height:39px;font-size:12px;min-width:63px}.rankings .ranking-grid{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -132,6 +133,6 @@ h3{font-size:18px}
 <noscript><p style="text-align:center">JavaScriptを有効にしてください。</p></noscript>
 <script src="./game.js?v=local02"></script>
 <script src="./vendor/peerjs.min.js"></script>
-<script src="./app.js?v=roomcode03"></script>
+<script src="./app.js?v=lobbysettings04"></script>
 </body>
 </html>
