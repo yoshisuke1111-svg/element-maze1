@@ -103,4 +103,38 @@ const make=rules=>E.newGame({rules:{jokers:0,...rules},random:()=>.32});
  }
 }
 
+
+for(let playerCount=2;playerCount<=6;playerCount++){
+ const handSize=Math.min(13,Math.floor(53/playerCount));
+ const players=Array.from({length:playerCount},(_,i)=>({name:'参加者'+i,isCPU:i>0}));
+ const room=E.newGame({rules:{jokers:1,exchange:true,sevenGive:true,tenDiscard:true},players,initialCards:handSize,random:()=>0.23});
+ assert.equal(room.players.length,playerCount);
+ assert.ok(room.players.every(p=>p.hand.length===handSize),'all players start with the selected number of cards');
+ assert.equal(room.players.flatMap(p=>p.hand).length,playerCount*handSize);
+ assert.equal(room.players.flatMap(p=>p.hand).filter(c=>c.rank===16).length,1,'configured joker is part of the dealt cards');
+ assert.equal(E.publicView(room,0).initialCards,handSize);
+ assert.equal(E.publicView(room,0).playerCount,playerCount);
+ const run=()=>{
+  let steps=0;
+  while(room.phase==='playing'&&steps<380){
+   const seat=room.turn;
+   if(room.pending)E.resolveSpecial(room,seat,E.pickCPUSpecial(room,seat));
+   else{
+    const ids=E.pickCPU(room,seat,65);
+    if(ids)E.move(room,seat,ids);
+    else E.pass(room,seat);
+   }
+   steps++;
+  }
+  assert.equal(room.phase,'results','variable player count must finish a game');
+  assert.equal(new Set(room.lastRanking).size,playerCount);
+ };
+ run();
+ E.startRound(room,room.lastRanking);
+ assert.equal(room.players.length,playerCount);
+ assert.ok(room.players.every(p=>p.hand.length===handSize),'rank exchange must preserve cards per player');
+ run();
+}
+assert.throws(()=>E.newGame({players:Array.from({length:6},(_,i)=>({name:String(i)})),initialCards:13,rules:{jokers:1}}),/手札枚数/);
+
 console.log('Daifugo rules engine PASS | turns=',steps,'elapsed=',Date.now()-start,'ms');
