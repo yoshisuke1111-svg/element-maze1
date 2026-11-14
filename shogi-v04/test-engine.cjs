@@ -1,10 +1,13 @@
 /* Validate the upstream Shogi WebAssembly engine on GitHub's Node runner. */
 'use strict';
 const Stockfish=require('./engine/stockfish.js');
+const fs=require('node:fs');
+const path=require('node:path');
 let result='';
 const timeout=setTimeout(()=>{console.error('Shogi WASM engine check timed out');process.exit(1)},40000);
 (async()=>{
-  const engine=await Stockfish();
+  const wasmBinary=new Uint8Array(fs.readFileSync(path.join(__dirname,'engine/stockfish.wasm')));
+  const engine=await Stockfish({wasmBinary});
   engine.addMessageListener(raw=>{
     for(const line of String(raw).split(/\r?\n/)){
       if(line.trim()==='usiok'){
