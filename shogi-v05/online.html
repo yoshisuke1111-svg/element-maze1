@@ -210,7 +210,7 @@ function openHost(){
    conn=c;configureHostConnection(c,serial);
   });
   peer.on('error',e=>{if(generation!==serial)return;failure=e?.type==='unavailable-id'?'部屋番号が重複しました。新しい部屋を作ってください。':'無料通信サーバーに接続できませんでした。';render();});
-  peer.on('disconnected',()=>{if(generation===serial&&!linked){notice='通信サーバーと再接続中です。';render();}});
+  peer.on('disconnected',()=>{if(generation===serial&&!linked){notice='通信サーバーと再接続中です。';try{peer?.reconnect();}catch{}render();}});
  }catch(e){failure='部屋の作成に失敗しました。';render();}
 }
 function openGuest(newRoom){
