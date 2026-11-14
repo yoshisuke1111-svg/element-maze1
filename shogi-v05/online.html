@@ -204,9 +204,37 @@ const coord=i=>Number.isInteger(i)?'９８７６５４３２１'[i%9]+'一二三
 let name=nick(localStorage.getItem('kido-online-nick')),room='',role='',side=1,peer=null,conn=null,generation=0;
 let state=E.newGame(),history=[state],logs=[],last=null,done=false,winner=null,reason='',hostName='ゲスト',guestName='ゲスト';
 let view='home',linked=false,ready=false,auth=false,selected=null,promotion=null,modal='',pending=false,notice='',failure='',ticket='',admittedTicket='';
+
+let clockLimit=0,clockRemaining={1:0,'-1':0},clockAt=0,guestClockAt=0;
+const allowedLimits=[0,3,5,10,15];
+function clockInit(){clockRemaining={1:clockLimit*60000,'-1':clockLimit*60000};clockAt=role==='host'&&linked&&clockLimit?Date.now():0;guestClockAt=Date.now();}
+function clockFormat(ms){const seconds=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
+function clockShow(who){
+ let ms=Number(clockRemaining[who])||0;
+ if(clockLimit>0&&!done&&linked&&state.turn===who){
+  const start=role==='host'?clockAt:guestClockAt;
+  if(start)ms-=Math.max(0,Date.now()-start);
+ }
+ return Math.max(0,ms);
+}
+function refreshClocks(){
+ for(const el of document.querySelectorAll('[data-clock-side]')){
+  const ms=clockShow(Number(el.dataset.clockSide));el.textContent=clockFormat(ms);el.classList.toggle('low',ms<=30000);
+ }
+}
+function settleClock(now=Date.now()){
+ if(role!=='host'||!clockLimit||!linked||done||!clockAt)return true;
+ const who=state.turn;
+ clockRemaining[who]=Math.max(0,(clockRemaining[who]||0)-Math.max(0,now-clockAt));
+ clockAt=now;
+ if(clockRemaining[who]<=0){done=true;winner=-who;reason=(who===1?'先手':'後手')+'の時間切れ';notice='時間切れで対局終了';sendSnapshot();render();return false;}
+ return true;
+}
+setInterval(()=>{if(view!=='room'||!clockLimit||!linked||done)return;if(role==='host'&&!settleClock())return;refreshClocks();},250);
+
 function saveName(){const input=document.getElementById('nickname');if(input)name=nick(input.value);localStorage.setItem('kido-online-nick',name);}
 function cleanup(){
- generation++;
+ generation++;clockAt=0;guestClockAt=0;
  const c=conn,p=peer;conn=null;peer=null;linked=false;ready=false;auth=false;pending=false;
  try{c?.close();}catch{}try{p?.destroy();}catch{}
 }
@@ -217,8 +245,11 @@ async function openHost(){
  let custom;
  try{custom=normalizeRoomCode(document.getElementById('create-code')?.value);}
  catch(e){const el=document.getElementById('room-error');if(el)el.textContent=e.message;return;}
- saveName();cleanup();role='host';side=1;room=custom;hostName=name;guestName='ゲスト';admittedTicket='';
- state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';
+ saveName();
+ const preferred=Number(document.getElementById('room-clock')?.value||0);
+ cleanup();role='host';side=1;room=custom;hostName=name;guestName='ゲスト';admittedTicket='';
+ clockLimit=allowedLimits.includes(preferred)?preferred:0;
+ state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';clockInit();
  view='room';notice='部屋の準備中です…';failure='';selected=null;promotion=null;modal='';render();
  const PeerCtor=window.Peer||window.peerjs?.Peer;
  if(!PeerCtor){failure='通信プログラムを読み込めませんでした。';render();return;}
@@ -271,9 +302,11 @@ function configureHostConnection(c,serial){
   if(data.t==='hello'){
    if(!codeOK(data.ticket)||admittedTicket&&admittedTicket!==data.ticket){c.send({t:'full'});c.close();return;}
    admittedTicket=data.ticket;guestName=nick(data.name);auth=true;linked=true;failure='';notice='対局相手と接続しました。';
+   if(clockLimit>0&&!done&&!clockAt)clockAt=Date.now();
    sendSnapshot();render();return;
   }
   if(!auth||!linked)return;
+  if(!settleClock()){sendSnapshot();return;}
   if(data.t==='move'){
    if(done||state.turn!==-1||!Number.isInteger(data.ply)||data.ply!==state.ply||data.key!==E.posKey(state)){sendSnapshot();return;}
    const m=data.move&&E.legalMoves(state).find(x=>E.sameMove(x,data.move));
@@ -285,8 +318,8 @@ function configureHostConnection(c,serial){
    notice='相手が再戦を希望しています。「もう一局」を押してください。';render();
   }
  });
- c.on('close',()=>{if(generation!==serial||conn!==c)return;linked=false;auth=false;conn=null;notice='接続が切れました。相手が同じURLで再入室するのを待っています。';render();});
- c.on('error',()=>{if(generation!==serial||conn!==c)return;linked=false;auth=false;conn=null;notice='接続が切れました。再入室を待っています。';render();});
+ c.on('close',()=>{if(generation!==serial||conn!==c)return;settleClock();linked=false;auth=false;clockAt=0;conn=null;notice='接続が切れました。相手が同じURLで再入室するのを待っています。';render();});
+ c.on('error',()=>{if(generation!==serial||conn!==c)return;settleClock();linked=false;auth=false;clockAt=0;conn=null;notice='接続が切れました。再入室を待っています。';render();});
 }
 function configureGuestConnection(c,serial){
  c.on('open',()=>{
@@ -301,22 +334,28 @@ function configureGuestConnection(c,serial){
   if(!next||!Array.isArray(data.logs)||data.logs.length>500)return;
   state=next;history=[state];logs=data.logs;last=data.last||null;done=!!data.done;winner=data.winner??null;reason=String(data.reason||'').slice(0,100);
   hostName=nick(data.host);guestName=nick(data.guest);
+  if(data.clock&&allowedLimits.includes(Number(data.clock.limit))){
+   clockLimit=Number(data.clock.limit);
+   clockRemaining={1:Math.max(0,Number(data.clock.left?.['1'])||0),'-1':Math.max(0,Number(data.clock.left?.['-1'])||0)};
+   guestClockAt=Date.now();
+  }
   linked=true;auth=true;pending=false;selected=null;promotion=null;failure='';notice=done?'対局が終了しました。':'対局相手と接続しました。';render();
  });
  c.on('close',()=>{if(generation!==serial||conn!==c)return;linked=false;auth=false;conn=null;pending=false;notice='部屋主との接続が切れました。再接続してください。';render();});
  c.on('error',()=>{if(generation!==serial||conn!==c)return;linked=false;auth=false;conn=null;pending=false;failure='通信エラーです。再接続してください。';render();});
 }
 function sendSnapshot(){
- if(conn?.open&&auth)conn.send({t:'snapshot',s:E.serialize(state),logs:logs.slice(-450),last,done,winner,reason,host:hostName,guest:guestName});
+ if(conn?.open&&auth)conn.send({t:'snapshot',s:E.serialize(state),logs:logs.slice(-450),last,done,winner,reason,host:hostName,guest:guestName,clock:{limit:clockLimit,left:{...clockRemaining}}});
 }
 function hostApply(m,owner){
- if(role!=='host'||!linked||done||state.turn!==owner)return false;
+ if(role!=='host'||!linked||done||state.turn!==owner||!settleClock())return false;
  const actual=E.legalMoves(state).find(x=>E.sameMove(x,m));if(!actual)return false;
  const before=state,text=E.moveText(before,actual);state=E.apply(before,actual);history.push(state);
  const check=E.inCheck(state,state.turn);
  logs.push({text,side:owner,from:actual.from,to:actual.to,drop:actual.drop||null,gaveCheck:check});
  last={text,side:owner,from:actual.from,to:actual.to,drop:actual.drop||null};
  const end=E.evaluateEnd(state,history,logs);if(end.done){done=true;winner=end.winner;reason=end.reason;}
+ if(clockLimit>0)clockAt=Date.now();
  selected=null;promotion=null;notice='';sendSnapshot();render();return true;
 }
 function move(m){
@@ -361,12 +400,13 @@ function hand(who,active){
 function player(who){
  const mine=who===side,pname=mine?name:role==='host'?guestName:hostName;
  return '<div class="player-panel"><div class="avatar">'+(mine?'自':'対')+'</div><div class="player-meta"><div class="player-name">'+esc(pname)+' <span class="dim">'+(who===1?'先手':'後手')+'</span></div><div class="player-title">'+(mine?'あなた':'対局相手')+'</div></div>'+
+ (clockLimit>0?'<span class="shogi-clock '+(state.turn===who&&!done?'active':'')+'" data-clock-side="'+who+'">'+clockFormat(clockShow(who))+'</span>':'')+
  (!done&&state.turn===who?'<span class="status-pill '+(E.inCheck(state,who)?'check':'')+'">'+(E.inCheck(state,who)?'王手':'手番')+'</span>':'')+'</div>';
 }
 function waiting(){
  return '<div class="online-room"><section class="panel"><h2 class="panel-title">'+(role==='host'?'対局相手を待っています':'対局室に接続中です')+'</h2><div class="room-status">'+esc(notice)+'</div>'+
  (failure?'<div class="room-status problem">'+esc(failure)+'</div>':'')+
- '<p class="room-sub">部屋コード</p><p class="room-code">'+esc(room)+'</p>'+
+ '<p class="room-sub">部屋コード</p><p class="room-code">'+esc(room)+'</p>'+(clockLimit?'<p class="room-sub">持ち時間：各'+clockLimit+'分</p>':'<p class="room-sub">持ち時間：なし</p>')+
  (role==='host'?'<input id="room-code-display" readonly class="room-link" value="'+esc(room)+'"><div class="room-inline"><button class="btn" data-act="copy">コードをコピー</button><button class="btn secondary" data-act="back">コードを変更</button></div>':
  '<div class="room-inline"><button class="btn" data-act="reconnect">再接続する</button><button class="btn secondary" data-act="back">戻る</button></div>')+
  '<div class="online-foot">ほかの人は「部屋に参加」で同じコードを入力してください。部屋主がページを閉じると対局室は終了します。</div></section></div>';
@@ -381,7 +421,7 @@ function game(){
  '<div class="room-inline"><button class="btn secondary" data-act="resign" '+(!linked||done?'disabled':'')+'>投了する</button><button class="btn ghost" data-act="back">部屋を退出</button></div></section>'+
  '<aside class="online-side"><section class="panel"><h3 class="panel-title">対局室の情報</h3><div class="room-status">'+esc(notice||'接続中')+'</div>'+
  (failure?'<div class="room-status problem">'+esc(failure)+'</div>':'')+
- '<div class="detail-row"><span>接続</span><strong>'+(linked?'オンライン':'切断')+'</strong></div><div class="detail-row"><span>手番</span><strong>'+(side===1?'先手':'後手')+'</strong></div>'+
+ '<div class="detail-row"><span>接続</span><strong>'+(linked?'オンライン':'切断')+'</strong></div><div class="detail-row"><span>手番</span><strong>'+(side===1?'先手':'後手')+'</strong></div><div class="detail-row"><span>持ち時間</span><strong>'+(clockLimit?clockLimit+'分 / 人':'なし')+'</strong></div>'+
  (role==='host'?'<label class="hint">部屋コード</label><input id="room-code-display" readonly class="room-link" value="'+esc(room)+'"><button class="btn wide secondary" data-act="copy">コードをコピー</button>':
  '<div class="detail-row"><span>部屋コード</span><strong>'+esc(room)+'</strong></div><button class="btn wide secondary" data-act="reconnect" '+(linked?'disabled':'')+'>再接続する</button>')+
  '</section><section class="panel"><h3 class="panel-title">棋譜</h3><div class="room-record">'+(logs.length?logs.slice(-80).map((o,i)=>'<div>'+(logs.length-Math.min(logs.length,80)+i+1)+'. '+esc(o.text)+(o.gaveCheck?' 王手':'')+'</div>').join(''):'<div>まだ指し手はありません。</div>')+'</div></section><p class="room-sub">通信回線や端末によっては接続できない場合があります。対局中は部屋主のページを開いたままにしてください。</p></aside></div>';
@@ -401,11 +441,11 @@ function render(){
 }
 function resign(){
  if(!linked||done)return;modal='';
- if(role==='host'){done=true;winner=-1;reason='部屋主が投了しました。';sendSnapshot();render();}
+ if(role==='host'){settleClock();if(done)return;done=true;winner=-1;reason='部屋主が投了しました。';sendSnapshot();render();}
  else {try{conn.send({t:'resign'});}catch{}notice='投了を送信しました。';render();}
 }
 function rematch(){
- if(role==='host'){state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';notice='新しい対局を開始しました。';sendSnapshot();render();}
+ if(role==='host'){state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';clockInit();notice='新しい対局を開始しました。';sendSnapshot();render();}
  else if(conn?.open){conn.send({t:'rematch'});notice='再戦希望を伝えました。';render();}
 }
 root.addEventListener('click',e=>{
@@ -429,7 +469,7 @@ root.addEventListener('click',e=>{
  }
 });
 root.addEventListener('change',e=>{if(e.target?.id==='nickname'){saveName();render();}});
-window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,isConnected:()=>linked,getName:()=>name,normalizeRoomCode};
+window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,isConnected:()=>linked,getName:()=>name,getClock:()=>({limit:clockLimit,remaining:{...clockRemaining},shown:{1:clockShow(1),'-1':clockShow(-1)},done,winner}),normalizeRoomCode};
 const incoming=roomFromURL();if(incoming)openGuest(incoming);else render();
 })();
 </script></body></html>
