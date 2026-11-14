@@ -11,7 +11,8 @@
 const SUITS=['S','H','D','C'],SUIT_LABEL={S:'♠',H:'♥',D:'♦',C:'♣'};
 const DEFAULT_RULES=Object.freeze({
   jokers:1,revolution:true,eightCut:true,elevenBack:false,
-  shibari:true,stairs:true,stairRevolution:false,spadeThree:true,exchange:true
+  shibari:true,stairs:true,stairRevolution:false,spadeThree:true,exchange:true,
+  fiveSkip:false,sixBack:false,sevenGive:false,nineReverse:false,tenDiscard:false,capitalFall:false
 });
 const LABEL={3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A',15:'2',16:'JOKER'};
 const PLACE=['大富豪','富豪','貧民','大貧民'];
@@ -72,7 +73,7 @@ function classify(cards,rules=DEFAULT_RULES){
  }
  return result;
 }
-function inversed(s){return !!s.revolution!==!!s.elevenBack;}
+function inversed(s){return (!!s.revolution!==!!s.elevenBack)!==!!s.sixBack;}
 function compareRank(a,b,reverse){
  if(a===b)return 0;
  if(a===16)return 1;if(b===16)return -1;
@@ -94,31 +95,112 @@ function choose(s,cards){
  options.sort((a,b)=>compareRank(a.rank,b.rank,inversed(s))||a.start-b.start);
  return options[0];
 }
-function active(s,id){return s.players[id] && s.players[id].hand.length>0;}
+function active(s,id){
+ return !!s.players[id] && s.players[id].hand.length>0 && s.lockedBottom!==id;
+}
 function nextPlayer(s,after,predicate=()=>true){
  for(let d=1;d<=s.players.length;d++){
-  const id=(after+d)%s.players.length;
+  const id=(after+(s.direction||1)*d+s.players.length*4)%s.players.length;
   if(active(s,id)&&predicate(id))return id;
  }
  return null;
 }
 function countFinish(s){
- if(s.finishOrder.length===s.players.length-1){
-  const remain=s.players.find(p=>p.hand.length>0&&!s.finishOrder.includes(p.id));
-  if(remain)s.finishOrder.push(remain.id);
+ const placed=s.finishOrder.length+(s.lockedBottom==null?0:1);
+ if(placed===s.players.length-1){
+  const last=s.players.find(p=>active(s,p.id)&&!s.finishOrder.includes(p.id));
+  if(last)s.finishOrder.push(last.id);
+  if(s.lockedBottom!=null)s.finishOrder.push(s.lockedBottom);
  }
  if(s.finishOrder.length===s.players.length){
-  s.phase='results';s.turn=null;s.table=null;s.bound='';s.elevenBack=false;s.passes=[];
+  s.phase='results';s.turn=null;s.table=null;s.bound='';
+  s.elevenBack=false;s.sixBack=false;s.passes=[];
+  s.pending=null;s.pendingQueue=[];s.afterEffect=null;
   s.lastRanking=s.finishOrder.slice();
   s.log.push({kind:'result',text:'対局終了',who:null});
   return true;
  }
  return false;
 }
+function registerFinish(s,id){
+ if(s.finishOrder.includes(id)||s.lockedBottom===id)return;
+ const player=s.players[id];
+ s.finishOrder.push(id);
+ s.log.push({kind:'finish',who:id,text:player.name+' 上がり ('+PLACE[s.finishOrder.length-1]+')'});
+ if(s.rules.capitalFall&&s.round>1&&s.finishOrder.length===1&&s.lastRanking&&s.lastRanking[0]!==id){
+  const former=s.lastRanking[0];
+  if(active(s,former)){
+   s.lockedBottom=former;
+   s.log.push({kind:'event',who:former,text:s.players[former].name+'：都落ち'});
+  }
+ }
+}
 function resetTable(s,leader){
- s.table=null;s.bound='';s.elevenBack=false;s.passes=[];
+ s.table=null;s.bound='';s.elevenBack=false;s.sixBack=false;s.passes=[];
  s.turn=active(s,leader)?leader:nextPlayer(s,leader);
  s.log.push({kind:'clear',text:'場が流れました',who:null});
+}
+function afterPlayed(s){
+ const ctx=s.afterEffect;s.afterEffect=null;
+ if(!ctx)return;
+ if(ctx.cut){
+  resetTable(s,ctx.owner);
+  s.log.push({kind:'event',who:ctx.owner,text:ctx.spadeCut?'スペ3返し':'8切り'});
+  return;
+ }
+ let next=nextPlayer(s,ctx.owner,id=>!s.passes.includes(id));
+ if(next==null||next===ctx.owner){resetTable(s,ctx.owner);return;}
+ for(let i=0;i<ctx.skip;i++){
+  const skipped=next;
+  s.log.push({kind:'event',who:ctx.owner,text:s.players[skipped].name+' を5飛ばし'});
+  next=nextPlayer(s,skipped,id=>!s.passes.includes(id));
+  if(next==null||next===ctx.owner){resetTable(s,ctx.owner);return;}
+ }
+ s.turn=next;
+}
+function serveEffect(s){
+ if(countFinish(s))return s;
+ while(s.pendingQueue.length){
+  const effect=s.pendingQueue.shift();
+  if(!active(s,effect.owner))continue;
+  if(effect.type==='give'&&(!active(s,effect.target)||effect.target===effect.owner))continue;
+  const max=Math.min(effect.count,s.players[effect.owner].hand.length);
+  if(max<1)continue;
+  s.pending={type:effect.type,owner:effect.owner,target:effect.target??null,max};
+  s.turn=effect.owner;
+  s.log.push({kind:'effect',who:effect.owner,text:effect.type==='give'?'7渡し：カードを選択':'10捨て：カードを選択'});
+  return s;
+ }
+ s.pending=null;
+ afterPlayed(s);
+ return s;
+}
+function resolveSpecial(s,id,ids=[]){
+ if(s.phase!=='playing'||!s.pending||s.pending.owner!==id)err('今は特殊効果を選択できません。');
+ if(!Array.isArray(ids)||ids.length>s.pending.max||new Set(ids).size!==ids.length)err('選択枚数が正しくありません。');
+ const p=s.players[id],picked=ids.map(k=>p.hand.find(c=>c.id===k));
+ if(picked.some(x=>!x))err('持っていないカードを選択しました。');
+ const effect=s.pending;
+ if(effect.type==='give'){
+  if(!active(s,effect.target))err('渡す相手がいません。');
+  const target=s.players[effect.target];
+  p.hand=sortHand(p.hand.filter(c=>!ids.includes(c.id)));
+  target.hand=sortHand(target.hand.concat(picked));
+  s.log.push({kind:'event',who:id,text:p.name+'：7渡し '+ids.length+'枚 → '+target.name});
+ }else if(effect.type==='discard'){
+  p.hand=sortHand(p.hand.filter(c=>!ids.includes(c.id)));
+  s.log.push({kind:'event',who:id,text:p.name+'：10捨て '+ids.length+'枚'});
+ }else err('未対応の特殊効果です。');
+ s.pending=null;s.seq++;
+ if(p.hand.length===0)registerFinish(s,id);
+ return serveEffect(s);
+}
+function pickCPUSpecial(s,id){
+ if(s.pending?.owner!==id)return [];
+ const p=s.players[id],max=Math.min(s.pending.max,p.hand.length);
+ const cards=sortHand(p.hand);
+ // Keep high cards for future exchanges; give/discard low cards first.
+ return cards.slice(0,max).map(c=>c.id);
 }
 function startRound(s,previousRanking=null,random=Math.random){
  const cards=shuffle(deck(s.rules.jokers),random);
@@ -136,7 +218,8 @@ function startRound(s,previousRanking=null,random=Math.random){
   trade(previousRanking[1],previousRanking[2],1);
  }
  s.turn=previousRanking?previousRanking[0]:0;
- s.table=null;s.bound='';s.elevenBack=false;s.revolution=false;s.passes=[];
+ s.table=null;s.bound='';s.elevenBack=false;s.sixBack=false;s.revolution=false;s.passes=[];
+ s.direction=1;s.pending=null;s.pendingQueue=[];s.afterEffect=null;s.lockedBottom=null;
  s.finishOrder=[];s.phase='playing';s.log=[];s.round=(s.round||0)+1;s.seq=(s.seq||0)+1;
  s.log.push({kind:'start',text:previousRanking?'次の対局を開始しました':'対局開始',who:null});
  return s;
@@ -147,11 +230,14 @@ function newGame(options={}){
  if(people.length!==4)err('4人用のゲームです。');
  const s={players:people.map((p,i)=>({id:i,name:String(p.name||'プレイヤー '+(i+1)).slice(0,20),
    isCPU:!!p.isCPU,hand:[],place:null})),rules,phase:'playing',turn:0,round:0,
-   table:null,bound:'',revolution:false,elevenBack:false,passes:[],finishOrder:[],lastRanking:null,log:[],seq:0};
+   table:null,bound:'',revolution:false,elevenBack:false,sixBack:false,direction:1,
+   passes:[],finishOrder:[],lastRanking:null,lockedBottom:null,
+   pending:null,pendingQueue:[],afterEffect:null,log:[],seq:0};
  return startRound(s,null,options.random||Math.random);
 }
 function move(s,playerId,ids){
  if(s.phase!=='playing')err('対局が終了しています。');
+ if(s.pending)err('先に7渡し・10捨てのカードを選択してください。');
  if(s.turn!==playerId)err('このプレイヤーの手番ではありません。');
  if(!Array.isArray(ids)||ids.length===0||ids.length>13||new Set(ids).size!==ids.length)err('カードの選択が正しくありません。');
  const player=s.players[playerId],chosen=ids.map(id=>player.hand.find(c=>c.id===id));
@@ -159,31 +245,38 @@ function move(s,playerId,ids){
  const combo=choose(s,chosen);
  if(!combo)err('このカードは出せません。');
  const previous=s.table,oldBound=s.bound,spadeCut=s.rules.spadeThree&&previous?.rank===16&&previous?.count===1
-  &&combo.rank===3&&combo.signature==='S';
+   &&combo.rank===3&&combo.signature==='S';
  const newBound=s.rules.shibari&&!oldBound&&previous&&previous.signature&&combo.signature
-  &&previous.signature===combo.signature?combo.signature:oldBound;
+   &&previous.signature===combo.signature?combo.signature:oldBound;
  player.hand=player.hand.filter(c=>!ids.includes(c.id));
  s.table={...combo,cards:chosen.map(c=>({...c})),owner:playerId};
- s.bound=newBound||''; // Passes remain until this trick is cleared.
+ s.bound=newBound||'';
  if(s.rules.revolution&&(combo.fourNatural||(s.rules.stairRevolution&&combo.stairRevolution)))s.revolution=!s.revolution;
  if(s.rules.elevenBack&&combo.hasEleven)s.elevenBack=true;
+ const count=r=>chosen.filter(c=>c.rank===r).length;
+ const count5=s.rules.fiveSkip?count(5):0;
+ if(s.rules.sixBack&&count(6))s.sixBack=true;
+ if(s.rules.nineReverse&&count(9)){s.direction=-s.direction;s.log.push({kind:'event',who:playerId,text:'9リバース'});}
  s.seq++;
  s.log.push({kind:'play',who:playerId,name:player.name,cards:ids.slice(),type:combo.type,count:ids.length,
    text:player.name+'：'+chosen.map(c=>c.rank===16?'JOKER':SUIT_LABEL[c.suit]+LABEL[c.rank]).join(' ')});
- if(player.hand.length===0){s.finishOrder.push(playerId);s.log.push({kind:'finish',who:playerId,text:player.name+' 上がり ('+PLACE[s.finishOrder.length-1]+')'});}
- if(countFinish(s))return s;
- if((s.rules.eightCut&&combo.hasEight)||spadeCut){
-  resetTable(s,playerId);
-  s.log.push({kind:'event',who:playerId,text:spadeCut?'スペ3返し':'8切り'});
- } else {
-  const next=nextPlayer(s,playerId,id=>!s.passes.includes(id));
-  if(next===null||next===playerId)resetTable(s,playerId);
-  else s.turn=next;
+ if(player.hand.length===0)registerFinish(s,playerId);
+ s.afterEffect={owner:playerId,cut:(s.rules.eightCut&&combo.hasEight)||spadeCut,spadeCut,skip:count5};
+ s.pendingQueue=[];
+ if(player.hand.length>0){
+  const seven=s.rules.sevenGive?count(7):0;
+  const ten=s.rules.tenDiscard?count(10):0;
+  if(seven){
+   const target=nextPlayer(s,playerId);
+   if(target!=null&&target!==playerId)s.pendingQueue.push({type:'give',owner:playerId,target,count:seven});
+  }
+  if(ten)s.pendingQueue.push({type:'discard',owner:playerId,count:ten});
  }
- return s;
+ return serveEffect(s);
 }
 function pass(s,playerId){
  if(s.phase!=='playing')err('対局が終了しています。');
+ if(s.pending)err('先に特殊効果を選択してください。');
  if(s.turn!==playerId)err('このプレイヤーの手番ではありません。');
  if(!s.table)err('場が空のときはパスできません。');
  if(s.table.owner===playerId)err('自分のカードにパスできません。');
@@ -196,7 +289,7 @@ function pass(s,playerId){
  return s;
 }
 function legalMoves(s,playerId){
- if(s.phase!=='playing'||s.turn!==playerId)return [];
+ if(s.phase!=='playing'||s.pending||s.turn!==playerId)return [];
  const hand=s.players[playerId].hand;
  const out=[],chosen=[],n=Math.min(hand.length,14);
  function walk(i){
@@ -243,6 +336,7 @@ function publicView(s,seat){
  if(!player)err('無効な座席です。');
  return {
   round:s.round,phase:s.phase,turn:s.turn,seq:s.seq,seat,ruleSummary:s.rules,
+  pending:s.pending?{...s.pending}:null,direction:s.direction,sixBack:s.sixBack,lockedBottom:s.lockedBottom,
   players:s.players.map(p=>({id:p.id,name:p.name,isCPU:p.isCPU,count:p.hand.length,place:p.place})),
   hand:player.hand.map(c=>({...c})),
   table:s.table?s.table:null,
@@ -252,5 +346,5 @@ function publicView(s,seat){
  };
 }
 return {SUITS,SUIT_LABEL,DEFAULT_RULES,LABEL,PLACE,settings,deck,shuffle,sortHand,classify,choose,beats,
- newGame,startRound,move,pass,legalMoves,pickCPU,publicView,compareRank};
+ newGame,startRound,move,pass,resolveSpecial,pickCPUSpecial,legalMoves,pickCPU,publicView,compareRank};
 });
