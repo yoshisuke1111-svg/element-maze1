@@ -1,0 +1,48 @@
+name: Install Shogi WASM engine assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shogi-engine-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Download pinned Fairy-Stockfish WebAssembly distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/shogi-pkg" fairy-stockfish-nnue.wasm@1.1.12
+          pkg="$RUNNER_TEMP/shogi-pkg/node_modules/fairy-stockfish-nnue.wasm"
+          mkdir -p shogi-v04/engine
+          for file in stockfish.js stockfish.wasm stockfish.worker.js AUTHORS Copying.txt package.json; do
+            cp "$pkg/$file" "shogi-v04/engine/$file"
+          done
+          du -h shogi-v04/engine/*
+      - name: Verify USI Shogi engine plays a move
+        run: node shogi-v04/test-engine.cjs
+      - name: Commit verified binaries to GitHub Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shogi-v04/engine
+          if git diff --cached --quiet; then
+            echo "No engine asset changes."
+          else
+            git commit -m "Install verified Fairy-Stockfish WASM Shogi engine"
+            git push
+          fi
