@@ -177,7 +177,7 @@ function serveEffect(s){
 }
 function resolveSpecial(s,id,ids=[]){
  if(s.phase!=='playing'||!s.pending||s.pending.owner!==id)err('今は特殊効果を選択できません。');
- if(!Array.isArray(ids)||ids.length>s.pending.max||new Set(ids).size!==ids.length)err('選択枚数が正しくありません。');
+ if(!Array.isArray(ids)||ids.length!==s.pending.max||new Set(ids).size!==ids.length)err('指定された枚数のカードを選んでください。');
  const p=s.players[id],picked=ids.map(k=>p.hand.find(c=>c.id===k));
  if(picked.some(x=>!x))err('持っていないカードを選択しました。');
  const effect=s.pending;
