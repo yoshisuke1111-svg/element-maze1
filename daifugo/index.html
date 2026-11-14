@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10251f">
+<meta name="description" content="ブラウザで遊べる大富豪。4人CPU対戦と招待URLによるオンライン対戦。">
+<title>大富豪</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:#f3efe1;--bg:#0a1d1b;--panel:#19382f;--panel2:#234738;--line:#53745e;--gold:#edc883;--muted:#b1cbbc;--red:#c43b48;--black:#263038}
+*{box-sizing:border-box}
+html{background:var(--bg);color-scheme:dark}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#2d5d48 0,transparent 62%),linear-gradient(155deg,#0f2c25,#081715 85%);font-size:15px}
+button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.43;cursor:not-allowed;transform:none!important}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input,select{width:100%;max-width:100%;background:#11312a;color:#f5f1e5;border:1px solid #517b65;border-radius:11px;min-height:42px;padding:10px}
+select{max-width:132px}button:active{transform:translateY(1px)}
+.app-shell{max-width:1250px;margin:auto;padding:0 17px 45px}
+.top{display:flex;justify-content:space-between;align-items:center;min-height:67px;border-bottom:1px solid #557c6855;gap:12px}
+.logo{font-size:22px;font-weight:800;letter-spacing:.1em;font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+.logo span{font:700 9px system-ui,sans-serif;letter-spacing:.19em;display:block;color:#b6cabc;margin-top:2px}
+.top-links{display:flex;gap:8px}
+.top button,.small-button{background:#24483a;color:#f4e8ce;border:1px solid #607f69;padding:8px 11px;border-radius:10px;font-size:12px;font-weight:700}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(27px,6vw,40px);letter-spacing:.05em}
+h2{font-size:22px}
+h3{font-size:18px}
+.panel{border:1px solid #547a62a9;background:linear-gradient(145deg,rgba(35,74,57,.91),rgba(18,44,37,.96));border-radius:17px;padding:18px;box-shadow:inset 0 1px 0 #ffffff14}
+.panel-head{font-weight:800;letter-spacing:.02em;font-size:16px;margin-bottom:15px;color:#f8e8bd}
+.home-content{max-width:850px;margin:27px auto}
+.home-header{margin-bottom:18px}
+.mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:16px 0}
+.mode-card{display:flex;flex-direction:column;gap:8px;min-height:180px}
+.mode-title{font-size:20px;font-weight:800;color:#f6e2b6}
+.mode-card p{font-size:13px;line-height:1.7;color:#c8dcce;flex:1;margin:0}
+.action-primary,.action-secondary,.action-quiet,.sub-button{border-radius:11px;border:1px solid #e0c68c;min-height:43px;font-size:14px;font-weight:800;padding:10px 16px}
+.action-primary{background:linear-gradient(155deg,#f0d59a,#c9a260);color:#203024;box-shadow:0 2px 0 #574d2b65}
+.action-secondary{background:#2a5243;border-color:#7a9e83;color:#f4edd5}
+.action-quiet,.sub-button{background:#152e29;border-color:#547363;color:#ccdcca}
+.sub-button{width:100%;margin-top:12px;font-size:12px}
+.settings{margin-top:15px}
+.field-label{display:block;color:#d3dfcc;font-size:12px;font-weight:700;margin:11px 0 7px}
+.setting-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0}
+.setting-line .field-label{margin:0}
+.setting-line strong{font-size:18px;color:var(--gold)}
+#skill{accent-color:#e5c786;min-height:20px;padding:0;margin:6px 0 16px}
+.rule-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+.rule-option{display:flex;align-items:center;gap:8px;border:1px solid #52765f;background:#183b30;border-radius:10px;padding:11px 8px;line-height:1.45;font-size:12px;cursor:pointer}
+.rule-option input{width:18px;min-height:18px;height:18px;margin:0;accent-color:#d6ba76;flex:none}
+.soft-note,.hint{color:var(--muted);font-size:12px;line-height:1.75}
+.lobby{max-width:680px;margin:25px auto}.lobby h1{margin:5px 0 14px}.lobby h2{font-size:20px}
+.room-state{color:#e9d7a9;background:#213d2f;border:1px solid #557a60;border-radius:9px;padding:11px;margin:12px 0}
+.error-note{padding:11px 12px;margin:12px 0;border-radius:10px;background:#5a322c;border:1px solid #a66b59;color:#ffe6d4;font-size:13px;line-height:1.6}
+.room-actions{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 20px}
+.room-actions button{flex:1}
+.seat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 17px}
+.seat{display:flex;flex-direction:column;gap:5px;background:#1a3c32;border:1px solid #527660;border-radius:10px;padding:12px;min-width:0}
+.seat span{color:#bed0bd;font-size:11px}
+.seat strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat small{color:#eed59d;font-size:11px}
+.start-button{width:100%;margin:8px 0}
+.game-shell{max-width:1100px;margin:17px auto;display:grid;grid-template-columns:minmax(0,800px) minmax(225px,255px);gap:15px;align-items:start}
+.board-main{min-width:0}
+.game-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 0 13px}
+.eyebrow{letter-spacing:.13em;font-size:10px;font-weight:700;color:#e9c88b;margin-bottom:6px}
+.game-title h2{font-size:18px;margin:0;color:#f1e6c8}
+.players-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:11px}
+.opponent{display:flex;align-items:center;gap:7px;min-width:0;position:relative;background:#1a3b30;border:1px solid #507964;border-radius:12px;padding:9px 10px;min-height:62px}
+.opponent.now{border-color:#eac47f;box-shadow:0 0 0 1px #eac47f66,inset 0 0 16px #ffc96612}
+.avatar{width:33px;height:33px;display:grid;place-items:center;flex:none;border-radius:10px;background:#315846;color:#ffe1aa;border:1px solid #738c6d;font-family:serif;font-weight:800}
+.opponent-info{min-width:0;flex:1}
+.opponent strong{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opponent small{display:block;color:#bdd3bf;font-size:10px;margin-top:3px}
+.card-count{font-size:11px;font-weight:800;color:#e7ca91;white-space:nowrap}
+.turn-dot{position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:100%;background:#e6c776}
+.table-area{background:radial-gradient(ellipse at center,#235b42 0,#164430 65%,#103326 100%);border:11px solid #41674c;box-shadow:0 12px 28px #020b0975,inset 0 0 0 2px #d5ac5a6b;border-radius:60px;min-height:255px;padding:17px 28px 12px;position:relative}
+.table-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:#e6e7d3}
+.table-head em{font-size:10px;font-style:normal;background:#e1d39f1e;border:1px solid #e1d39f77;color:#f4d99e;border-radius:15px;padding:3px 7px;display:inline-block;margin-left:3px}
+.played-area{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;min-height:152px;padding:10px 0}
+.empty-table{font-family:serif;color:#d0e5d2b8;font-size:25px;letter-spacing:.2em}
+.table-meta{font-size:11px;text-align:center;color:#c5dec6}
+.table-card{width:58px;height:85px;border-radius:7px;background:linear-gradient(142deg,#ffffff,#ebe9e2);border:1px solid #fff;box-shadow:1px 3px 6px #071a13a3;color:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.table-card strong{font-family:Georgia,serif;font-size:19px}
+.table-card span{font-size:26px}
+.table-card.red{color:var(--red)}
+.table-card.joker{background:linear-gradient(135deg,#352748,#67418d);color:#fbdeb0}
+.my-zone{margin-top:12px;border:1px solid #618166;border-radius:14px;background:linear-gradient(150deg,#234c3c,#173729);padding:14px}
+.my-zone-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.my-zone-head strong{font-size:15px}
+.my-zone-head span{font-size:12px;color:#ecd093;margin-left:10px}
+.my-zone-head small{font-size:11px;color:#c0d5be;text-align:right}
+.myhand{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px;min-height:91px;padding:5px 0 8px}
+.play-card{display:flex;align-items:center;justify-content:space-between;flex-direction:column;width:51px;height:78px;padding:4px 3px;border-radius:7px;background:linear-gradient(145deg,#fffefb,#e8e3d8);color:var(--black);box-shadow:0 3px 3px #0217109e;border:2px solid #f7f7ed;position:relative;transition:transform .12s, box-shadow .12s;flex:none}
+.play-card.red{color:var(--red)}
+.play-card.joker{background:linear-gradient(140deg,#432f56,#70508b);color:#ffe5a6;border-color:#bf9cdb}
+.play-card.selected{transform:translateY(-9px);outline:2px solid #f9db84;z-index:2;box-shadow:0 6px 0 #946e34,0 0 14px #f9dc9969}
+.play-card:active{transform:translateY(-3px)}
+.play-card .corner{width:100%;text-align:left;font-weight:900;font-family:Georgia,serif;font-size:13px;line-height:1}
+.play-card .corner span{font-size:12px;margin-left:2px}
+.play-card .center-suit{font-size:24px;line-height:1}
+.play-card .bottom-corner{align-self:flex-end;font-family:Georgia,serif;font-weight:bold;font-size:10px}
+.my-action{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+.validation{color:#e9bbb1;font-size:12px;flex:1}
+.validation.ok{color:#bae4b7}
+.play-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.play-buttons button{min-width:74px}
+.rankings{margin-top:13px}
+.rankings h3{margin-bottom:11px}
+.ranking-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:15px}
+.ranking-grid>div{background:#163b30;border:1px solid #5f8166;border-radius:8px;padding:10px 6px;display:flex;gap:6px;align-items:center;flex-direction:column;text-align:center}
+.rank-digit{font-size:22px;color:#e8c37d;font-weight:900}
+.ranking-grid strong{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ranking-grid small{font-size:10px;color:#c9d9c5}
+.side-bar{display:flex;flex-direction:column;gap:12px}
+.info-item{display:flex;justify-content:space-between;border-bottom:1px solid #69816c47;padding:8px 0;gap:10px;font-size:12px}
+.info-item span{color:#b1cfba}
+.info-item strong{text-align:right;font-size:12px;max-width:140px;overflow-wrap:anywhere}
+.logs{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:7px}
+.logs div{font-size:12px;background:#14372c;padding:7px 8px;border-radius:6px;color:#dbefda}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:20;background:#285440;border:1px solid #a0c09a;border-radius:11px;max-width:90vw;padding:10px 15px;box-shadow:0 6px 20px #0007;font-size:12px}
+.toast.error{background:#61382d;border-color:#bf806e}
+@media(max-width:900px){.game-shell{grid-template-columns:minmax(0,760px);max-width:760px}.side-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.mode-grid{grid-template-columns:1fr}.mode-card{min-height:145px}.rule-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-area{min-height:216px;border-width:7px;border-radius:39px;padding:14px}.played-area{min-height:133px}.game-title h2{font-size:16px}.opponent{padding:7px;gap:5px;min-height:57px}.opponent strong{font-size:11px}.opponent .avatar{height:29px;width:29px}.card-count{font-size:10px}.my-zone{padding:10px}.my-zone-head{align-items:flex-start}.my-zone-head small{max-width:160px}.side-bar{grid-template-columns:1fr}}
+@media(max-width:425px){.app-shell{padding:0 8px 32px}.top{min-height:57px}.logo{font-size:19px}.home-content{margin:17px auto}.panel{padding:12px}.players-top{gap:5px}.opponent{padding:5px;flex-wrap:wrap}.opponent .avatar{height:25px;width:25px;font-size:12px}.opponent-info{min-width:40px}.card-count{margin-left:auto}.play-card{width:43px;height:70px;border-width:1px;padding:3px}.play-card .center-suit{font-size:22px}.myhand{gap:4px}.table-card{width:46px;height:70px}.table-card span{font-size:22px}.room-actions button{font-size:12px;padding:8px}.play-buttons button{padding:8px;min-height:39px;font-size:12px;min-width:63px}.rankings .ranking-grid{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"><div style="text-align:center;padding:27vh 15px;font-size:25px">大富豪</div></div>
+<noscript><p style="text-align:center">JavaScriptを有効にしてください。</p></noscript>
+<script src="./game.js"></script>
+<script src="./vendor/peerjs.min.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
