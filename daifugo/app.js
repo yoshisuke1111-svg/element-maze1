@@ -8,9 +8,17 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const nickname=x=>String(x||'').trim().replace(/[\u0000-\u001f\u007f]/g,'').slice(0,16)||'プレイヤー';
 const drawCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(12)),n=>n.toString(16).padStart(2,'0')).join('');
 const codeValid=x=>/^[a-f0-9]{24}$/.test(x||'');
-const destPeer=x=>'daifugo-room-01-'+x;
-const fromHash=()=>/^#r=([a-f0-9]{24})$/i.test(location.hash)?location.hash.slice(3).toLowerCase():'';
-const roomLink=()=>location.origin+location.pathname+'#r='+roomCode;
+function normalizeRoomCode(value){
+ const code=String(value||'').normalize('NFKC').trim().replace(/\s+/g,'').toUpperCase();
+ if(!code)throw Error('部屋コードを入力してください。');
+ if([...code].length<3||[...code].length>16)throw Error('部屋コードは3〜16文字で入力してください。');
+ if(!/^[\p{L}\p{N}_-]+$/u.test(code))throw Error('部屋コードは文字・数字・-・_だけ使えます。');
+ return code;
+}
+async function destPeer(code){
+ const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('daifugo-code-01:'+code)));
+ return 'daifugo-custom-'+Array.from(digest.slice(0,16),v=>v.toString(16).padStart(2,'0')).join('');
+}
 const rankLabel=card=>card.rank===16?'JOKER':E.LABEL[card.rank];
 const suitLabel=card=>card.rank===16?'':E.SUIT_LABEL[card.suit]||'';
 let initial={};
@@ -47,21 +55,26 @@ function startSolo(){
  chosen.clear();message='';error='';render();scheduleCPU();
 }
 function rememberName(){const f=document.getElementById('player-name');if(f)myName=nickname(f.value);persist();}
-function freshHost(){
- rememberName();stopNetworking();mode='host';screen='lobby';roomCode=drawCode();
+async function freshHost(){
+ let code;
+ try{code=normalizeRoomCode(document.getElementById('create-room-code')?.value);}
+ catch(e){const field=document.getElementById('room-error');if(field){field.textContent=e.message;field.style.display='block';}return;}
+ rememberName();stopNetworking();mode='host';screen='lobby';roomCode=code;
  lobbySeats=[{id:0,name:myName,connected:true}];full=null;display=null;mySeat=0;
  chosen.clear();roomReady=false;message='部屋を作成しています…';error='';render();
  const C=P();if(!C){error='通信ライブラリを読み込めませんでした。';render();return;}
  const mark=generation;
  try{
-  hostPeer=new C(destPeer(roomCode));
+  const peerId=await destPeer(roomCode);
+  if(mark!==generation)return;
+  hostPeer=new C(peerId);
   hostPeer.on('open',()=>{
    if(mark!==generation)return;roomReady=true;message='参加者を待っています。';error='';render();
   });
   hostPeer.on('connection',c=>acceptGuest(c,mark));
   hostPeer.on('error',e=>{
    if(mark!==generation)return;
-   error=e?.type==='unavailable-id'?'部屋番号が重複しました。新しい部屋を作成してください。':'通信サービスに接続できませんでした。';
+   error=e?.type==='unavailable-id'?'この部屋コードは使用中です。別のコードを指定してください。':'通信サービスに接続できませんでした。';
    render();
   });
   hostPeer.on('disconnected',()=>{
@@ -162,8 +175,11 @@ function startHost(){
  full=E.newGame({rules:options,players:people});screen='game';chosen.clear();
  display=E.publicView(full,0);message='';broadcastState();scheduleCPU();
 }
-function beginJoin(code){
- stopNetworking();mode='guest';screen='lobby';roomCode=code;mySeat=-1;
+async function beginJoin(value){
+ let code;
+ try{code=normalizeRoomCode(value);}
+ catch(e){const field=document.getElementById('room-error');if(field){field.textContent=e.message;field.style.display='block';}return;}
+ rememberName();stopNetworking();mode='guest';screen='lobby';roomCode=code;mySeat=-1;
  chosen.clear();full=null;display=null;roomReady=false;linked=false;
  lobbySeats=[];error='';message='部屋に接続しています…';guestLoading=true;
  try{
@@ -174,10 +190,12 @@ function beginJoin(code){
  const C=P();if(!C){error='通信ライブラリを読み込めませんでした。';render();return;}
  const mark=generation;
  try{
+  const peerId=await destPeer(roomCode);
+  if(mark!==generation)return;
   clientPeer=new C();
   clientPeer.on('open',()=>{
    if(mark!==generation)return;
-   const c=clientPeer.connect(destPeer(code),{reliable:true,serialization:'json'});
+   const c=clientPeer.connect(peerId,{reliable:true,serialization:'json'});
    guestConn=c;bindGuest(c,mark);
   });
   clientPeer.on('error',e=>{
@@ -347,7 +365,7 @@ function gameMarkup(){
  (v.phase==='results'?resultsMarkup(v):'')+'</section>'+
  '<aside class="side-bar"><section class="panel"><div class="panel-head">対局情報</div><div class="info-item"><span>手番</span><strong>'+esc(status)+'</strong></div><div class="info-item"><span>場</span><strong>'+(table?table.count+'枚':'なし')+'</strong></div>'+
  '<div class="info-item"><span>ルール</span><strong>'+chips.join(' / ')+'</strong></div>'+
- (mode==='host'?'<div class="info-item"><span>部屋</span><strong>'+esc(roomCode.slice(0,8).toUpperCase())+'</strong></div><button class="sub-button" data-act="copy">招待URLをコピー</button>':'')+
+ (mode==='host'?'<div class="info-item"><span>部屋コード</span><strong>'+esc(roomCode)+'</strong></div><button class="sub-button" data-act="copy">コードをコピー</button>':mode==='guest'?'<div class="info-item"><span>部屋コード</span><strong>'+esc(roomCode)+'</strong></div>':'')+
  (mode==='guest'?'<div class="info-item"><span>接続</span><strong>'+(linked?'オンライン':'切断')+'</strong></div>'+(linked?'':'<button class="sub-button" data-act="reconnect">再接続</button>'):'')+
  '</section><section class="panel"><div class="panel-head">履歴</div><div class="logs">'+v.log.slice(-16).map(entry=>'<div>'+esc(entry.text)+'</div>').join('')+'</div></section>'+
  '<div class="soft-note">カードは複数選択できます。革命・8切り・縛りなどは部屋の設定に従います。</div></aside></div>'+
@@ -368,7 +386,7 @@ function homeMarkup(){
  ];
  return '<section class="home-content"><div class="home-header"><h1>大富豪</h1></div>'+
  '<div class="mode-grid"><section class="panel mode-card"><div class="mode-title">CPU対戦</div><p>4人で対局。自分以外はCPUが操作します。</p><button class="action-primary" data-act="solo">CPUと対局する</button></section>'+
- '<section class="panel mode-card"><div class="mode-title">オンライン対戦</div><p>招待URLで部屋を共有。1〜4人で参加し、空席にはCPUを追加できます。</p><button class="action-primary" data-act="host">部屋を作成</button></section></div>'+
+ '<section class="panel mode-card"><div class="mode-title">オンライン対戦</div><p>部屋コードで参加する対局です。空席はCPUで補充できます。</p><label class="field-label" for="create-room-code">部屋を作る（コードを決める）</label><input id="create-room-code" class="room-code-entry" maxlength="40" placeholder="例：放課後-1" autocapitalize="characters"><button class="action-primary" data-act="host">部屋を作成</button><label class="field-label" for="join-room-code">部屋に参加</label><input id="join-room-code" class="room-code-entry" maxlength="40" placeholder="部屋コードを入力" autocapitalize="characters"><button class="action-secondary" data-act="join">コードで入室</button><p id="room-error" class="error-note" role="alert" style="display:none"></p></section></div>'+
  '<section class="panel settings"><div class="panel-head">対局設定</div><label class="field-label" for="player-name">表示名</label><input id="player-name" maxlength="16" value="'+esc(myName)+'" placeholder="プレイヤー">'+
  '<div class="setting-line"><label class="field-label" for="skill">CPUの強さ</label><strong id="skill-label">'+cpuSkill+'</strong></div><input id="skill" type="range" min="1" max="100" value="'+cpuSkill+'">'+
  '<div class="setting-line"><span class="field-label">ジョーカー</span><select id="jokers"><option value="0" '+(options.jokers===0?'selected':'')+'>0枚</option><option value="1" '+(options.jokers===1?'selected':'')+'>1枚</option><option value="2" '+(options.jokers===2?'selected':'')+'>2枚</option></select></div>'+
@@ -379,13 +397,13 @@ function waitingMarkup(){
  if(mode==='guest'){
   return '<div class="lobby"><section class="panel"><h1>オンライン対戦</h1><h2>'+(!linked?'接続中':'対局開始待ち')+'</h2><p class="muted">'+esc(message||'部屋主の開始を待っています。')+'</p>'+
  (error?'<div class="error-note">'+esc(error)+'</div>':'')+
- '<div class="seat-grid">'+lobbySeats.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.connected?'参加中':'未接続')+'</small></div>').join('')+'</div>'+
+ '<p class="soft-note">部屋コード：<strong>'+esc(roomCode)+'</strong></p><div class="seat-grid">'+lobbySeats.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.connected?'参加中':'未接続')+'</small></div>').join('')+'</div>'+
  '<div class="room-actions"><button class="action-secondary" data-act="reconnect" '+(guestLoading?'disabled':'')+'>再接続する</button><button class="action-quiet" data-act="home">戻る</button></div></section></div>';
  }
  const roster=roomRoster();
  return '<div class="lobby"><section class="panel"><div class="panel-head">オンライン対戦</div><h1>部屋を作成</h1><div class="room-state">'+(roomReady?'参加者を待っています':'通信サービスへ接続中…')+'</div>'+
  (error?'<div class="error-note">'+esc(error)+'</div>':'')+
- '<label class="field-label" for="invite-url">招待URL</label><input id="invite-url" readonly value="'+esc(roomLink())+'"><div class="room-actions"><button class="action-primary" data-act="copy">URLをコピー</button><button class="action-quiet" data-act="home">戻る</button></div>'+
+ '<label class="field-label" for="room-code-display">部屋コード</label><input id="room-code-display" readonly value="'+esc(roomCode)+'"><div class="room-actions"><button class="action-primary" data-act="copy">コードをコピー</button><button class="action-quiet" data-act="home">戻る</button></div>'+
  '<h3>参加者</h3><div class="seat-grid">'+roster.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.id===0?'部屋主':p.connected?'参加中':'空席')+'</small></div>').join('')+'</div>'+
  '<button class="action-primary start-button" data-act="start-online" '+(!roomReady?'disabled':'')+'>対局を開始（空席はCPU）</button>'+
  '<p class="soft-note">参加する人が全員入室してから開始してください。開始後は新しい参加者を受け付けません。部屋主がページを閉じると対局室は終了します。</p></section></div>';
@@ -398,12 +416,12 @@ function render(){
  '</main></div>';
  if(window.scrollY!==y)window.scrollTo(0,y);
 }
-async function copyLink(){
- const text=roomLink();
- try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
- else {const el=document.getElementById('invite-url');if(!el)throw Error('no input');el.select();document.execCommand('copy');}
- message='URLをコピーしました。';error='';
- }catch{message='';error='コピーできない場合はURL欄を長押ししてください。';}
+async function copyCode(){
+ try{
+  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(roomCode);
+  else {const el=document.getElementById('room-code-display');if(!el)throw Error('no input');el.select();document.execCommand('copy');}
+  message='部屋コードをコピーしました。';error='';
+ }catch{message='';error='コピーできない場合はコード欄を長押ししてください。';}
  render();
 }
 root.addEventListener('click',event=>{
@@ -411,10 +429,11 @@ root.addEventListener('click',event=>{
  const action=button.dataset.act;
  if(action==='solo'){startSolo();return;}
  if(action==='host'){freshHost();return;}
+ if(action==='join'){beginJoin(document.getElementById('join-room-code')?.value);return;}
  if(action==='start-online'){startHost();return;}
  if(action==='home'){menu();return;}
  if(action==='reconnect'){if(mode==='guest')beginJoin(roomCode);return;}
- if(action==='copy'){copyLink();return;}
+ if(action==='copy'){copyCode();return;}
  if(action==='card'){
   const id=button.dataset.id;
   if(!display||display.phase!=='playing'||display.turn!==mySeat)return;
@@ -437,10 +456,9 @@ root.addEventListener('change',event=>{
  if(el.dataset?.rule){options[el.dataset.rule]=el.checked;persist();}
 });
 window.DaifugoDebug={
- view:()=>display,screen:()=>screen,mode:()=>mode,room:()=>roomCode,seat:()=>mySeat,
+ view:()=>display,screen:()=>screen,mode:()=>mode,room:()=>roomCode,seat:()=>mySeat,normalizeRoomCode,
  full:()=>mode==='guest'?null:full,
  startSolo,play,pass,resolveLocal
 };
-const invitation=fromHash();
-if(invitation)beginJoin(invitation);else render();
+render();
 })();
