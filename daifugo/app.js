@@ -23,15 +23,25 @@ const rankLabel=card=>card.rank===16?'JOKER':E.LABEL[card.rank];
 const suitLabel=card=>card.rank===16?'':E.SUIT_LABEL[card.suit]||'';
 let initial={};
 try{initial=JSON.parse(localStorage.getItem('daifugo-options-1')||'{}')||{};}catch{}
-let options={...E.DEFAULT_RULES,...initial};
-let cpuSkill=clamp(Math.round(Number(initial.cpuSkill)||70),1,100);
+let options=E.settings(initial);
+const CPU_DEFAULT_SKILL=65; // 強さは非公開固定値。後日管理画面で設定する。
 let myName=nickname(initial.myName||'あなた');
+let roomPlayers=4,initialCards=13;
+const maxInitial=()=>Math.min(13,Math.floor((52+options.jokers)/roomPlayers));
+const publicSettings=()=>({playerCount:roomPlayers,initialCards,rules:{...options}});
+function setRoomSettings(data){
+ if(!data||!Number.isInteger(data.playerCount)||data.playerCount<2||data.playerCount>6)return;
+ roomPlayers=data.playerCount;
+ options=E.settings(data.rules||{});
+ initialCards=clamp(Number(data.initialCards)||13,1,maxInitial());
+}
+
 let mode='home',screen='home',full=null,display=null,mySeat=0;
 let chosen=new Set(),message='',error='',roomCode='',lobbySeats=[],roomReady=false,linked=false;
 let hostPeer=null,clientPeer=null,guestConn=null,connections=new Map(),tickets=new Map();
 let guestTicket='',generation=0,cpuTimer=null,guestLoading=false;
 const P=()=>window.Peer||window.peerjs?.Peer;
-function persist(){try{localStorage.setItem('daifugo-options-1',JSON.stringify({...options,cpuSkill,myName}));}catch{}}
+function persist(){try{localStorage.setItem('daifugo-options-1',JSON.stringify({...options,myName}));}catch{}}
 function cancelThinking(){if(cpuTimer){clearTimeout(cpuTimer);cpuTimer=null;}}
 function stopNetworking(){
  generation++;cancelThinking();
@@ -49,10 +59,19 @@ function menu(){
  render();
 }
 function startSolo(){
- rememberName();stopNetworking();mode='solo';screen='game';mySeat=0;
- const people=Array.from({length:4},(_,i)=>({name:i===0?myName:'CPU '+i,isCPU:i!==0}));
- full=E.newGame({rules:options,players:people});display=E.publicView(full,0);
- chosen.clear();message='';error='';render();scheduleCPU();
+ rememberName();stopNetworking();
+ mode='solo';screen='lobby';mySeat=0;roomCode='';
+ lobbySeats=[{id:0,name:myName,connected:true}];full=null;display=null;
+ chosen.clear();message='';error='';render();
+}
+function startSoloGame(){
+ if(mode!=='solo'||screen!=='lobby')return;
+ const people=Array.from({length:roomPlayers},(_,i)=>({name:i===0?myName:'CPU '+i,isCPU:i!==0}));
+ try{
+  full=E.newGame({rules:options,players:people,initialCards});
+  display=E.publicView(full,0);screen='game';
+  chosen.clear();message='';error='';render();scheduleCPU();
+ }catch(e){error=e.message;render();}
 }
 function rememberName(){const f=document.getElementById('player-name');if(f)myName=nickname(f.value);persist();}
 async function freshHost(){
@@ -84,7 +103,7 @@ async function freshHost(){
  }catch(e){error='部屋を作成できませんでした。';render();}
 }
 function roomRoster(){
- return Array.from({length:4},(_,seat)=>{
+ return Array.from({length:roomPlayers},(_,seat)=>{
   const p=lobbySeats.find(p=>p.id===seat);
   return p?{id:seat,name:p.name,connected:p.connected}:{id:seat,name:'参加待ち',connected:false};
  });
@@ -102,7 +121,7 @@ function acceptGuest(c,mark){
    for(const [seat,t] of tickets.entries())if(t===ticket)found=seat;
    if(found===-1){
     if(screen!=='lobby'){try{c.send({t:'refused',reason:'すでに対局が始まっています。'});}catch{}c.close();return;}
-    for(let seat=1;seat<4;seat++)if(!tickets.has(seat)){found=seat;break;}
+    for(let seat=1;seat<roomPlayers;seat++)if(!tickets.has(seat)){found=seat;break;}
    }
    if(found<0){try{c.send({t:'refused',reason:'部屋が満員です。'});}catch{}c.close();return;}
    const previous=connections.get(found);
@@ -150,8 +169,8 @@ function acceptGuest(c,mark){
  c.on('error',()=>{try{c.close();}catch{}});
 }
 function broadcastLobby(){
- const seats=roomRoster();
- for(const c of connections.values())if(c.open)try{c.send({t:'lobby',roster:seats});}catch{}
+ const seats=roomRoster(),settings=publicSettings();
+ for(const c of connections.values())if(c.open)try{c.send({t:'lobby',roster:seats,settings});}catch{}
  render();
 }
 function sendStateTo(seat){
@@ -168,11 +187,11 @@ function broadcastState(){
 }
 function startHost(){
  if(!roomReady)return;
- const people=Array.from({length:4},(_,seat)=>{
+ const people=Array.from({length:roomPlayers},(_,seat)=>{
   const slot=lobbySeats.find(s=>s.id===seat);
   return {name:slot?slot.name:'CPU '+seat,isCPU:seat!==0&&!slot?.connected};
  });
- full=E.newGame({rules:options,players:people});screen='game';chosen.clear();
+ full=E.newGame({rules:options,players:people,initialCards});screen='game';chosen.clear();
  display=E.publicView(full,0);message='';broadcastState();scheduleCPU();
 }
 async function beginJoin(value){
@@ -224,11 +243,12 @@ function bindGuest(c,mark){
   }
   if(data.t==='lobby'){
    lobbySeats=Array.isArray(data.roster)?data.roster:[];
+   setRoomSettings(data.settings);
    screen='lobby';linked=true;message='部屋主の対局開始を待っています。';render();return;
   }
   if(data.t==='state'){
    const v=data.view;
-   if(!v||!Array.isArray(v.players)||!Array.isArray(v.hand)||v.seat!==mySeat||v.players.length!==4)return;
+   if(!v||!Array.isArray(v.players)||!Array.isArray(v.hand)||v.seat!==mySeat||v.players.length<2||v.players.length>6)return;
    display=v;screen='game';linked=true;guestLoading=false;
    chosen.clear();message='';error='';render();return;
   }
@@ -293,7 +313,7 @@ function scheduleCPU(){
    if(full.pending){
     E.resolveSpecial(full,seat,E.pickCPUSpecial(full,seat));
    }else{
-    const ids=E.pickCPU(full,seat,cpuSkill);
+    const ids=E.pickCPU(full,seat,CPU_DEFAULT_SKILL);
     if(ids)E.move(full,seat,ids);
     else E.pass(full,seat);
    }
@@ -341,13 +361,13 @@ function participant(p,index){
  const turn=display?.turn===p.id&&display.phase==='playing';
  const place=display?.finishOrder.indexOf(p.id);
  return '<div class="opponent '+(turn?'now':'')+'"><div class="avatar">'+(p.isCPU?'C':(p.id===mySeat?'自':'人'))+'</div><div class="opponent-info"><strong>'+esc(p.name)+'</strong>'+
- '<small>'+(place>=0?E.PLACE[place]:(p.isCPU?'CPU':'プレイヤー'))+'</small></div>'+
+ '<small>'+(place>=0?E.placeName(place,display.players.length):(p.isCPU?'CPU':'プレイヤー'))+'</small></div>'+
  '<span class="card-count">'+p.count+'枚</span>'+(turn?'<span class="turn-dot"></span>':'')+'</div>';
 }
 function gameMarkup(){
  const v=display;if(!v)return '<div class="panel">対局情報を読み込んでいます。</div>';
  const mine=v.players[mySeat]||v.players[0],isTurn=v.phase==='playing'&&v.turn===mySeat;
- const other=[1,2,3].map(i=>v.players[(mySeat+i)%4]);
+ const other=Array.from({length:v.players.length-1},(_,i)=>v.players[(mySeat+i+1)%v.players.length]);
  const sel=selectionStatus(),allow=isTurn&&(mode!=='guest'||linked);
  const table=v.table,owner=table?v.players[table.owner]:null;
  const status=v.phase==='results'?'対局終了':!linked&&mode==='guest'?'通信が切れています':v.pending?(v.pending.owner===mySeat?'特殊効果のカードを選択':v.players[v.pending.owner]?.name+' がカードを選択中'):isTurn?'あなたの手番':v.players[v.turn]?.name+'の手番';
@@ -355,7 +375,7 @@ function gameMarkup(){
  const special=v.pending?.owner===mySeat?v.pending:null;
  const prompt=special?(special.type==='give'?'7渡し：'+v.players[special.target]?.name+' に渡すカードを '+special.max+' 枚選択':'10捨て：捨てるカードを '+special.max+' 枚選択'):null;
  return '<div class="game-shell"><section class="board-main"><div class="game-title"><div><div class="eyebrow">'+(mode==='solo'?'CPU対戦':'オンライン対戦')+' ・ 第'+v.round+'回戦</div><h2>'+esc(status)+'</h2></div><button class="small-button" data-act="home">退出</button></div>'+
- '<div class="players-top">'+other.map((p,i)=>participant(p,i)).join('')+'</div>'+
+ '<div class="players-top" style="--opponents:'+other.length+'">'+other.map((p,i)=>participant(p,i)).join('')+'</div>'+
  '<div class="table-area"><div class="table-head"><span>'+(table?esc(owner?.name||'')+' が出したカード':'場は空です')+'</span><span>'+chips.map(x=>'<em>'+esc(x)+'</em>').join('')+'</span></div>'+
  '<div class="played-area">'+(table?table.cards.map(tableCard).join(''):'<div class="empty-table">新しい場</div>')+'</div>'+
  '<div class="table-meta">'+(table?(table.type==='run'?'階段':'同じ数字')+' ・ '+table.count+'枚':'好きなカードから出せます')+'</div></div>'+
@@ -373,40 +393,68 @@ function gameMarkup(){
 }
 function resultsMarkup(v){
  return '<section class="panel rankings"><h3>順位</h3><div class="ranking-grid">'+v.finishOrder.map((seat,i)=>
- '<div><span class="rank-digit">'+(i+1)+'</span><strong>'+esc(v.players[seat].name)+'</strong><small>'+E.PLACE[i]+'</small></div>').join('')+'</div>'+
+ '<div><span class="rank-digit">'+(i+1)+'</span><strong>'+esc(v.players[seat].name)+'</strong><small>'+E.placeName(i,v.players.length)+'</small></div>').join('')+'</div>'+
  (mode==='guest'?'<p class="hint">部屋主が次の対局を開始します。</p>':'<button class="action-primary" data-act="next-round">次の対局へ</button>')+
  '<p class="hint">2回戦以降は順位に応じたカード交換を自動で行います（設定時）。</p></section>';
 }
-function homeMarkup(){
+function ruleControlMarkup(){
  const rules=[
  ['revolution','革命'],['eightCut','8切り'],['shibari','縛り'],['stairs','階段'],['elevenBack','11バック'],
  ['stairRevolution','階段革命'],['spadeThree','スペ3返し'],['exchange','順位によるカード交換'],
  ['fiveSkip','5飛ばし'],['sixBack','6戻し'],['sevenGive','7渡し'],['nineReverse','9リバース'],
  ['tenDiscard','10捨て'],['capitalFall','都落ち']
  ];
+ return '<div class="rule-grid">'+rules.map(([id,label])=>'<label class="rule-option"><input type="checkbox" data-rule="'+id+'" '+(options[id]?'checked':'')+'><span>'+label+'</span></label>').join('')+'</div>';
+}
+function hostRoomSettingsMarkup(){
+ const max=maxInitial();
+ return '<section class="panel settings"><div class="panel-head">部屋の設定</div>'+
+ '<div class="room-config-grid"><label class="field-label" for="room-players">対局人数<select id="room-players">'+Array.from({length:5},(_,i)=>i+2).map(n=>'<option value="'+n+'" '+(n===roomPlayers?'selected':'')+'>'+n+'人</option>').join('')+'</select></label>'+
+ '<label class="field-label" for="initial-cards">最初の手札<select id="initial-cards">'+Array.from({length:max},(_,i)=>i+1).map(n=>'<option value="'+n+'" '+(n===initialCards?'selected':'')+'>'+n+'枚 / 人</option>').join('')+'</select></label>'+
+ '<label class="field-label" for="jokers">ジョーカー<select id="jokers">'+[0,1,2].map(n=>'<option value="'+n+'" '+(n===options.jokers?'selected':'')+'>'+n+'枚</option>').join('')+'</select></label></div>'+
+ '<div class="soft-note">人数に応じて手札の上限が変わります。使わないカードは山札に残し、対局では使用しません。</div>'+
+ '<div class="panel-head rules-title">ローカルルール</div>'+ruleControlMarkup()+
+ '<div class="soft-note">7渡し：次の人に手札を渡す。10捨て：カードを選んで捨てる。5飛ばし・6戻し・9リバース・都落ちも個別に選べます。</div></section>';
+}
+function guestRoomSettingsMarkup(){
+ const cfg=publicSettings();
+ const names=[['revolution','革命'],['eightCut','8切り'],['shibari','縛り'],['stairs','階段'],['elevenBack','11バック'],
+ ['stairRevolution','階段革命'],['spadeThree','スペ3返し'],['exchange','カード交換'],
+ ['fiveSkip','5飛ばし'],['sixBack','6戻し'],['sevenGive','7渡し'],['nineReverse','9リバース'],
+ ['tenDiscard','10捨て'],['capitalFall','都落ち']];
+ const enabled=names.filter(([key])=>cfg.rules[key]).map(([,label])=>label);
+ return '<section class="panel"><div class="panel-head">部屋の設定</div><div class="info-item"><span>対局人数</span><strong>'+cfg.playerCount+'人</strong></div>'+
+ '<div class="info-item"><span>最初の手札</span><strong>'+cfg.initialCards+'枚 / 人</strong></div>'+
+ '<div class="info-item"><span>ジョーカー</span><strong>'+cfg.rules.jokers+'枚</strong></div>'+
+ '<p class="soft-note">採用ルール：'+esc(enabled.join('・')||'なし')+'</p><p class="hint">設定は部屋主のみ変更できます。</p></section>';
+}
+function homeMarkup(){
  return '<section class="home-content"><div class="home-header"><h1>大富豪</h1></div>'+
- '<div class="mode-grid"><section class="panel mode-card"><div class="mode-title">CPU対戦</div><p>4人で対局。自分以外はCPUが操作します。</p><button class="action-primary" data-act="solo">CPUと対局する</button></section>'+
- '<section class="panel mode-card"><div class="mode-title">オンライン対戦</div><p>部屋コードで参加する対局です。空席はCPUで補充できます。</p><label class="field-label" for="create-room-code">部屋を作る（コードを決める）</label><input id="create-room-code" class="room-code-entry" maxlength="40" placeholder="例：放課後-1" autocapitalize="characters"><button class="action-primary" data-act="host">部屋を作成</button><label class="field-label" for="join-room-code">部屋に参加</label><input id="join-room-code" class="room-code-entry" maxlength="40" placeholder="部屋コードを入力" autocapitalize="characters"><button class="action-secondary" data-act="join">コードで入室</button><p id="room-error" class="error-note" role="alert" style="display:none"></p></section></div>'+
- '<section class="panel settings"><div class="panel-head">対局設定</div><label class="field-label" for="player-name">表示名</label><input id="player-name" maxlength="16" value="'+esc(myName)+'" placeholder="プレイヤー">'+
- '<div class="setting-line"><label class="field-label" for="skill">CPUの強さ</label><strong id="skill-label">'+cpuSkill+'</strong></div><input id="skill" type="range" min="1" max="100" value="'+cpuSkill+'">'+
- '<div class="setting-line"><span class="field-label">ジョーカー</span><select id="jokers"><option value="0" '+(options.jokers===0?'selected':'')+'>0枚</option><option value="1" '+(options.jokers===1?'selected':'')+'>1枚</option><option value="2" '+(options.jokers===2?'selected':'')+'>2枚</option></select></div>'+
- '<div class="rule-grid">'+rules.map(([id,label])=>'<label class="rule-option"><input type="checkbox" data-rule="'+id+'" '+(options[id]?'checked':'')+'><span>'+label+'</span></label>').join('')+'</div>'+
- '<div class="soft-note">7渡し：出した7の枚数分を次の相手に渡す。10捨て：出した10の枚数分を手札から捨てる。5飛ばし：出した枚数分の次の手番を飛ばす。6戻し：場が流れるまで強さが反転。9リバース：順番を反転。都落ち：前回の大富豪が次の対局で1位を逃すと最下位。採用するルールにチェックを入れてください。</div></section></section>';
+ '<section class="panel name-panel"><label class="field-label" for="player-name">プレイヤー名</label><input id="player-name" maxlength="16" value="'+esc(myName)+'" placeholder="名前を入力"></section>'+
+ '<div class="mode-grid"><section class="panel mode-card"><div class="mode-title">CPU対戦</div><p>CPUとの練習対局</p><button class="action-primary" data-act="solo">CPU対戦の設定へ</button></section>'+
+ '<section class="panel mode-card"><div class="mode-title">オンライン対戦</div><label class="field-label" for="create-room-code">部屋を作る</label><input id="create-room-code" maxlength="40" placeholder="部屋コード（3〜16文字）" autocapitalize="characters"><button class="action-primary" data-act="host">部屋を作成</button>'+
+ '<label class="field-label" for="join-room-code">部屋に参加</label><input id="join-room-code" maxlength="40" placeholder="部屋コードを入力" autocapitalize="characters"><button class="action-secondary" data-act="join">コードで入室</button><p id="room-error" class="error-note" role="alert" style="display:none"></p></section></div></section>';
 }
 function waitingMarkup(){
  if(mode==='guest'){
-  return '<div class="lobby"><section class="panel"><h1>オンライン対戦</h1><h2>'+(!linked?'接続中':'対局開始待ち')+'</h2><p class="muted">'+esc(message||'部屋主の開始を待っています。')+'</p>'+
+  return '<div class="lobby"><section class="panel"><h1>部屋に参加</h1><h2>'+(!linked?'接続中':'対局開始待ち')+'</h2><p class="muted">'+esc(message||'部屋主の開始を待っています。')+'</p>'+
  (error?'<div class="error-note">'+esc(error)+'</div>':'')+
  '<p class="soft-note">部屋コード：<strong>'+esc(roomCode)+'</strong></p><div class="seat-grid">'+lobbySeats.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.connected?'参加中':'未接続')+'</small></div>').join('')+'</div>'+
- '<div class="room-actions"><button class="action-secondary" data-act="reconnect" '+(guestLoading?'disabled':'')+'>再接続する</button><button class="action-quiet" data-act="home">戻る</button></div></section></div>';
+ '<div class="room-actions"><button class="action-secondary" data-act="reconnect" '+(guestLoading?'disabled':'')+'>再接続する</button><button class="action-quiet" data-act="home">戻る</button></div></section>'+guestRoomSettingsMarkup()+'</div>';
+ }
+ if(mode==='solo'){
+  return '<div class="lobby"><section class="panel"><h1>CPU対戦の設定</h1><p class="soft-note">対局の人数とルールを選んでください。</p></section>'+
+ hostRoomSettingsMarkup()+
+ '<section class="panel"><button class="action-primary start-button" data-act="start-solo">対局を開始</button><button class="action-quiet" data-act="home">戻る</button></section></div>';
  }
  const roster=roomRoster();
  return '<div class="lobby"><section class="panel"><div class="panel-head">オンライン対戦</div><h1>部屋を作成</h1><div class="room-state">'+(roomReady?'参加者を待っています':'通信サービスへ接続中…')+'</div>'+
  (error?'<div class="error-note">'+esc(error)+'</div>':'')+
  '<label class="field-label" for="room-code-display">部屋コード</label><input id="room-code-display" readonly value="'+esc(roomCode)+'"><div class="room-actions"><button class="action-primary" data-act="copy">コードをコピー</button><button class="action-quiet" data-act="home">戻る</button></div>'+
- '<h3>参加者</h3><div class="seat-grid">'+roster.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.id===0?'部屋主':p.connected?'参加中':'空席')+'</small></div>').join('')+'</div>'+
- '<button class="action-primary start-button" data-act="start-online" '+(!roomReady?'disabled':'')+'>対局を開始（空席はCPU）</button>'+
- '<p class="soft-note">参加する人が全員入室してから開始してください。開始後は新しい参加者を受け付けません。部屋主がページを閉じると対局室は終了します。</p></section></div>';
+ '<h3>参加者</h3><div class="seat-grid">'+roster.map(p=>'<div class="seat"><span>席 '+(p.id+1)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.id===0?'部屋主':p.connected?'参加中':'空席')+'</small></div>').join('')+'</div></section>'+
+ hostRoomSettingsMarkup()+
+ '<section class="panel"><button class="action-primary start-button" data-act="start-online" '+(!roomReady?'disabled':'')+'>対局を開始（空席はCPU）</button>'+
+ '<p class="soft-note">参加者が揃ってから開始してください。人数やルールは開始前に確定します。部屋主がページを閉じると終了します。</p></section></div>';
 }
 function render(){
  const y=window.scrollY;
@@ -428,6 +476,7 @@ root.addEventListener('click',event=>{
  const button=event.target.closest('button[data-act]');if(!button)return;
  const action=button.dataset.act;
  if(action==='solo'){startSolo();return;}
+ if(action==='start-solo'){startSoloGame();return;}
  if(action==='host'){freshHost();return;}
  if(action==='join'){beginJoin(document.getElementById('join-room-code')?.value);return;}
  if(action==='start-online'){startHost();return;}
@@ -445,18 +494,27 @@ root.addEventListener('click',event=>{
  if(action==='pass'){pass();return;}
  if(action==='next-round'){nextRound();return;}
 });
-root.addEventListener('input',event=>{
- const el=event.target;
- if(el.id==='skill'){cpuSkill=clamp(Math.round(Number(el.value)),1,100);const label=document.getElementById('skill-label');if(label)label.textContent=cpuSkill;persist();}
-});
 root.addEventListener('change',event=>{
  const el=event.target;
- if(el.id==='player-name')rememberName();
- if(el.id==='jokers'){options.jokers=clamp(Number(el.value),0,2);persist();}
- if(el.dataset?.rule){options[el.dataset.rule]=el.checked;persist();}
+ if(el.id==='player-name'){rememberName();return;}
+ if((mode!=='host'&&mode!=='solo')||screen!=='lobby')return;
+ if(el.id==='room-players'){
+  const desired=clamp(Number(el.value)||4,2,6);
+  const occupied=mode==='host'?Math.max(0,...tickets.keys())+1:1;
+  if(desired<occupied){error='現在参加しているプレイヤーがいるため、その人数には減らせません。';render();return;}
+  roomPlayers=desired;initialCards=Math.min(initialCards,maxInitial());error='';
+ }else if(el.id==='initial-cards'){
+  initialCards=clamp(Number(el.value)||13,1,maxInitial());error='';
+ }else if(el.id==='jokers'){
+  options.jokers=clamp(Number(el.value),0,2);initialCards=Math.min(initialCards,maxInitial());error='';
+ }else if(el.dataset?.rule){
+  options[el.dataset.rule]=el.checked;error='';
+ }else return;
+ persist();
+ if(mode==='host')broadcastLobby();else render();
 });
 window.DaifugoDebug={
- view:()=>display,screen:()=>screen,mode:()=>mode,room:()=>roomCode,seat:()=>mySeat,normalizeRoomCode,
+ view:()=>display,screen:()=>screen,mode:()=>mode,room:()=>roomCode,seat:()=>mySeat,normalizeRoomCode,roomSettings:publicSettings,
  full:()=>mode==='guest'?null:full,
  startSolo,play,pass,resolveLocal
 };
