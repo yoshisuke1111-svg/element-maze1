@@ -43,6 +43,17 @@
 @media(max-width:800px){.game-layout{grid-template-columns:minmax(0,550px);max-width:560px;margin:12px auto}.side-stack{order:2}.game-center{order:1}.game-layout .panel{margin:0}.welcome{grid-template-columns:1fr;max-width:620px;margin:auto}}
 @media(max-width:450px){.game-layout{gap:10px}.move-info{padding:9px;min-height:61px}.move-info-main{font-size:15px}.move-coords{font-size:12px}.strength-title strong{font-size:17px}.strength-block{margin-top:12px}.board-wrap{padding:7px}.koma{font-size:clamp(12px,5.1vw,22px)}.welcome-art{min-height:185px}}
 
+
+/* Chess clock, game-over result and pictographic held pieces */
+.hand-piece .hand-koma{width:22px;height:26px;display:inline-grid;place-items:center;flex:none;clip-path:polygon(50% 2%,97% 25%,93% 100%,7% 100%,3% 25%);background:linear-gradient(140deg,#fff2ce,#d1a264 85%);border-bottom:2px solid #8c5c2f;color:#29231b;font:900 15px "Yu Mincho",serif;filter:drop-shadow(0 1px 1px #372012)}
+.hand-piece .hand-caption{font-weight:800;font-size:14px}.hand-piece{gap:5px;min-height:42px}
+.shogi-clock{font:800 16px ui-monospace,SFMono-Regular,monospace;color:#eadfc6;letter-spacing:.02em;white-space:nowrap;border:1px solid #779484;border-radius:8px;background:#1c3f34;padding:5px 7px;min-width:73px;text-align:center}
+.shogi-clock.active{border-color:#f3cb77;background:#59472d;color:#ffe4a5}.shogi-clock.low{border-color:#ffb497;background:#6c2f28;color:#fff1db}
+.board-result-overlay{position:absolute;inset:0;z-index:10;background:#061711c4;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;color:#fff9e6}
+.board-result-inner{width:min(94%,330px);background:#142d27f2;border:2px solid #eac887;border-radius:18px;padding:20px 10px;box-shadow:0 14px 34px #0009}
+.board-result-heading{font:bold clamp(34px,9vw,54px) "Yu Mincho",serif;color:#ffe0a0}.board-result-detail{font-size:14px;line-height:1.7;margin-top:8px;overflow-wrap:anywhere}
+.clock-select{margin:12px 0;max-width:100%}.clock-select label{display:block;font-size:13px;margin-bottom:6px;color:#e3ebd9}
+@media(max-width:450px){.shogi-clock{font-size:13px;min-width:62px;padding:4px 5px}.hand-piece .hand-koma{width:19px;height:23px;font-size:13px}}
 </style>
 <script src="./coi-serviceworker.min.js"></script>
 </head>
@@ -389,19 +400,35 @@ const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 const labelLevel=lv=>lv<=25?'入門':lv<=50?'初級':lv<=70?'中級':lv<=85?'上級':'最強';
 const HOME_KEY='kido-options-v04',SESSION_KEY='kido-session-v04';
 const saved=read(HOME_KEY)||{};
-let home={side:['1','-1','random'].includes(saved.side)?saved.side:'1',level:clamp(Math.floor(Number(saved.level)||85),1,100),time:Math.min(30,Math.max(2,Number(saved.time)||12))};
+let home={side:['1','-1','random'].includes(saved.side)?saved.side:'1',level:clamp(Math.floor(Number(saved.level)||85),1,100),time:Math.min(30,Math.max(2,Number(saved.time)||12)),clock:[0,3,5,10,15].includes(Number(saved.clock))?Number(saved.clock):0};
 let session=null,view='home',selected=null,pendingPromotion=null,modal=null,notice='';
 let thinking=false,thinkTimer=null,cpuWorker=null,strongWorker=null,strongBusy=false,strongStatus='未起動',engineKind='未開始',epoch=0;
+function clockLabel(ms){const n=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
+function clockShown(who){if(!session||!session.clock)return 0;let n=Number(session.remaining?.[who])||0;if(!session.done&&view==='game'&&session.s.turn===who&&session.clockAt)n-=Math.max(0,Date.now()-session.clockAt);return Math.max(0,n);}
+function refreshClockDisplay(){for(const el of document.querySelectorAll('[data-clock-side]')){const m=clockShown(Number(el.dataset.clockSide));el.textContent=clockLabel(m);el.classList.toggle('low',m<=30000);}}
+function chargeClock(){
+ if(!session||!session.clock||session.done||view!=='game'||!session.clockAt)return true;
+ const who=session.s.turn,now=Date.now();
+ session.remaining[who]=Math.max(0,(session.remaining[who]||0)-Math.max(0,now-session.clockAt));
+ session.clockAt=now;
+ if(session.remaining[who]<=0){
+  session.done=true;session.winner=-who;session.reason=sideName(who)+'の時間切れ';
+  clearCPU();selected=null;pendingPromotion=null;modal=null;save();render();return false;
+ }
+ return true;
+}
+setInterval(()=>{if(view==='game'&&session?.clock&&!session.done){if(!chargeClock())return;refreshClockDisplay();}},250);
+
 const humanSide=()=>session?.side||1;
 const viewSide=()=>humanSide();
 const sideName=x=>x===1?'先手':'後手';
 const coord=i=>i===undefined||i===null?'駒台':('９８７６５４３２１'[i%9]+'一二三四五六七八九'[Math.floor(i/9)]);
 function lastCpu(){if(!session)return null;for(let i=session.logs.length-1;i>=0;i--)if(session.logs[i].side!==session.side)return session.logs[i];return null;}
 function gameSaved(){const s=read(SESSION_KEY);return !!(s&&E.deserialize(s.s));}
-function save(){store(HOME_KEY,home);if(session)store(SESSION_KEY,{s:E.serialize(session.s),history:session.history.map(E.serialize),logs:session.logs,side:session.side,level:session.level,time:session.time,done:session.done,winner:session.winner,reason:session.reason});}
+function save(){store(HOME_KEY,home);if(session)store(SESSION_KEY,{s:E.serialize(session.s),history:session.history.map(E.serialize),logs:session.logs,side:session.side,level:session.level,time:session.time,clock:session.clock,remaining:session.remaining,done:session.done,winner:session.winner,reason:session.reason});}
 function restore(){const data=read(SESSION_KEY);if(!data||!E.deserialize(data.s))return false;try{
  const history=(data.history||[]).map(E.deserialize).filter(Boolean);
- session={s:history.length?history[history.length-1]:E.deserialize(data.s),history:history.length?history:[E.deserialize(data.s)],logs:Array.isArray(data.logs)?data.logs:[],side:[1,-1].includes(data.side)?data.side:1,level:clamp(Number(data.level)||65,1,100),time:Math.min(30,Math.max(2,Number(data.time)||12)),done:!!data.done,winner:data.winner??null,reason:data.reason||''};return true;
+ session={s:history.length?history[history.length-1]:E.deserialize(data.s),history:history.length?history:[E.deserialize(data.s)],logs:Array.isArray(data.logs)?data.logs:[],side:[1,-1].includes(data.side)?data.side:1,level:clamp(Number(data.level)||65,1,100),time:Math.min(30,Math.max(2,Number(data.time)||12)),clock:[0,3,5,10,15].includes(Number(data.clock))?Number(data.clock):0,remaining:{1:Math.max(0,Number(data.remaining?.['1'])||0),'-1':Math.max(0,Number(data.remaining?.['-1'])||0)},clockAt:0,done:!!data.done,winner:data.winner??null,reason:data.reason||''};return true;
 }catch{return false;}}
 function clearCPU(keepStrong=false){
  epoch++;clearTimeout(thinkTimer);thinkTimer=null;
@@ -410,12 +437,15 @@ function clearCPU(keepStrong=false){
  thinking=false;
 }
 function launch(){clearCPU();const side=home.side==='random'?(Math.random()<.5?1:-1):Number(home.side),s=E.newGame();
- session={s,history:[s],logs:[],side,level:home.level,time:home.time,done:false,winner:null,reason:''};selected=null;pendingPromotion=null;modal=null;view='game';notice='';save();render();scheduleCPU();}
+ session={s,history:[s],logs:[],side,level:home.level,time:home.time,clock:home.clock,remaining:{1:home.clock*60000,'-1':home.clock*60000},clockAt:Date.now(),done:false,winner:null,reason:''};selected=null;pendingPromotion=null;modal=null;view='game';notice='';save();render();scheduleCPU();}
 function header(){return `<header class="site-header"><div class="brand"><div class="monogram">棋</div><div><div class="brand-name">将棋</div><div class="brand-caption">CPU対局</div></div></div><div class="head-actions">${view==='game'?'<button type="button" class="btn small secondary" data-act="home">タイトルへ</button>':''}</div></header>`;}
 function preview(){return `<div class="welcome-art"><div class="art-board">${['銀','金','玉','','歩','','','金','銀'].map((p,i)=>`<div class="art-square">${p?`<span class="art-piece ${i<3?'inv':''}">${p}</span>`:''}</div>`).join('')}</div></div>`;}
 function levelSlider(id,value){return `<div class="strength-block"><div class="strength-title"><span>CPUの強さ</span><strong id="${id}-readout">${value} / 100 <small>${labelLevel(value)}</small></strong></div><input type="range" id="${id}" min="1" max="100" value="${value}" step="1" aria-label="CPUの強さ"/><div class="strength-marks"><span>1 · やさしい</span><span>100 · 強い</span></div></div>`;}
+function clockSelector(){
+ return '<div class="clock-select"><label for="home-clock">持ち時間（双方それぞれ）</label><select id="home-clock">'+[0,3,5,10,15].map(n=>'<option value="'+n+'" '+(home.clock===n?'selected':'')+'>'+(n?n+'分':'なし')+'</option>').join('')+'</select></div>';
+}
 function timeSelector(id,value){return `<div class="strength-block" style="margin-top:11px"><div class="strength-title"><span>強いCPUの思考時間</span><strong id="${id}-readout">${value}秒</strong></div><input type="range" id="${id}" min="2" max="30" value="${value}" step="1" aria-label="本格CPUの思考時間"/><div class="strength-marks"><span>2秒 · 速い</span><span>30秒 · 深く読む</span></div></div>`;}
-function renderHome(){return `<div class="welcome"><div class="welcome-left"><h1 class="page-heading">CPU対局</h1><p class="page-lead">先手・後手とCPUの強さを選択してください。</p>${preview()}</div><section class="panel start-panel"><h2 class="panel-title">対局の設定</h2><div class="section-caption">先手・後手</div><div class="segmented" role="group" aria-label="先後の選択"><button data-act="side" data-value="1" class="${home.side==='1'?'active':''}">先手</button><button data-act="side" data-value="-1" class="${home.side==='-1'?'active':''}">後手</button><button data-act="side" data-value="random" class="${home.side==='random'?'active':''}">ランダム</button></div>${levelSlider('home-strength',home.level)}${timeSelector('home-time',home.time)}<div class="preset-row">${[20,50,75,100].map(lv=>`<button class="preset ${home.level===lv?'active':''}" data-act="preset" data-level="${lv}">${lv}</button>`).join('')}</div><button class="btn wide" data-act="launch">CPUと対局する</button>${gameSaved()?'<button class="btn wide secondary" data-act="resume" style="margin-top:9px">前回の対局を再開</button>':''}<p class="hint" style="margin-top:12px">CPU100は本格将棋エンジンを優先しますが、ぴよ将棋Lv30との勝ち越しは未検証です。端末非対応の場合は軽量AIになります。</p></section></div>`;}
+function renderHome(){return `<div class="welcome"><div class="welcome-left"><h1 class="page-heading">CPU対局</h1><p class="page-lead">先手・後手とCPUの強さを選択してください。</p>${preview()}</div><section class="panel start-panel"><h2 class="panel-title">対局の設定</h2><div class="section-caption">先手・後手</div><div class="segmented" role="group" aria-label="先後の選択"><button data-act="side" data-value="1" class="${home.side==='1'?'active':''}">先手</button><button data-act="side" data-value="-1" class="${home.side==='-1'?'active':''}">後手</button><button data-act="side" data-value="random" class="${home.side==='random'?'active':''}">ランダム</button></div>${levelSlider('home-strength',home.level)}${timeSelector('home-time',home.time)}${clockSelector()}<div class="preset-row">${[20,50,75,100].map(lv=>`<button class="preset ${home.level===lv?'active':''}" data-act="preset" data-level="${lv}">${lv}</button>`).join('')}</div><button class="btn wide" data-act="launch">CPUと対局する</button>${gameSaved()?'<button class="btn wide secondary" data-act="resume" style="margin-top:9px">前回の対局を再開</button>':''}<p class="hint" style="margin-top:12px">CPU100は本格将棋エンジンを優先しますが、ぴよ将棋Lv30との勝ち越しは未検証です。端末非対応の場合は軽量AIになります。</p></section></div>`;}
 function selectedLegal(){if(!session||session.done||thinking||modal||pendingPromotion||session.s.turn!==session.side||!selected)return [];
  const all=E.legalMoves(session.s);return all.filter(m=>selected.kind==='board'?m.from===selected.i:!!m.drop&&m.drop===selected.t);}
 function arrowMarkup(m){if(!m||m.from===undefined||m.drop)return '';
@@ -429,11 +459,11 @@ function boardMarkup(){const s=session.s,moves=selectedLegal(),last=s.trail?.at(
   const i=viewSide()===1?j:80-j,p=s.board[i],isSelected=selected?.kind==='board'&&selected.i===i,target=moves.some(m=>m.to===i),lastFrom=cpuMove?.from===i,lastTo=cpuMove?.to===i,checked=checkKing===i;
   const char=p?(p.p?E.PROMOTED[p.t]:E.NAMES[p.t]):'';
   const aria=(p?((p.s===session.side?'自分の':'CPUの')+(p.p?'成':'')+E.NAMES[p.t]):'空き')+' '+coord(i);
-  return `<button type="button" data-act="cell" data-square="${i}" role="gridcell" class="cell ${isSelected?'selected':''} ${target?'target':''} ${p?'occupied':''} ${checked?'king-in-check':''} ${lastFrom?'cpu-from':''} ${lastTo?'cpu-to':''}" aria-label="${aria}" ${session.done?'disabled':''}>${p?`<span class="koma ${p.s===viewSide()?'':'opp'} ${p.p?'promoted':''}">${char}</span>`:''}</button>`;}).join('')}</div>${arrowMarkup(cpuMove)}</div></div>`;}
+  return `<button type="button" data-act="cell" data-square="${i}" role="gridcell" class="cell ${isSelected?'selected':''} ${target?'target':''} ${p?'occupied':''} ${checked?'king-in-check':''} ${lastFrom?'cpu-from':''} ${lastTo?'cpu-to':''}" aria-label="${aria}" ${session.done?'disabled':''}>${p?`<span class="koma ${p.s===viewSide()?'':'opp'} ${p.p?'promoted':''}">${char}</span>`:''}</button>`;}).join('')}</div>${arrowMarkup(cpuMove)}${session.done?'<div class="board-result-overlay" role="status"><div class="board-result-inner"><div class="board-result-heading">'+(session.winner===0?'引き分け':session.winner===session.side?'勝利':'敗北')+'</div><div class="board-result-detail">'+clean(session.reason)+'</div></div></div>':''}</div></div>`;}
 function handMarkup(side,allowed){const h=session.s.hands[side]||{},list=E.TYPES.filter(t=>h[t]>0);if(!list.length)return '<span class="empty-label">持ち駒なし</span>';
- return `<div class="hands">${list.map(t=>`<button type="button" class="hand-piece ${selected?.kind==='hand'&&selected.t===t?'selected':''}" data-act="hand" data-piece="${t}" ${allowed&&!thinking&&!session.done&&session.s.turn===session.side?'':'disabled'}>${E.NAMES[t]} <em>×${h[t]}</em></button>`).join('')}</div>`;
+ return `<div class="hands">${list.map(t=>`<button type="button" class="hand-piece ${selected?.kind==='hand'&&selected.t===t?'selected':''}" data-act="hand" data-piece="${t}" ${allowed&&!thinking&&!session.done&&session.s.turn===session.side?'':'disabled'}><span class="hand-koma" aria-hidden="true">${E.NAMES[t]}</span><span class="hand-caption">${E.NAMES[t]}</span><em>×${h[t]}</em></button>`).join('')}</div>`;
 }
-function playerPanel(side){const ours=side===session.side,turn=side===session.s.turn&&!session.done,check=turn&&E.inCheck(session.s,side);return `<div class="player-panel"><div class="avatar">${ours?'自':'将'}</div><div class="player-meta"><div class="player-name">${ours?'あなた':'CPU'} <span class="dim">${sideName(side)}</span></div><div class="player-title">${ours?'対局者':'強さ '+session.level+' / 100 '+(engineKind==='WASM'?'・高性能AI':engineKind==='JS'?'・簡易AI':'')}</div></div>${turn?`<span class="status-pill ${check?'check':''}">${check?'王手':'手番'}</span>`:''}</div>`;}
+function playerPanel(side){const ours=side===session.side,turn=side===session.s.turn&&!session.done,check=turn&&E.inCheck(session.s,side);return `<div class="player-panel"><div class="avatar">${ours?'自':'将'}</div><div class="player-meta"><div class="player-name">${ours?'あなた':'CPU'} <span class="dim">${sideName(side)}</span></div><div class="player-title">${ours?'対局者':'強さ '+session.level+' / 100 '+(engineKind==='WASM'?'・高性能AI':engineKind==='JS'?'・簡易AI':'')}</div></div>${session.clock?`<span class="shogi-clock ${turn?'active':''}" data-clock-side="${side}">${clockLabel(clockShown(side))}</span>`:''}${turn?`<span class="status-pill ${check?'check':''}">${check?'王手':'手番'}</span>`:''}</div>`;}
 function statusText(){if(session.done)return session.winner===0?'引き分け・千日手':session.winner===session.side?'あなたの勝ち':'CPUの勝ち';return thinking?(engineKind==='WASM'?'本格エンジンが考えています…':'CPUが考えています…'):session.s.turn===session.side?'あなたの手番':'CPUの手番';}
 function moveNotice(){const recent=lastCpu();if(!recent)return '<div class="move-info is-empty">CPUの直前の指し手は、盤上の矢印と色で表示されます。</div>';
  return `<div class="move-info"><div class="move-info-icon">↗</div><div><div class="move-info-label">CPUの直近の一手</div><div class="move-info-main">${clean(recent.text)} <span class="move-coords">${recent.drop?'駒台':coord(recent.from)} → ${coord(recent.to)}</span></div></div></div>`;}
@@ -492,9 +522,9 @@ function scheduleCPU(){clearCPU(true);if(!session||session.done||session.s.turn=
   else fallbackCPU(stamp,'軽量AI（難易度設定）');
  },180);
 }
-function commitMove(move){if(!session||session.done)return false;const actual=E.legalMoves(session.s).find(m=>E.sameMove(move,m));if(!actual)return false;
+function commitMove(move){if(!session||session.done||!chargeClock())return false;const actual=E.legalMoves(session.s).find(m=>E.sameMove(move,m));if(!actual)return false;
  const before=session.s,txt=E.moveText(before,actual),next=E.apply(before,actual),gaveCheck=E.inCheck(next,next.turn);
- session.s=next;session.history.push(next);session.logs.push({text:txt,side:before.turn,from:actual.from,to:actual.to,drop:actual.drop||null,gaveCheck});
+ session.s=next;session.clockAt=Date.now();session.history.push(next);session.logs.push({text:txt,side:before.turn,from:actual.from,to:actual.to,drop:actual.drop||null,gaveCheck});
  const end=E.evaluateEnd(next,session.history,session.logs);if(end.done){session.done=true;session.winner=end.winner;session.reason=end.reason;}
  selected=null;pendingPromotion=null;notice='';save();render();if(!session.done)scheduleCPU();return true;}
 function cellClick(i){if(!session||session.done||thinking||modal||pendingPromotion||session.s.turn!==session.side)return;
@@ -502,21 +532,21 @@ function cellClick(i){if(!session||session.done||thinking||modal||pendingPromoti
  if(candidates.length){if(candidates.length===2&&candidates.some(m=>m.promote)){pendingPromotion=candidates;render();}else commitMove(candidates[0]);return;}
  if(p&&p.s===session.side){selected=selected?.kind==='board'&&selected.i===i?null:{kind:'board',i};notice='';render();return;}
  selected=null;notice='選んだ駒の移動先をタップしてください。';render();}
-function undo(){if(!session||session.done||session.history.length<2)return;clearCPU();
+function undo(){if(!session||session.done||session.history.length<2||!chargeClock())return;clearCPU();
  do{session.history.pop();session.logs.pop();}while(session.history.length>1&&session.history[session.history.length-1].turn!==session.side);
- session.s=session.history.at(-1);selected=null;pendingPromotion=null;notice='一手戻しました。';save();render();scheduleCPU();}
+ session.s=session.history.at(-1);session.clockAt=Date.now();selected=null;pendingPromotion=null;notice='一手戻しました。';save();render();scheduleCPU();}
 root.addEventListener('click',event=>{const b=event.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
  if(a==='cell')return cellClick(Number(b.dataset.square));
  if(a==='hand'){if(!session||thinking||session.s.turn!==session.side)return;selected=selected?.kind==='hand'&&selected.t===b.dataset.piece?null:{kind:'hand',t:b.dataset.piece};notice='';render();return;}
  if(a==='promotion'){const m=pendingPromotion?.find(x=>!!x.promote===(b.dataset.value==='yes'));if(m)commitMove(m);return;}
  if(a==='launch')return launch();
- if(a==='resume'){clearCPU();if(restore()){view='game';selected=null;pendingPromotion=null;modal=null;render();scheduleCPU();}return;}
+ if(a==='resume'){clearCPU();if(restore()){view='game';session.clockAt=Date.now();selected=null;pendingPromotion=null;modal=null;render();scheduleCPU();}return;}
  if(a==='side'){home.side=b.dataset.value;store(HOME_KEY,home);render();return;}
  if(a==='preset'){home.level=clamp(Number(b.dataset.level),1,100);store(HOME_KEY,home);render();return;}
- if(a==='home'){clearCPU();view='home';selected=null;modal=null;pendingPromotion=null;render();return;}
+ if(a==='home'){if(!chargeClock()){view='home';render();return;}clearCPU();if(session){session.clockAt=0;save();}view='home';selected=null;modal=null;pendingPromotion=null;render();return;}
  if(a==='help'||a==='resign'){modal=a;render();return;}
  if(a==='modal-close'){modal=null;render();scheduleCPU();return;}
- if(a==='resign-yes'){clearCPU();modal=null;session.done=true;session.winner=-session.side;session.reason='投了';save();render();return;}
+ if(a==='resign-yes'){if(!chargeClock())return;clearCPU();modal=null;session.done=true;session.winner=-session.side;session.reason='投了';save();render();return;}
  if(a==='undo')return undo();
  if(a==='retry')return launch();
 });
@@ -525,10 +555,10 @@ root.addEventListener('input',event=>{const el=event.target;if(!el||!['home-stre
  const level=clamp(Math.round(Number(el.value)),1,100),label=document.getElementById(el.id+'-readout');if(label)label.innerHTML=`${level} / 100 <small>${labelLevel(level)}</small>`;
  if(el.id==='home-strength'){home.level=level;store(HOME_KEY,home);}else if(session){session.level=level;home.level=level;save();}
 });
-root.addEventListener('change',event=>{if(['home-strength','game-strength','home-time','game-time'].includes(event.target?.id)){
+root.addEventListener('change',event=>{if(event.target?.id==='home-clock'){home.clock=[0,3,5,10,15].includes(Number(event.target.value))?Number(event.target.value):0;save();render();return;}if(['home-strength','game-strength','home-time','game-time'].includes(event.target?.id)){
  if(event.target.id==='game-strength'&&session&&thinking){scheduleCPU();}else render();
 }});
-window.ShogiLabDebug={engine:E,ai:A,getGame:()=>session?.s,getSession:()=>session,launch,commitMove,usiMove,getEngineStatus:()=>({engineKind,strongStatus,thinking})};
+window.ShogiLabDebug={engine:E,ai:A,getGame:()=>session?.s,getSession:()=>session,launch,commitMove,usiMove,getEngineStatus:()=>({engineKind,strongStatus,thinking}),getClock:()=>session?{limit:session.clock,remaining:session.remaining,shown:{1:clockShown(1),'-1':clockShown(-1)},done:session.done,winner:session.winner}:null};
 render();
 })();
 
