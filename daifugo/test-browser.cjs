@@ -14,20 +14,33 @@ async function boot(browser){
  try{
   const solo=await boot(browser);
   solo.on('pageerror',e=>errs.push('solo '+e.message));
+  await solo.locator('#player-name').fill('テスト利用者');
   await solo.locator('[data-act="solo"]').click();
+  await until(solo,()=>DaifugoDebug.screen()==='lobby');
+  assert.equal(await solo.locator('#skill').count(),0,'CPU strength must not be displayed');
+  await solo.locator('#room-players').selectOption('5');
+  await solo.locator('#initial-cards').selectOption('10');
+  assert.equal(await solo.locator('#room-players').inputValue(),'5');
+  await solo.locator('[data-act="start-solo"]').click();
   await until(solo,()=>DaifugoDebug.screen()==='game');
-  assert.equal(await solo.locator('.play-card').count(),14);
+  assert.equal(await solo.locator('.play-card').count(),10);
+  assert.equal(await solo.evaluate(()=>DaifugoDebug.full().players.length),5);
+  assert.equal(await solo.evaluate(()=>DaifugoDebug.full().initialCards),10);
   await solo.locator('.play-card').first().click();
   await solo.locator('[data-act="play"]').click();
   await until(solo,()=>DaifugoDebug.view()?.seq>=2);
   const soloV=await solo.evaluate(()=>({mode:DaifugoDebug.mode(),count:DaifugoDebug.view().hand.length,seq:DaifugoDebug.view().seq}));
-  assert.equal(soloV.mode,'solo');assert.equal(soloV.count,13);
+  assert.equal(soloV.mode,'solo');assert.equal(soloV.count,9);
   console.log('CPU GAME OK',soloV);
   await solo.locator('[data-act="home"]').first().click();
+  await solo.locator('[data-act="solo"]').click();
+  await until(solo,()=>DaifugoDebug.screen()==='lobby');
+  await solo.locator('#room-players').selectOption('4');
+  await solo.locator('#initial-cards').selectOption('13');
   for(const rule of ['fiveSkip','sixBack','sevenGive','nineReverse','tenDiscard','capitalFall']){
     await solo.locator('[data-rule="'+rule+'"]').check();
   }
-  await solo.locator('[data-act="solo"]').click();
+  await solo.locator('[data-act="start-solo"]').click();
   await until(solo,()=>DaifugoDebug.view()?.ruleSummary.sevenGive===true);
   await solo.evaluate(()=>{
     const p=DaifugoDebug.full().players[0];
@@ -43,6 +56,7 @@ async function boot(browser){
   console.log('7 GIVE UI OK');
   await solo.locator('[data-act="home"]').first().click();
   await solo.locator('[data-act="solo"]').click();
+  await solo.locator('[data-act="start-solo"]').click();
   await solo.evaluate(()=>{
     const p=DaifugoDebug.full().players[0];
     p.hand=[{id:'S10',suit:'S',rank:10},{id:'S4',suit:'S',rank:4}];
@@ -67,6 +81,11 @@ async function boot(browser){
   await host.waitForSelector('#room-code-display',{timeout:20000});
   await until(host,()=>document.body.textContent.includes('参加者を待っています'),30000);
   assert.equal(await host.locator('#room-code-display').inputValue(),code);
+  await host.locator('#room-players').selectOption('6');
+  await host.locator('#initial-cards').selectOption('8');
+  await host.locator('[data-rule="capitalFall"]').check();
+  assert.equal(await host.locator('.seat-grid .seat').count(),6);
+  assert.equal(await host.evaluate(()=>DaifugoDebug.roomSettings().initialCards),8);
   for(const participant of [guest,guest2]){
     await participant.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
     await participant.waitForSelector('[data-act="join"]',{timeout:30000});
@@ -75,7 +94,9 @@ async function boot(browser){
   }
   await until(guest,()=>DaifugoDebug.seat()>0,60000);
   await until(guest2,()=>DaifugoDebug.seat()>0,60000);
-  await until(host,()=>document.querySelectorAll('.seat strong').length===4&&document.body.textContent.includes('参加中'),40000);
+  await until(host,()=>document.querySelectorAll('.seat strong').length===6&&document.body.textContent.includes('参加中'),40000);
+  await until(guest,()=>DaifugoDebug.roomSettings().playerCount===6&&DaifugoDebug.roomSettings().initialCards===8);
+  assert.ok((await guest.locator('body').innerText()).includes('8枚 / 人'));
   const seats=[await guest.evaluate(()=>DaifugoDebug.seat()),await guest2.evaluate(()=>DaifugoDebug.seat())];
   assert.equal(new Set(seats).size,2,'two guests must get different seats');
   console.log('ROOM JOIN',seats);
@@ -84,7 +105,9 @@ async function boot(browser){
   const privateState=await guest.evaluate(()=>({role:DaifugoDebug.mode(),full:DaifugoDebug.full(),view:DaifugoDebug.view()}));
   assert.equal(privateState.role,'guest');
   assert.equal(privateState.full,null);
-  assert.ok(privateState.view.hand.length>=13);
+  assert.equal(privateState.view.hand.length,8);
+  assert.equal(privateState.view.players.length,6);
+  assert.equal(await host.evaluate(()=>DaifugoDebug.full().players.every(p=>p.hand.length===8)),true);
   assert.ok(privateState.view.players.every(p=>!Object.prototype.hasOwnProperty.call(p,'hand')));
   await host.locator('.play-card').first().click();
   await host.locator('[data-act="play"]').click();
