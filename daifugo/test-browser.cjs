@@ -58,13 +58,21 @@ async function boot(browser){
   const guest=await browser.newPage({viewport:{width:390,height:844},isMobile:true});
   const guest2=await browser.newPage({viewport:{width:390,height:844},isMobile:true});
   for(const [name,page] of [['host',host],['guest',guest],['guest2',guest2]])page.on('pageerror',e=>errs.push(name+' '+e.message));
+  const code='大富豪-'+require('node:crypto').randomBytes(4).toString('hex').toUpperCase();
+  assert.equal(await host.evaluate(()=>DaifugoDebug.normalizeRoomCode('放課後-１')),'放課後-1');
   await host.locator('[data-act="host"]').click();
-  await host.waitForSelector('#invite-url',{timeout:20000});
+  assert.ok(await host.locator('#room-error').isVisible(),'blank code must be rejected');
+  await host.locator('#create-room-code').fill(code);
+  await host.locator('[data-act="host"]').click();
+  await host.waitForSelector('#room-code-display',{timeout:20000});
   await until(host,()=>document.body.textContent.includes('参加者を待っています'),30000);
-  const invite=await host.locator('#invite-url').inputValue();
-  assert.match(invite,/^https:\/\/.+\/daifugo\/#r=[a-f0-9]{24}$/);
-  await guest.goto(invite,{waitUntil:'domcontentloaded',timeout:45000});
-  await guest2.goto(invite,{waitUntil:'domcontentloaded',timeout:45000});
+  assert.equal(await host.locator('#room-code-display').inputValue(),code);
+  for(const participant of [guest,guest2]){
+    await participant.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+    await participant.waitForSelector('[data-act="join"]',{timeout:30000});
+    await participant.locator('#join-room-code').fill(code);
+    await participant.locator('[data-act="join"]').click();
+  }
   await until(guest,()=>DaifugoDebug.seat()>0,60000);
   await until(guest2,()=>DaifugoDebug.seat()>0,60000);
   await until(host,()=>document.querySelectorAll('.seat strong').length===4&&document.body.textContent.includes('参加中'),40000);
@@ -100,6 +108,6 @@ async function boot(browser){
   await until(guest2,()=>DaifugoDebug.view()?.seq>=3,30000);
   const finalState=await host.evaluate(()=>({seq:DaifugoDebug.view().seq,turn:DaifugoDebug.view().turn,playCount:DaifugoDebug.view().log.length}));
   assert.deepEqual(errs,[]);
-  console.log('DAIFUGO TWO-BROWSER ONLINE PASS',finalState);
+  console.log('DAIFUGO CODE ROOM ONLINE PASS',finalState,code);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
