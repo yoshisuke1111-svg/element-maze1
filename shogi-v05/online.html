@@ -45,7 +45,7 @@
 .room-status{padding:12px;background:#244136;border:1px solid #557c63;border-radius:10px;font-size:13px;line-height:1.7;margin:10px 0}
 .room-status.problem{background:#503429;border-color:#ad755a;color:#ffddc8}
 .room-inline{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}.room-inline .btn{flex:1;min-width:120px}
-.room-code{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:.14em}
+.room-code{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:.06em;overflow-wrap:anywhere}.room-code-entry{text-transform:uppercase;margin:8px 0 12px}.room-error{color:#ffcfb9;font-size:13px;line-height:1.6;margin:12px 0}.room-error:empty{display:none}
 .room-sub{color:var(--muted);font-size:12px;line-height:1.75}
 .room-panel{border:1px solid #516e5b;border-radius:12px;background:#1b3931;padding:10px}
 .room-record{max-height:350px;overflow:auto;display:grid;gap:5px}
@@ -177,11 +177,20 @@ if(!E){root.textContent='将棋を読み込めませんでした。';return;}
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nick=x=>String(x||'').trim().replace(/[\u0000-\u001f\u007f]/g,'').slice(0,20)||'ゲスト';
 const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(12)),v=>v.toString(16).padStart(2,'0')).join('');
-const codeOK=x=>/^[a-f0-9]{24}$/.test(x||'');
-const peerCode=x=>'kidoshogi05-'+x;
-const roomFromURL=()=>/^#room=([0-9a-f]{24})$/i.test(location.hash)?location.hash.substring(6).toLowerCase():null;
+const codeOK=x=>/^[a-f0-9]{24}$/.test(x||''); // Session ticket.
+function normalizeRoomCode(value){
+ const code=String(value||'').normalize('NFKC').trim().replace(/\s+/g,'').toUpperCase();
+ if(!code)throw Error('部屋コードを入力してください。');
+ if([...code].length<3||[...code].length>16)throw Error('部屋コードは3〜16文字で入力してください。');
+ if(!/^[\p{L}\p{N}_-]+$/u.test(code))throw Error('部屋コードは文字・数字・-・_だけ使えます。');
+ return code;
+}
+async function peerCode(code){
+ const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('shogi-v05:'+code)));
+ return 'kidoshogi-code-'+Array.from(hash.slice(0,16),v=>v.toString(16).padStart(2,'0')).join('');
+}
+const roomFromURL=()=>{const m=/^#room=([^&]+)$/.exec(location.hash);if(!m)return null;try{return normalizeRoomCode(decodeURIComponent(m[1]));}catch{return null;}};
 const coord=i=>Number.isInteger(i)?'９８７６５４３２１'[i%9]+'一二三四五六七八九'[Math.floor(i/9)]:'駒台';
-const url=()=>new URL('online.html#room='+room,location.href).href;
 let name=nick(localStorage.getItem('kido-online-nick')),room='',role='',side=1,peer=null,conn=null,generation=0;
 let state=E.newGame(),history=[state],logs=[],last=null,done=false,winner=null,reason='',hostName='ゲスト',guestName='ゲスト';
 let view='home',linked=false,ready=false,auth=false,selected=null,promotion=null,modal='',pending=false,notice='',failure='',ticket='',admittedTicket='';
@@ -194,27 +203,35 @@ function cleanup(){
 function back(){
  cleanup();role='';room='';view='home';state=E.newGame();history=[state];logs=[];last=null;notice='';failure='';selected=null;promotion=null;modal='';done=false;location.hash='';render();
 }
-function openHost(){
- saveName();cleanup();role='host';side=1;room=random();hostName=name;guestName='ゲスト';admittedTicket='';
+async function openHost(){
+ let custom;
+ try{custom=normalizeRoomCode(document.getElementById('create-code')?.value);}
+ catch(e){const el=document.getElementById('room-error');if(el)el.textContent=e.message;return;}
+ saveName();cleanup();role='host';side=1;room=custom;hostName=name;guestName='ゲスト';admittedTicket='';
  state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';
  view='room';notice='部屋の準備中です…';failure='';selected=null;promotion=null;modal='';render();
  const PeerCtor=window.Peer||window.peerjs?.Peer;
  if(!PeerCtor){failure='通信プログラムを読み込めませんでした。';render();return;}
  const serial=generation;
  try{
-  peer=new PeerCtor(peerCode(room));
-  peer.on('open',()=>{if(generation!==serial)return;ready=true;notice='参加者を待っています。このURLを友達に送ってください。';render();});
+  const peerId=await peerCode(room);
+  if(serial!==generation)return;
+  peer=new PeerCtor(peerId);
+  peer.on('open',()=>{if(generation!==serial)return;ready=true;notice='参加者を待っています。部屋コードを友達に伝えてください。';render();});
   peer.on('connection',c=>{
    if(generation!==serial){c.close();return;}
    if(conn){c.on('open',()=>{try{c.send({t:'full'});}catch{}c.close();});return;}
    conn=c;configureHostConnection(c,serial);
   });
-  peer.on('error',e=>{if(generation!==serial)return;failure=e?.type==='unavailable-id'?'部屋番号が重複しました。新しい部屋を作ってください。':'無料通信サーバーに接続できませんでした。';render();});
+  peer.on('error',e=>{if(generation!==serial)return;failure=e?.type==='unavailable-id'?'この部屋コードは使用中です。別のコードを指定してください。':'通信サービスに接続できませんでした。';render();});
   peer.on('disconnected',()=>{if(generation===serial&&!linked){notice='通信サーバーと再接続中です。';try{peer?.reconnect();}catch{}render();}});
  }catch(e){failure='部屋の作成に失敗しました。';render();}
 }
-function openGuest(newRoom){
- cleanup();role='guest';side=-1;room=newRoom;
+async function openGuest(newRoom){
+ let code;
+ try{code=normalizeRoomCode(newRoom);}
+ catch(e){const el=document.getElementById('room-error');if(el)el.textContent=e.message;return;}
+ saveName();cleanup();role='guest';side=-1;room=code;
  ticket=sessionStorage.getItem('kido-ticket-'+room)||random();sessionStorage.setItem('kido-ticket-'+room,ticket);
  view='room';state=E.newGame();history=[state];logs=[];last=null;done=false;winner=null;reason='';
  hostName='部屋主';guestName=name;notice='部屋主に接続しています…';failure='';selected=null;promotion=null;modal='';render();
@@ -222,10 +239,12 @@ function openGuest(newRoom){
  if(!PeerCtor){failure='通信プログラムを読み込めませんでした。';render();return;}
  const serial=generation;
  try{
+  const targetId=await peerCode(room);
+  if(generation!==serial)return;
   peer=new PeerCtor();
   peer.on('open',()=>{
    if(generation!==serial)return;
-   const c=peer.connect(peerCode(room),{reliable:true,serialization:'json'});
+   const c=peer.connect(targetId,{reliable:true,serialization:'json'});
    conn=c;configureGuestConnection(c,serial);
   });
   peer.on('error',e=>{
@@ -337,9 +356,10 @@ function player(who){
 function waiting(){
  return '<div class="online-room"><section class="panel"><h2 class="panel-title">'+(role==='host'?'対局相手を待っています':'対局室に接続中です')+'</h2><div class="room-status">'+esc(notice)+'</div>'+
  (failure?'<div class="room-status problem">'+esc(failure)+'</div>':'')+
- (role==='host'?'<p class="room-sub">部屋番号</p><p class="room-code">'+esc(room.slice(0,8).toUpperCase())+'</p><label class="hint">友達に送るURL</label><input id="room-url" readonly class="room-link" value="'+esc(url())+'"><div class="room-inline"><button class="btn" data-act="copy">URLをコピー</button><button class="btn secondary" data-act="create">新しい部屋を作る</button></div>':
+ '<p class="room-sub">部屋コード</p><p class="room-code">'+esc(room)+'</p>'+
+ (role==='host'?'<input id="room-code-display" readonly class="room-link" value="'+esc(room)+'"><div class="room-inline"><button class="btn" data-act="copy">コードをコピー</button><button class="btn secondary" data-act="back">コードを変更</button></div>':
  '<div class="room-inline"><button class="btn" data-act="reconnect">再接続する</button><button class="btn secondary" data-act="back">戻る</button></div>')+
- '<div class="online-foot">招待URLから相手が入室できます。部屋主がページを閉じると部屋は終了します。</div></section></div>';
+ '<div class="online-foot">ほかの人は「部屋に参加」で同じコードを入力してください。部屋主がページを閉じると対局室は終了します。</div></section></div>';
 }
 function game(){
  const other=-side,subtitle=done?(winner===0?'引き分け':winner===side?'あなたの勝ち':'あなたの負け'):!linked?'接続が切れています':pending?'指し手を送信しています…':state.turn===side?'あなたの手番':'相手の手番';
@@ -352,8 +372,8 @@ function game(){
  '<aside class="online-side"><section class="panel"><h3 class="panel-title">対局室の情報</h3><div class="room-status">'+esc(notice||'接続中')+'</div>'+
  (failure?'<div class="room-status problem">'+esc(failure)+'</div>':'')+
  '<div class="detail-row"><span>接続</span><strong>'+(linked?'オンライン':'切断')+'</strong></div><div class="detail-row"><span>手番</span><strong>'+(side===1?'先手':'後手')+'</strong></div>'+
- (role==='host'?'<label class="hint">招待URL</label><input id="room-url" readonly class="room-link" value="'+esc(url())+'"><button class="btn wide secondary" data-act="copy">URLをコピー</button>':
- '<button class="btn wide secondary" data-act="reconnect" '+(linked?'disabled':'')+'>再接続する</button>')+
+ (role==='host'?'<label class="hint">部屋コード</label><input id="room-code-display" readonly class="room-link" value="'+esc(room)+'"><button class="btn wide secondary" data-act="copy">コードをコピー</button>':
+ '<div class="detail-row"><span>部屋コード</span><strong>'+esc(room)+'</strong></div><button class="btn wide secondary" data-act="reconnect" '+(linked?'disabled':'')+'>再接続する</button>')+
  '</section><section class="panel"><h3 class="panel-title">棋譜</h3><div class="room-record">'+(logs.length?logs.slice(-80).map((o,i)=>'<div>'+(logs.length-Math.min(logs.length,80)+i+1)+'. '+esc(o.text)+(o.gaveCheck?' 王手':'')+'</div>').join(''):'<div>まだ指し手はありません。</div>')+'</div></section><p class="room-sub">通信回線や端末によっては接続できない場合があります。対局中は部屋主のページを開いたままにしてください。</p></aside></div>';
 }
 function overlay(){
@@ -365,7 +385,7 @@ function overlay(){
 function render(){
  const y=scrollY;
  root.innerHTML='<div class="app-shell"><header class="site-header"><div class="brand"><div class="monogram">棋</div><div><div class="brand-name">将棋</div><div class="brand-caption">オンライン対局</div></div></div><button class="btn small secondary" data-act="back">戻る</button></header><main>'+
- (view==='home'?'<div class="online-home"><h1 class="page-heading">オンライン対局</h1><p class="page-lead">招待URLで対局相手を呼べます。</p><section class="panel"><h2 class="panel-title">部屋を作成</h2><label class="hint" for="nickname">表示名（任意）</label><input id="nickname" maxlength="20" value="'+esc(name)+'"><p class="hint">部屋主が先手、参加者が後手になります。</p><button class="btn wide" data-act="create">部屋を作ってURLを発行</button><p class="room-sub">このページを開いたまま、相手の入室を待てます。</p></section><a class="btn secondary" href="../shogi-v04/" style="display:block;text-align:center;text-decoration:none">CPU対局を遊ぶ</a></div>':
+ (view==='home'?'<div class="online-home"><h1 class="page-heading">オンライン対局</h1><p class="page-lead">部屋主がコードを決めて作成し、参加者は同じコードで入室します。</p><section class="panel"><h2 class="panel-title">部屋を作る</h2><label class="hint" for="nickname">表示名（任意）</label><input id="nickname" maxlength="20" value="'+esc(name)+'"><label class="hint" for="create-code">部屋コード（3〜16文字）</label><input id="create-code" class="room-code-entry" maxlength="40" placeholder="例：放課後-1" autocapitalize="characters"><p class="hint">部屋主が先手、参加者が後手になります。</p><button class="btn wide" data-act="create">部屋を作成</button></section><section class="panel"><h2 class="panel-title">部屋に参加</h2><label class="hint" for="join-code">部屋コード</label><input id="join-code" class="room-code-entry" maxlength="40" placeholder="コードを入力" autocapitalize="characters"><button class="btn wide secondary" data-act="join" style="margin-top:12px">コードで入室</button></section><p id="room-error" class="room-error" role="alert"></p><a class="btn secondary" href="../shogi-v04/" style="display:block;text-align:center;text-decoration:none">CPU対局を遊ぶ</a></div>':
  (!linked?waiting():game()))+'</main></div>'+overlay();
  if(scrollY!==y)scrollTo(0,y);
 }
@@ -381,6 +401,7 @@ function rematch(){
 root.addEventListener('click',e=>{
  const b=e.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
  if(a==='create')return openHost();
+ if(a==='join')return openGuest(document.getElementById('join-code')?.value);
  if(a==='back')return back();
  if(a==='reconnect'&&role==='guest')return openGuest(room);
  if(a==='cell')return tapSquare(Number(b.dataset.square));
@@ -392,13 +413,13 @@ root.addEventListener('click',e=>{
  if(a==='close'){modal='';render();return;}
  if(a==='rematch')return rematch();
  if(a==='copy'){
-  const link=url(),f=()=>{const inp=document.getElementById('room-url');if(inp){inp.select();document.execCommand('copy');}};
-  navigator.clipboard?.writeText?navigator.clipboard.writeText(link).catch(f):f();
-  notice='URLをコピーしました。';render();return;
+  const fallback=()=>{const inp=document.getElementById('room-code-display');if(inp){inp.select();document.execCommand('copy');}};
+  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(room).catch(fallback);else fallback();
+  notice='部屋コードをコピーしました。';render();return;
  }
 });
 root.addEventListener('change',e=>{if(e.target?.id==='nickname'){saveName();render();}});
-window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,isConnected:()=>linked,getName:()=>name};
+window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,isConnected:()=>linked,getName:()=>name,normalizeRoomCode};
 const incoming=roomFromURL();if(incoming)openGuest(incoming);else render();
 })();
 </script></body></html>
