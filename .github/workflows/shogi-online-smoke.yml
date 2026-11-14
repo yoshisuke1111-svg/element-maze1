@@ -1,0 +1,31 @@
+name: Verify online shogi two-player room
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shogi-online-smoke.yml'
+      - 'shogi-v05/test-live-room.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-room:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install browser test dependency
+        run: npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/shogi-browser" playwright@1.56.0
+      - name: Verify invitation link and two-way moves
+        env:
+          NODE_PATH: ${{ runner.temp }}/shogi-browser/node_modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium)"
+          node shogi-v05/test-live-room.cjs
