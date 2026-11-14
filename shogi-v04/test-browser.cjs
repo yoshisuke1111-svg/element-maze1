@@ -18,6 +18,7 @@ const { chromium }=require('playwright');
   await page.waitForSelector('[data-act="launch"]',{timeout:15000});
   await page.locator('[data-act="side"][data-value="-1"]').click();
   await page.locator('[data-act="preset"][data-level="100"]').click();
+  await page.locator('#home-clock').selectOption('3');
   const slider=page.locator('#home-time');
   await slider.evaluate(el=>{
     el.value='2';
@@ -44,7 +45,19 @@ const { chromium }=require('playwright');
   assert.ok(view.status.strongStatus.includes('Fairy-Stockfish'));
   assert.equal(view.arrows,2,'CPU move must be highlighted from/to');
   assert.ok(view.width<=view.viewport,'no mobile horizontal overflow');
+  assert.equal(await page.evaluate(()=>ShogiLabDebug.getClock().limit),3);
+  assert.equal(await page.locator('[data-clock-side]').count(),2,'two chess clocks must be displayed');
+  await page.evaluate(()=>{const s=ShogiLabDebug.getSession();s.s.hands[s.side].P=2;});
+  await page.locator('[data-act="help"]').click();
+  await page.locator('[data-act="modal-close"]').click();
+  assert.ok(await page.locator('.hand-koma').count()>0,'captured-piece illustration must appear');
+  await page.evaluate(()=>{
+    const s=ShogiLabDebug.getSession();s.remaining[s.s.turn]=650;s.clockAt=Date.now();
+  });
+  await page.waitForFunction(()=>ShogiLabDebug.getSession().done===true,{timeout:8000});
+  assert.ok((await page.locator('.board-result-heading').innerText()).includes('敗北'));
+  assert.ok((await page.locator('.board-result-detail').innerText()).includes('時間切れ'));
   assert.deepEqual(errors,[],'no JavaScript runtime errors');
   await browser.close();
-  console.log('Browser WASM SHOGI PASS');
+  console.log('Browser WASM SHOGI PASS - clock, result overlay and captured piece icon');
 })().catch(e=>{console.error(e);process.exit(1);});
