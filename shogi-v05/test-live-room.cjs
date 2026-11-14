@@ -19,6 +19,7 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
   await host.locator('[data-act="create"]').click();
   assert.ok(await host.locator('#room-error').isVisible(),'blank code must show an error');
   await host.locator('#create-code').fill(code);
+  await host.locator('#room-clock').selectOption('3');
   await host.locator('[data-act="create"]').click();
   await host.waitForSelector('#room-code-display',{timeout:30000});
   await waitFor(host,()=>document.body.textContent.includes('参加者を待っています'),30000);
@@ -29,6 +30,9 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
   await guest.locator('[data-act="join"]').click();
   await waitFor(host,()=>window.ShogiOnlineDebug?.isConnected()===true,80000);
   await waitFor(guest,()=>window.ShogiOnlineDebug?.isConnected()===true,35000);
+  await waitFor(guest,()=>ShogiOnlineDebug.getClock().limit===3,20000);
+  assert.equal(await host.locator('[data-clock-side]').count(),2);
+  assert.equal(await guest.locator('[data-clock-side]').count(),2);
   console.log('Room connected',await host.evaluate(()=>({role:ShogiOnlineDebug.getRole(),side:ShogiOnlineDebug.getState().turn})),
   await guest.evaluate(()=>({role:ShogiOnlineDebug.getRole(),side:ShogiOnlineDebug.getState().turn})));
   await host.locator('[data-act="cell"][data-square="56"]').click();
@@ -40,7 +44,23 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
   await waitFor(host,()=>window.ShogiOnlineDebug?.getState()?.ply===2,22000);
   assert.equal(await host.evaluate(()=>ShogiOnlineDebug.getState().board[33]?.t),'P');
   assert.equal(await host.locator('.cell.cpu-to').count(),1);
+  assert.ok((await host.evaluate(()=>ShogiOnlineDebug.getClock().shown[1]))<180000);
+  await host.evaluate(()=>{
+   const s=ShogiOnlineDebug.getState();s.hands[1].P=1;
+  });
+  await host.locator('[data-act="help"]').click();
+  await host.locator('[data-act="close"]').click();
+  assert.ok(await host.locator('.hand-koma').count()>0,'held-piece illustration appears next to count');
+  await host.evaluate(()=>{
+    const oldNow=Date.now.bind(Date);
+    Date.now=()=>oldNow()+190000;
+  });
+  await waitFor(host,()=>ShogiOnlineDebug.getClock()?.done===true,6000);
+  await waitFor(guest,()=>ShogiOnlineDebug.getClock()?.done===true,12000);
+  assert.ok((await host.locator('.board-result-heading').innerText()).includes('敗北'));
+  assert.ok((await guest.locator('.board-result-heading').innerText()).includes('勝利'));
+  assert.ok((await guest.locator('.board-result-detail').innerText()).includes('時間切れ'));
   assert.deepEqual(errors,[]);
-  console.log('LIVE SHOGI CUSTOM CODE TEST PASSED',code);
+  console.log('LIVE SHOGI CUSTOM CODE + CLOCK + OVERLAY TEST PASSED',code);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
