@@ -14,13 +14,19 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
   console.log('Initial page:',response?.status(),await host.title());
   console.log('Initial app:',(await host.locator('#app').innerText().catch(()=>'' )).slice(0,300));
   await host.waitForSelector('[data-act="create"]',{timeout:22000}).catch(async error=>{console.error('UI INIT ERROR',await host.locator('body').innerText().catch(()=>''),errors);throw error;});
+  const code='将棋-'+require('node:crypto').randomBytes(4).toString('hex').toUpperCase();
+  assert.equal(await host.evaluate(()=>ShogiOnlineDebug.normalizeRoomCode('放課後-１')),'放課後-1');
   await host.locator('[data-act="create"]').click();
-  await host.waitForSelector('#room-url',{timeout:30000});
+  assert.ok(await host.locator('#room-error').isVisible(),'blank code must show an error');
+  await host.locator('#create-code').fill(code);
+  await host.locator('[data-act="create"]').click();
+  await host.waitForSelector('#room-code-display',{timeout:30000});
   await waitFor(host,()=>document.body.textContent.includes('参加者を待っています'),30000);
-  const invitation=await host.locator('#room-url').inputValue();
-  console.log('Room URL',invitation.replace(/#room=.*/,'#room=[redacted]'));
-  assert.match(invitation,/^https:\/\/.+\/online\.html#room=[a-f0-9]{24}$/);
-  await guest.goto(invitation,{waitUntil:'domcontentloaded',timeout:45000});
+  assert.equal(await host.locator('#room-code-display').inputValue(),code);
+  await guest.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+  await guest.waitForSelector('[data-act="join"]',{timeout:30000});
+  await guest.locator('#join-code').fill(code);
+  await guest.locator('[data-act="join"]').click();
   await waitFor(host,()=>window.ShogiOnlineDebug?.isConnected()===true,80000);
   await waitFor(guest,()=>window.ShogiOnlineDebug?.isConnected()===true,35000);
   console.log('Room connected',await host.evaluate(()=>({role:ShogiOnlineDebug.getRole(),side:ShogiOnlineDebug.getState().turn})),
@@ -35,6 +41,6 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
   assert.equal(await host.evaluate(()=>ShogiOnlineDebug.getState().board[33]?.t),'P');
   assert.equal(await host.locator('.cell.cpu-to').count(),1);
   assert.deepEqual(errors,[]);
-  console.log('LIVE TWO-BROWSER SHOGI TEST PASSED');
+  console.log('LIVE SHOGI CUSTOM CODE TEST PASSED',code);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
