@@ -1,0 +1,31 @@
+name: Verify Shogi v0.4 production browser
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shogi-browser-smoke.yml'
+      - 'shogi-v04/test-browser.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright JS
+        run: npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/shogi-browser" playwright@1.56.0
+      - name: Test public GitHub Pages with Chromium
+        env:
+          NODE_PATH: ${{ runner.temp }}/shogi-browser/node_modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium)"
+          node shogi-v04/test-browser.cjs
