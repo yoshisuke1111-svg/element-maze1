@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/shogi-engine-assets.yml'
+      - 'shogi-v04/test-engine.cjs'
   workflow_dispatch:
 
 permissions:
