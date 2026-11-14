@@ -16,6 +16,7 @@ const DEFAULT_RULES=Object.freeze({
 });
 const LABEL={3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A',15:'2',16:'JOKER'};
 const PLACE=['大富豪','富豪','貧民','大貧民'];
+const placeName=(index,count)=>count===4?PLACE[index]:index===0?'大富豪':index===count-1?'大貧民':(index+1)+'位';
 const err=(s)=>{throw Error(s);};
 function settings(input={}){
  const o={...DEFAULT_RULES};
@@ -126,7 +127,7 @@ function registerFinish(s,id){
  if(s.finishOrder.includes(id)||s.lockedBottom===id)return;
  const player=s.players[id];
  s.finishOrder.push(id);
- s.log.push({kind:'finish',who:id,text:player.name+' 上がり ('+PLACE[s.finishOrder.length-1]+')'});
+ s.log.push({kind:'finish',who:id,text:player.name+' 上がり ('+placeName(s.finishOrder.length-1,s.players.length)+')'});
  if(s.rules.capitalFall&&s.round>1&&s.finishOrder.length===1&&s.lastRanking&&s.lastRanking[0]!==id){
   const former=s.lastRanking[0];
   if(active(s,former)){
@@ -203,8 +204,16 @@ function pickCPUSpecial(s,id){
  return cards.slice(0,max).map(c=>c.id);
 }
 function startRound(s,previousRanking=null,random=Math.random){
- const cards=shuffle(deck(s.rules.jokers),random);
+ const shuffled=shuffle(deck(s.rules.jokers),random);
  for(const p of s.players){p.hand=[];p.place=previousRanking?previousRanking.indexOf(p.id):null;}
+ const cards=s.initialCards==null?shuffled:(()=>{
+  const needed=s.initialCards*s.players.length;
+  if(!Number.isInteger(s.initialCards)||s.initialCards<1||s.initialCards>13||needed>shuffled.length)err('手札枚数が不正です。');
+  // Include all configured jokers before randomly selecting the other cards.
+  const jokers=shuffled.filter(c=>c.rank===16);
+  const normal=shuffled.filter(c=>c.rank!==16);
+  return shuffle([...jokers,...normal.slice(0,needed-jokers.length)],random);
+ })();
  cards.forEach((card,i)=>s.players[i%s.players.length].hand.push(card));
  for(const p of s.players)p.hand=sortHand(p.hand);
  if(previousRanking&&s.rules.exchange&&s.players.length===4){
@@ -227,9 +236,11 @@ function startRound(s,previousRanking=null,random=Math.random){
 function newGame(options={}){
  const rules=settings(options.rules||{});
  const people=options.players||Array.from({length:4},(_,i)=>({name:i===0?'あなた':'CPU '+i,isCPU:i!==0}));
- if(people.length!==4)err('4人用のゲームです。');
+ if(people.length<2||people.length>6)err('2〜6人用のゲームです。');
+ const initialCards=options.initialCards==null?null:Number(options.initialCards);
+ if(initialCards!==null&&(!Number.isInteger(initialCards)||initialCards<1||initialCards>13||initialCards*people.length>52+rules.jokers))err('最初のカード枚数が不正です。');
  const s={players:people.map((p,i)=>({id:i,name:String(p.name||'プレイヤー '+(i+1)).slice(0,20),
-   isCPU:!!p.isCPU,hand:[],place:null})),rules,phase:'playing',turn:0,round:0,
+   isCPU:!!p.isCPU,hand:[],place:null})),rules,initialCards,phase:'playing',turn:0,round:0,
    table:null,bound:'',revolution:false,elevenBack:false,sixBack:false,direction:1,
    passes:[],finishOrder:[],lastRanking:null,lockedBottom:null,
    pending:null,pendingQueue:[],afterEffect:null,log:[],seq:0};
@@ -336,6 +347,7 @@ function publicView(s,seat){
  if(!player)err('無効な座席です。');
  return {
   round:s.round,phase:s.phase,turn:s.turn,seq:s.seq,seat,ruleSummary:s.rules,
+  initialCards:s.initialCards,playerCount:s.players.length,
   pending:s.pending?{...s.pending}:null,direction:s.direction,sixBack:s.sixBack,lockedBottom:s.lockedBottom,
   players:s.players.map(p=>({id:p.id,name:p.name,isCPU:p.isCPU,count:p.hand.length,place:p.place})),
   hand:player.hand.map(c=>({...c})),
@@ -345,6 +357,6 @@ function publicView(s,seat){
   log:s.log.slice(-48)
  };
 }
-return {SUITS,SUIT_LABEL,DEFAULT_RULES,LABEL,PLACE,settings,deck,shuffle,sortHand,classify,choose,beats,
+return {SUITS,SUIT_LABEL,DEFAULT_RULES,LABEL,PLACE,placeName,settings,deck,shuffle,sortHand,classify,choose,beats,
  newGame,startRound,move,pass,resolveSpecial,pickCPUSpecial,legalMoves,pickCPU,publicView,compareRank};
 });
