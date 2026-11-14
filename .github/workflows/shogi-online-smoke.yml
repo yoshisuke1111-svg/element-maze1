@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/shogi-online-smoke.yml'
       - 'shogi-v05/test-live-room.cjs'
+      - 'shogi-v05/online.html'
+      - 'shogi-v05/index.html'
   workflow_dispatch:
 
 permissions:
