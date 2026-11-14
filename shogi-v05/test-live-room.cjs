@@ -10,8 +10,10 @@ async function waitFor(page,f,timeout=75000){await page.waitForFunction(f,null,{
  const errors=[];for(const [kind,page] of [['host',host],['guest',guest]])page.on('pageerror',e=>errors.push(kind+': '+e.message));
  const base='https://yoshisuke1111-svg.github.io/element-maze1/shogi-v05/online.html';
  try{
-  await host.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
-  await host.waitForSelector('[data-act="create"]',{timeout:30000});
+  const response=await host.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+  console.log('Initial page:',response?.status(),await host.title());
+  console.log('Initial app:',(await host.locator('#app').innerText().catch(()=>'' )).slice(0,300));
+  await host.waitForSelector('[data-act="create"]',{timeout:22000}).catch(async error=>{console.error('UI INIT ERROR',await host.locator('body').innerText().catch(()=>''),errors);throw error;});
   await host.locator('[data-act="create"]').click();
   await host.waitForSelector('#room-url',{timeout:30000});
   await waitFor(host,()=>document.body.textContent.includes('参加者を待っています'),30000);
