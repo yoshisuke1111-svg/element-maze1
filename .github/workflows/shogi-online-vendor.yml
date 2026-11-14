@@ -1,0 +1,41 @@
+name: Install Shogi online PeerJS client
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shogi-online-vendor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Acquire pinned open-source PeerJS client
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/kido-peer" peerjs@1.5.5
+          pkg="$RUNNER_TEMP/kido-peer/node_modules/peerjs"
+          mkdir -p shogi-v05/vendor
+          cp "$pkg/dist/peerjs.min.js" shogi-v05/vendor/peerjs.min.js
+          cp "$pkg/LICENSE" shogi-v05/vendor/PEERJS-LICENSE.txt
+          test -s shogi-v05/vendor/peerjs.min.js
+          wc -c shogi-v05/vendor/*
+      - name: Commit PeerJS for same-origin GitHub Pages loading
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shogi-v05/vendor
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Vendor pinned PeerJS client for private invite rooms"
+          git push
