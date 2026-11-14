@@ -23,6 +23,37 @@ async function boot(browser){
   const soloV=await solo.evaluate(()=>({mode:DaifugoDebug.mode(),count:DaifugoDebug.view().hand.length,seq:DaifugoDebug.view().seq}));
   assert.equal(soloV.mode,'solo');assert.equal(soloV.count,13);
   console.log('CPU GAME OK',soloV);
+  await solo.locator('[data-act="home"]').first().click();
+  for(const rule of ['fiveSkip','sixBack','sevenGive','nineReverse','tenDiscard','capitalFall']){
+    await solo.locator('[data-rule="'+rule+'"]').check();
+  }
+  await solo.locator('[data-act="solo"]').click();
+  await until(solo,()=>DaifugoDebug.view()?.ruleSummary.sevenGive===true);
+  await solo.evaluate(()=>{
+    const p=DaifugoDebug.full().players[0];
+    p.hand=[{id:'S7',suit:'S',rank:7},{id:'S4',suit:'S',rank:4},{id:'S5',suit:'S',rank:5}];
+    DaifugoDebug.play(['S7']);
+  });
+  await until(solo,()=>DaifugoDebug.view()?.pending?.type==='give');
+  assert.ok((await solo.locator('.special-banner').innerText()).includes('7渡し'));
+  await solo.locator('[data-act="card"][data-id="S4"]').click();
+  await solo.locator('[data-act="play"]').click();
+  await until(solo,()=>DaifugoDebug.view()?.pending===null);
+  assert.ok(await solo.evaluate(()=>DaifugoDebug.full().players[1].hand.some(x=>x.id==='S4')),'selected card must move to next player');
+  console.log('7 GIVE UI OK');
+  await solo.locator('[data-act="home"]').first().click();
+  await solo.locator('[data-act="solo"]').click();
+  await solo.evaluate(()=>{
+    const p=DaifugoDebug.full().players[0];
+    p.hand=[{id:'S10',suit:'S',rank:10},{id:'S4',suit:'S',rank:4}];
+    DaifugoDebug.play(['S10']);
+  });
+  await until(solo,()=>DaifugoDebug.view()?.pending?.type==='discard');
+  assert.ok((await solo.locator('.special-banner').innerText()).includes('10捨て'));
+  await solo.locator('[data-act="card"][data-id="S4"]').click();
+  await solo.locator('[data-act="play"]').click();
+  await until(solo,()=>DaifugoDebug.full()?.finishOrder.includes(0));
+  console.log('10 DISCARD UI OK');
   const host=await boot(browser);
   const guest=await browser.newPage({viewport:{width:390,height:844},isMobile:true});
   const guest2=await browser.newPage({viewport:{width:390,height:844},isMobile:true});
