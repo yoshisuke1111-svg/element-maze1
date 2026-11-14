@@ -216,15 +216,17 @@ function startRound(s,previousRanking=null,random=Math.random){
  })();
  cards.forEach((card,i)=>s.players[i%s.players.length].hand.push(card));
  for(const p of s.players)p.hand=sortHand(p.hand);
- if(previousRanking&&s.rules.exchange&&s.players.length===4){
-  const trade=(upper,lower,n)=>{
+ if(previousRanking&&s.rules.exchange){
+  const trade=(upper,lower,requested)=>{
    const top=s.players[upper],bottom=s.players[lower];
+   const n=Math.min(requested,top.hand.length,bottom.hand.length);
    const fromTop=top.hand.slice(0,n),fromBottom=bottom.hand.slice(-n);
    top.hand=sortHand(top.hand.filter(c=>!fromTop.some(x=>x.id===c.id)).concat(fromBottom));
    bottom.hand=sortHand(bottom.hand.filter(c=>!fromBottom.some(x=>x.id===c.id)).concat(fromTop));
   };
-  trade(previousRanking[0],previousRanking[3],2);
-  trade(previousRanking[1],previousRanking[2],1);
+  for(let i=0;i<Math.floor(s.players.length/2);i++){
+   trade(previousRanking[i],previousRanking[s.players.length-1-i],i===0?2:1);
+  }
  }
  s.turn=previousRanking?previousRanking[0]:0;
  s.table=null;s.bound='';s.elevenBack=false;s.sixBack=false;s.revolution=false;s.passes=[];
