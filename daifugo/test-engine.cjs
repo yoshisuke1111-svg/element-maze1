@@ -135,6 +135,6 @@ for(let playerCount=2;playerCount<=6;playerCount++){
  assert.ok(room.players.every(p=>p.hand.length===handSize),'rank exchange must preserve cards per player');
  run();
 }
-assert.throws(()=>E.newGame({players:Array.from({length:6},(_,i)=>({name:String(i)})),initialCards:13,rules:{jokers:1}}),/手札枚数/);
+assert.throws(()=>E.newGame({players:Array.from({length:6},(_,i)=>({name:String(i)})),initialCards:13,rules:{jokers:1}}),/カード枚数/);
 
 console.log('Daifugo rules engine PASS | turns=',steps,'elapsed=',Date.now()-start,'ms');
