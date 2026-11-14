@@ -1,0 +1,48 @@
+name: Daifugo rules and online gameplay
+
+on:
+  push:
+    paths:
+      - '.github/workflows/daifugo-tests.yml'
+      - 'daifugo/game.js'
+      - 'daifugo/app.js'
+      - 'daifugo/index.html'
+      - 'daifugo/test-browser.cjs'
+      - 'daifugo/test-engine.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Test card rules and complete four-player rounds
+        run: node daifugo/test-engine.cjs
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/browser" playwright@1.56.0
+      - name: Let GitHub Pages serve the latest release
+        run: sleep 35
+      - name: Test CPU game and real two-way invite room
+        env:
+          NODE_PATH: ${{ runner.temp }}/browser/node_modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium)"
+          node daifugo/test-browser.cjs
