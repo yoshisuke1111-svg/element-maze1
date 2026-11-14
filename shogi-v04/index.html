@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#112521">
+<meta name="description" content="スマホで遊べる将棋。高性能WASM将棋AIを導入し、CPU対戦に対応します。">
+<title>棋道｜将棋・強化CPU v0.4</title>
+<style>
+:root{color-scheme:dark;--bg:#0e201e;--bg2:#091a18;--panel:#17302c;--panel2:#1e3933;--border:#385b52;--text:#f4f3e9;--muted:#b0c7bc;--gold:#f0cf88;--wood:#d5ab66;--woodlight:#edd099;--danger:#fa9d86;--green:#a4dfb9;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg2)}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(ellipse at 50% -20%,#285146 0,transparent 60%),linear-gradient(160deg,#112723,#091a18 70%);font-size:15px}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.46;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}input,select{color:var(--text);background:#0e2722;border:1px solid #547366;border-radius:10px;padding:10px;width:100%;min-height:42px}select option{background:#10312b}.app-shell{max-width:1200px;padding:0 16px 40px;margin:auto}.site-header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:71px;border-bottom:1px solid #51726755}.brand{display:flex;align-items:center;gap:12px}.monogram{width:42px;height:42px;border:1.5px solid #dfc38f;border-radius:13px;color:#f9e7b9;display:grid;place-items:center;font-size:26px;font-family:serif;background:#294138}.brand-name{font-family:serif;font-weight:bold;letter-spacing:.22em;font-size:24px;line-height:1.1}.brand-caption{font-size:10px;color:var(--muted);letter-spacing:.23em;margin-top:5px}.head-actions{display:flex;gap:8px;align-items:center}.btn{background:linear-gradient(155deg,#dab676,#b88c48);border:1px solid #e9d49f;color:#1f2824;font-weight:750;border-radius:12px;padding:10px 15px;min-height:43px;box-shadow:0 3px 0 #71533040}.btn:active{transform:translateY(1px)}.btn.secondary{background:#234138;border-color:#587b67;color:#f4f0dc;box-shadow:none}.btn.ghost{background:transparent;color:var(--muted);border:1px solid #4b6c5e;box-shadow:none}.btn.danger{background:#583126;color:#ffddcd;border-color:#bb6e5c;box-shadow:none}.btn.small{padding:7px 10px;min-height:34px;font-size:13px}.btn.wide{width:100%}.btn-inline{display:flex;gap:8px;align-items:center;justify-content:center}.eyebrow{font-size:11px;letter-spacing:.19em;color:var(--gold);font-weight:700}.muted{color:var(--muted)}.hint{font-size:12px;color:var(--muted);line-height:1.65}.panel{background:linear-gradient(145deg,rgba(32,65,54,.88),rgba(18,42,36,.96));border:1px solid #51726596;border-radius:17px;padding:17px;box-shadow:inset 0 1px 0 #ffffff15}.panel-title{font-size:16px;font-weight:750;margin:0 0 13px}.page-heading{font-size:clamp(29px,6vw,47px);font-family:serif;line-height:1.25;letter-spacing:.07em;margin:8px 0 12px}.page-lead{color:#d2e3d7;line-height:1.8;max-width:530px;font-size:14px}.welcome{padding-top:32px;display:grid;grid-template-columns:minmax(270px,1fr) minmax(270px,450px);gap:30px;align-items:center}.welcome-left{padding:0 0 15px}.welcome-art{max-width:440px;margin:20px auto 0;border-radius:22px;background:radial-gradient(circle at 50% 30%,#4c6a5d,#18312b 68%);border:1px solid #547366;min-height:245px;display:grid;place-items:center;position:relative;overflow:hidden}.welcome-art:before{content:"";position:absolute;inset:-70px 0 0;background:repeating-linear-gradient(125deg,transparent 0 35px,#dbcb9533 36px 37px);opacity:.18}.art-board{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,60px);transform:perspective(420px)rotateX(30deg)rotateZ(-7deg);border:10px solid #805938;box-shadow:0 24px 25px #05181299,0 0 0 1px #a68551;border-radius:6px;position:relative}.art-square{background:linear-gradient(140deg,#e7c58e,#cfa268);border:1px solid #986e4388;display:grid;place-items:center;color:#33291e;font-weight:bold;font-family:serif;font-size:26px}.art-piece{clip-path:polygon(50% 3%,95% 25%,95% 100%,5% 100%,5% 25%);background:linear-gradient(140deg,#fff1c5,#bc8851);border-radius:2px;width:40px;height:45px;display:grid;place-items:center}.art-piece.inv{transform:rotate(180deg)}.settings-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.setting-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:125px}.setting-field label{color:#c9dbce;font-size:12px}.segmented{display:flex;border:1px solid #507365;border-radius:11px;padding:3px;gap:3px;background:#102a26}.segmented button{flex:1;border:0;color:var(--muted);padding:10px 6px;border-radius:8px;background:transparent;font-size:13px}.segmented button.active{background:#e7ca8f;color:#253127;font-weight:800}.field-note{font-size:12px;color:#d2e2d5;border:1px solid #6d7f5b;padding:11px;border-radius:10px;background:#4c583b28;margin-top:10px}.section-caption{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gold);margin:18px 0 5px}.footnote{border-top:1px solid #49645755;margin-top:25px;padding-top:15px;font-size:12px;line-height:1.75;color:var(--muted)}.pills{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.pill{border:1px solid #587566;padding:5px 9px;font-size:11px;color:#d4e2d6;border-radius:100px;background:#29443b}.game-layout{display:grid;grid-template-columns:minmax(180px,240px) minmax(310px,530px) minmax(180px,260px);gap:16px;margin:18px auto;justify-content:center;align-items:start}.game-center{min-width:0}.player-panel{display:flex;align-items:center;gap:10px;justify-content:space-between}.avatar{display:grid;place-items:center;width:47px;height:47px;border-radius:14px;border:1px solid #d5c18c;background:linear-gradient(135deg,#29483f,#0c2824);color:#f0d79a;font-family:serif;font-size:25px;flex:none}.player-meta{flex:1;min-width:0}.player-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-title{color:var(--muted);font-size:11px;margin-top:2px}.status-pill{background:#234a3c;color:#c9f2d7;border:1px solid #65907c;padding:4px 8px;border-radius:30px;font-size:11px;white-space:nowrap}.status-pill.check{background:#65382d;color:#ffd2c7;border-color:#be775c}.top-player,.bottom-player{padding:10px 13px;background:#17332e;border:1px solid #4e7964;border-radius:14px}.top-player{margin-bottom:9px}.bottom-player{margin-top:11px}.board-wrap{position:relative;background:linear-gradient(135deg,#8b6138,#c1965b 28%,#6b4c2e 95%);padding:11px;border-radius:11px;box-shadow:0 14px 25px #020f0cbc,inset 0 2px 0 #e9ca90;border:2px solid #d8b47b}.board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));width:100%;aspect-ratio:1/1;box-shadow:0 0 0 2px #6f4a24,0 2px 8px #3b211c55;background:var(--wood)}.cell{border:0;outline:1px solid #98754b;border-radius:0;display:grid;place-items:center;background:radial-gradient(circle at 35% 35%,#eed19d 5%,#ddb578 90%);padding:0;min-width:0;min-height:0;position:relative;aspect-ratio:1/1}.cell.last{background:#e5bd85}.cell.king-in-check{background:#d58165}.cell.target{background:#e5d297}.cell.target:after{content:"";position:absolute;inset:28%;border-radius:50%;background:#44844c99;z-index:1;pointer-events:none}.cell.target.occupied:after{inset:3px;border:3px solid #2b7651;background:transparent;border-radius:4px}.cell.selected{background:#f5d986;box-shadow:inset 0 0 0 3px #419462;z-index:1}.cell:focus-visible{z-index:3;outline:3px solid #fff5c4}.koma{display:grid;place-items:center;clip-path:polygon(50% 1%,95% 23%,95% 98%,5% 98%,5% 23%);background:linear-gradient(120deg,#ffeac0 0%,#e7c18b 62%,#c69c61 100%);width:81%;height:89%;color:#2b241d;filter:drop-shadow(0 1px 1px #4b302b);font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:900;font-size:clamp(14px,2.2vw,26px);line-height:1;user-select:none;position:relative;z-index:2}.koma.opp{transform:rotate(180deg)}.koma.promoted{color:#a43f32}.koma.selected-koma{background:linear-gradient(135deg,#fff0bf,#f2d27c)}.turn-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 11px;gap:8px}.turn-line{font-weight:bold;color:#f1e1b9;font-size:15px}.role-caption{font-size:12px;color:#c8dccc}.hands{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:49px}.hand-piece{padding:5px 7px;display:flex;gap:4px;align-items:center;background:linear-gradient(160deg,#ddba84,#a87b48);border:1px solid #e1c396;border-radius:8px;color:#30261a;min-width:40px;min-height:38px;justify-content:center;font-family:"Yu Mincho",serif;font-weight:bold;font-size:18px}.hand-piece em{font:700 11px sans-serif;color:#513c23}.hand-piece.selected{box-shadow:0 0 0 2px #8bcf86,0 0 0 4px #12332c}.hand-piece:disabled{opacity:.6}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions>*{flex:1}.side-stack{display:flex;flex-direction:column;gap:12px}.record{font-size:12px;color:#c6ddcd;overflow:auto;max-height:350px;display:grid;grid-template-columns:1fr 1fr;gap:6px}.record-item{padding:7px;background:#102b26;border:1px solid #44655755;border-radius:7px;white-space:nowrap}.record-item.latest{border-color:#d5ad74;color:#f5dcb6}.detail-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #5a726148;font-size:13px}.detail-row:last-child{border:0}.chip-number{color:var(--gold);font-weight:bold}.empty-label{color:#a2bcb0;font-size:12px;padding:7px 0}.help-list{font-size:13px;line-height:1.9;color:#cbded3}.callout{padding:12px;border-radius:11px;background:#3c56392e;border:1px solid #82976f70;font-size:12px;line-height:1.65;color:#e6e2ca}.notice{padding:10px 12px;background:#183b34;border:1px solid #678f74;border-radius:10px;color:#e3f0e3;font-size:13px}.notice.warning{background:#613d31;border-color:#b97d60;color:#ffe7d3}.modal-backdrop{position:fixed;inset:0;background:#061614cc;display:grid;place-items:center;z-index:40;padding:18px;overscroll-behavior:contain}.modal{border:1px solid #7a967f;background:linear-gradient(140deg,#23453b,#0c241f);border-radius:17px;padding:20px;max-width:520px;width:100%;max-height:calc(100vh - 38px);overflow:auto;box-shadow:0 30px 70px #0009}.modal h2{font-family:serif;font-size:23px;margin:0 0 9px}.modal .actions{margin-top:17px}.tiny{font-size:11px;color:#bdd1c3}.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.admin-grid label{font-size:12px;color:#c2d2c3;display:block;margin-bottom:5px}.admin-row{margin:10px 0}.admin-range{display:flex;gap:8px;align-items:center}.admin-range input[type=range]{padding:0}.admin-level{font-size:18px;color:var(--gold);font-weight:bold;min-width:40px;text-align:right}.bottom-banner{font-size:11px;text-align:center;color:#90b0a0;line-height:1.6;margin:22px 0}.ui-error{color:#ffdbcc;background:#513327;padding:14px;border-radius:8px}.checkmate{font-size:19px;color:var(--gold);font-weight:800}.wideboard{max-width:530px;margin:auto}.loading-fallback{padding:35vh 20px;text-align:center;color:var(--gold);font:700 30px serif}.loading-fallback small{display:block;font:14px sans-serif;margin-top:15px;color:#c9ddd2}.no-script{padding:15px;color:#f8e2b7}.testing-tag{font-size:10px;color:#eddfb3;border:1px solid #847350;padding:3px 7px;border-radius:100px}.split-mode{display:grid;gap:8px;margin-bottom:12px}.result-big{font-size:40px;font-weight:800;color:var(--gold);font-family:serif}.mini-divider{border-top:1px solid #51725d55;margin:12px 0}
+@media(max-width:990px){.game-layout{grid-template-columns:minmax(0,570px);max-width:580px;margin:12px auto}.game-center{order:1}.side-left{order:2}.side-right{order:3}.side-stack{display:flex;flex-direction:column;gap:12px}.side-left .panel,.side-right .panel{margin-top:7px}.welcome{grid-template-columns:1fr;max-width:680px;margin:auto;gap:12px}.welcome-left{padding:0}.welcome-art{min-height:180px}.art-board{transform:perspective(440px)rotateX(30deg)rotateZ(-7deg)scale(.8)}.board-wrap{max-width:520px;margin:auto}}
+@media(max-width:450px){.app-shell{padding:0 9px 28px}.site-header{min-height:58px}.brand-name{font-size:19px}.brand-caption{font-size:8px}.monogram{width:36px;height:36px;font-size:22px}.btn.small{min-height:34px;font-size:11px;padding:7px 8px}.page-heading{font-size:29px}.welcome{padding-top:19px}.panel{padding:12px;border-radius:13px}.board-wrap{padding:7px;border-width:2px}.koma{font-size:clamp(12px,5.1vw,22px)}.top-player,.bottom-player{padding:8px 9px}.avatar{width:35px;height:35px;font-size:20px;border-radius:11px}.player-name{font-size:13px}.player-title{font-size:10px}.turn-line{font-size:13px}.game-layout{gap:9px}.cell.target.occupied:after{border-width:2px}.hand-piece{min-height:36px;font-size:16px}.btn{font-size:13px;padding:10px}.record{max-height:160px}.modal{padding:15px}}
+/* v0.3: shogi-only UI, distinct last CPU move, mobile-first game layout. */
+:root{--accent:#d3b77e}
+.game-layout{display:grid;grid-template-columns:minmax(0,550px) minmax(220px,290px);gap:17px;align-items:start;justify-content:center;max-width:895px;margin:15px auto}
+.game-center{min-width:0}
+.side-stack{display:flex;flex-direction:column;gap:12px}
+.board-plane{position:relative;aspect-ratio:1/1}
+.board-plane .board{position:relative;width:100%;height:100%}
+.board-plane .move-arrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible}
+.cell.cpu-from{background:#d9b47a;box-shadow:inset 0 0 0 3px #ad4b32}
+.cell.cpu-to{background:#f5cb84;box-shadow:inset 0 0 0 3px #bc4c31}
+.cell.cpu-from .koma,.cell.cpu-to .koma{filter:drop-shadow(0 0 3px #db7445)}
+.move-info{margin:10px 0 0;min-height:65px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #9e7157;border-radius:12px;background:linear-gradient(115deg,#3f3d2b,#28352b);color:#fff1d4}
+.move-info.is-empty{font-size:12px;border-color:#426555;background:#1b3932;color:#bdcfbf}
+.move-info-icon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:#794e37;color:#fff2c0;flex:none}
+.move-info-label{font-size:11px;color:#e9c999;font-weight:bold}
+.move-info-main{font-size:17px;font-weight:800;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.move-coords{font-size:13px;font-weight:650;color:#e6ddc0}
+.strength-block{margin-top:19px;margin-bottom:10px;padding:13px;background:#193d34;border:1px solid #5b7c64;border-radius:13px}
+.strength-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#ece6c4;font-size:13px;font-weight:bold}
+.strength-title strong{font-size:19px;color:#f4d58f;white-space:nowrap}.strength-title small{font-size:12px;color:#c9e0c6;font-weight:normal}
+.strength-block input[type=range]{width:100%;margin:15px 0 9px;accent-color:#edcb87;padding:0;min-height:25px}
+.strength-marks{display:flex;justify-content:space-between;color:#b2c7ba;font-size:11px}
+.preset-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 17px}
+.preset{font-size:13px;background:#1a3931;border:1px solid #56776a;color:#c8ddce;min-height:36px;border-radius:8px}.preset.active{border-color:#e2c18b;color:#edd0a3;background:#364d3c}
+.game-center .notice{margin-top:8px}
+.end-panel{margin-top:11px;text-align:center}
+.dim{font-size:11px;color:#c6d8ca;font-weight:normal}
+.start-panel{align-self:start}
+.record{grid-template-columns:1fr 1fr;max-height:360px}
+@media(max-width:800px){.game-layout{grid-template-columns:minmax(0,550px);max-width:560px;margin:12px auto}.side-stack{order:2}.game-center{order:1}.game-layout .panel{margin:0}.welcome{grid-template-columns:1fr;max-width:620px;margin:auto}}
+@media(max-width:450px){.game-layout{gap:10px}.move-info{padding:9px;min-height:61px}.move-info-main{font-size:15px}.move-coords{font-size:12px}.strength-title strong{font-size:17px}.strength-block{margin-top:12px}.board-wrap{padding:7px}.koma{font-size:clamp(12px,5.1vw,22px)}.welcome-art{min-height:185px}}
+
+</style>
+<script src="./coi-serviceworker.min.js"></script>
+</head>
+<body>
+<div id="app"><div class="loading-fallback">棋道<br><small>将棋を読み込んでいます…</small></div></div>
+<noscript><p class="no-script">JavaScriptを有効にして開いてください。</p></noscript>
+<script>
+/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const TYPES=['R','B','G','S','N','L','P'];
+const NAMES={K:'玉',R:'飛',B:'角',G:'金',S:'銀',N:'桂',L:'香',P:'歩'};
+const PROMOTED={R:'龍',B:'馬',S:'全',N:'圭',L:'杏',P:'と'};
+const PRICE={K:20000,R:1020,B:890,G:580,S:490,N:320,L:290,P:105};
+const rc=i=>[Math.floor(i/9),i%9];const idx=(r,c)=>r*9+c;const inside=(r,c)=>r>=0&&r<9&&c>=0&&c<9;
+const piece=(t,s,p=false)=>({t,s,p});
+const clone=s=>({board:s.board.map(p=>p?{...p}:null),hands:{1:{...s.hands[1]},'-1':{...s.hands[-1]}},turn:s.turn,ply:s.ply,trail:s.trail?s.trail.slice():[]});
+function newGame(){
+ const b=Array(81).fill(null),top=['L','N','S','G','K','G','S','N','L'];
+ for(let c=0;c<9;c++){b[idx(0,c)]=piece(top[c],-1);b[idx(8,c)]=piece(top[c],1);b[idx(2,c)]=piece('P',-1);b[idx(6,c)]=piece('P',1);}
+ b[idx(1,1)]=piece('R',-1);b[idx(1,7)]=piece('B',-1);
+ b[idx(7,1)]=piece('B',1);b[idx(7,7)]=piece('R',1);
+ return {board:b,hands:{1:{},'-1':{}},turn:1,ply:0,trail:[]};
+}
+const gold=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,0]];
+const silver=[[1,-1],[1,0],[1,1],[-1,-1],[-1,1]];
+const king=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1]];
+const knight=[[2,-1],[2,1]];
+const diagonal=[[1,-1],[1,1],[-1,-1],[-1,1]];
+const orthogonal=[[1,0],[-1,0],[0,-1],[0,1]];
+const forward=[[1,0]];
+function directions(p){
+ const t=p.p&&['P','L','N','S'].includes(p.t)?'G':p.t;
+ let step=[],slide=[],jump=[];
+ switch(t){case 'K':step=king;break;case 'G':step=gold;break;case 'S':step=silver;break;case 'N':jump=knight;break;case 'L':slide=forward;break;case 'P':step=forward;break;case 'B':slide=diagonal;if(p.p)step=orthogonal;break;case 'R':slide=orthogonal;if(p.p)step=diagonal;break;}
+ return {step,slide,jump};
+}
+function eachTarget(s,from,p,fn){
+ const [r,c]=rc(from),{step,slide,jump}=directions(p),dr0=-p.s;
+ for(const [dr,dc] of [...step,...jump]){const rr=r+dr*dr0,cc=c+dc;if(inside(rr,cc)){const q=s.board[idx(rr,cc)];if(!q||q.s!==p.s)fn(idx(rr,cc));}}
+ for(const [dr,dc] of slide){let rr=r+dr*dr0,cc=c+dc;while(inside(rr,cc)){const j=idx(rr,cc),q=s.board[j];if(q?.s===p.s)break;fn(j);if(q)break;rr+=dr*dr0;cc+=dc;}}
+}
+function attacks(s,to,by){for(let f=0;f<81;f++){const p=s.board[f];if(!p||p.s!==by)continue;let a=false;eachTarget(s,f,p,t=>{if(t===to)a=true;});if(a)return true;}return false;}
+function kingIndex(s,side){return s.board.findIndex(p=>p&&p.t==='K'&&p.s===side);}
+function inCheck(s,side=s.turn){const k=kingIndex(s,side);return k<0||attacks(s,k,-side);}
+function zone(row,side){return side===1?row<=2:row>=6;}
+function lastRow(side){return side===1?0:8;}
+function lastTwo(row,side){return side===1?row<=1:row>=7;}
+function mustPromote(t,row,side){return (t==='P'||t==='L')&&row===lastRow(side)||t==='N'&&lastTwo(row,side);}
+function promotable(t){return t!=='K'&&t!=='G';}
+function apply(s,m){
+ const n=clone(s),side=s.turn;
+ if(m.drop){n.board[m.to]=piece(m.drop,side);n.hands[side][m.drop]--;if(n.hands[side][m.drop]===0)delete n.hands[side][m.drop];}
+ else{const moving=n.board[m.from],taken=n.board[m.to];n.board[m.from]=null;
+  if(taken){n.hands[side][taken.t]=(n.hands[side][taken.t]||0)+1;}
+  n.board[m.to]={...moving,p:m.promote||moving.p};
+ }
+ n.turn=-side;n.ply=s.ply+1;n.trail=[...(s.trail||[]),{...m,side}];return n;
+}
+function pseudo(s){
+ const out=[],side=s.turn;
+ for(let i=0;i<81;i++){
+  const p=s.board[i];if(!p||p.s!==side)continue;
+  eachTarget(s,i,p,to=>{
+   if(s.board[to]?.t==='K')return;
+   const [fr]=rc(i),[tr]=rc(to);
+   if(!p.p&&promotable(p.t)&&(zone(fr,side)||zone(tr,side))){
+     if(!mustPromote(p.t,tr,side))out.push({from:i,to,promote:false});
+     out.push({from:i,to,promote:true});
+   }else out.push({from:i,to,promote:false});
+  });
+ }
+ const hand=s.hands[side];for(const t of TYPES){if(!hand[t])continue;for(let to=0;to<81;to++){
+  if(s.board[to])continue;const [r,c]=rc(to);if(mustPromote(t,r,side))continue;
+  if(t==='P'){
+    let found=false;for(let rr=0;rr<9;rr++){const p=s.board[idx(rr,c)];if(p?.t==='P'&&p.s===side&&!p.p){found=true;break;}}
+    if(found)continue;
+  }
+  out.push({drop:t,to});
+ }}
+ return out;
+}
+function sameMove(a,b){return a.to===b.to&&a.from===b.from&&a.drop===b.drop&&!!a.promote===!!b.promote;}
+function legalMoves(s,options={}){
+ const side=s.turn;const moves=[];
+ for(const m of pseudo(s)){
+  const after=apply(s,m);if(inCheck(after,side))continue;
+  if(m.drop==='P'&&!options.skipPawnMate){
+   // If a pawn drop is checkmate, the drop is illegal (打ち歩詰め).
+   if(inCheck(after,-side)&&legalMoves(after,{skipPawnMate:true}).length===0)continue;
+  }
+  moves.push(m);
+ }
+ return moves;
+}
+function posKey(s){
+ return s.turn+'|'+s.board.map(p=>p?p.s+':'+p.t+(p.p?'+':''):'_').join(',')+'|'+[1,-1].map(side=>TYPES.map(t=>s.hands[side][t]||0).join('.')).join('|');
+}
+function evaluateEnd(state,history=[],moveLog=[]){
+ const moves=legalMoves(state);
+ if(moves.length===0)return {done:true,winner:-state.turn,reason:inCheck(state)?'詰み':'合法手なし'};
+ const key=posKey(state),matches=history.map((s,i)=>posKey(s)===key?i:-1).filter(i=>i>=0);
+ if(matches.length>=4){
+  const a=matches[matches.length-4],b=matches[matches.length-1];let perp=null;
+  for(const side of [1,-1]){
+   const seq=moveLog.slice(a,b).filter(m=>m.side===side);
+   if(seq.length&&seq.every(m=>m.gaveCheck))perp=side;
+  }
+  return perp?{done:true,winner:-perp,reason:'連続王手の千日手'}:{done:true,winner:0,reason:'千日手（引き分け）'};
+ }
+ return {done:false,winner:null,reason:''};
+}
+function moveText(s,m){
+ const c=9-(m.to%9),r=Math.floor(m.to/9)+1,nums='１２３４５６７８９',kan='一二三四五六七八九',t=m.drop?m.drop:s.board[m.from].t;
+ const hand=m.drop?'打':m.promote?'成':'';
+ return (s.turn===1?'▲':'△')+nums[c-1]+kan[r-1]+(NAMES[t]||'')+hand;
+}
+function pieceValue(p){return p?PRICE[p.t]*(p.p?(p.t==='P'?4.7:p.t==='L'?1.75:p.t==='N'?1.65:p.t==='S'?1.35:1.3):1):0;}
+function totalPieces(s){const count={};for(const p of s.board)if(p)count[p.t]=(count[p.t]||0)+1;for(const side of [1,-1])for(const [t,n]of Object.entries(s.hands[side]))count[t]=(count[t]||0)+n;return count;}
+function serialize(s){return JSON.stringify(s);}
+function deserialize(raw){try{const s=JSON.parse(raw);if(s.board?.length!==81||![-1,1].includes(s.turn)||!s.hands?.[1]||!s.hands?.[-1]||kingIndex(s,1)<0||kingIndex(s,-1)<0)throw Error('Invalid shogi position');return s;}catch{return null;}}
+return {TYPES,NAMES,PROMOTED,PRICE,newGame,clone,rc,idx,inside,eachTarget,attacks,kingIndex,inCheck,zone,mustPromote,legalMoves,pseudo,apply,sameMove,posKey,evaluateEnd,moveText,pieceValue,totalPieces,serialize,deserialize};
+});
+
+</script>
+<script>
+/* KIDO v0.3 CPU -- iterative deepening alpha-beta, capture extensions, and transposition cache.
+   Pure offline JavaScript. Rating 1-100 is a game difficulty setting, NOT a shogi rank. */
+(function(root,factory){const engine=root.ShogiEngine||(typeof require!=='undefined'?require('./engine.js'):null),api=factory(engine);if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiAI=api;})(typeof globalThis!=='undefined'?globalThis:this,function(E){
+'use strict';
+const VALUES={K:30000,R:1100,B:970,G:610,S:515,N:340,L:300,P:115};
+const PROMO={R:1.40,B:1.43,S:1.44,N:1.65,L:1.72,P:4.45};
+const MATE=1000000;
+const clock=()=>typeof performance!=='undefined'?performance.now():Date.now();
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const randint=n=>Math.floor(Math.random()*n);
+const keyMove=m=>m?(m.drop?`d${m.drop}:${m.to}`:`${m.from}:${m.to}:${m.promote?1:0}`):'';
+function score(s,side){
+ let total=0;const kingPositions={1:-1,'-1':-1};let material=0;
+ for(let i=0;i<81;i++){
+  const p=s.board[i];if(!p)continue;
+  if(p.t==='K')kingPositions[p.s]=i;
+  const row=Math.floor(i/9),col=i%9,advance=p.s===1?8-row:row;
+  const cent=4-Math.abs(col-4),dev=Math.min(4,advance),v=VALUES[p.t]*(p.p?(PROMO[p.t]||1):1);
+  let position=0;
+  if(p.t==='P')position=advance*9+cent*1.5;
+  else if(p.t==='S')position=dev*12+cent*4-(advance>5?(advance-5)*10:0);
+  else if(p.t==='N')position=dev*10+cent*3;
+  else if(p.t==='L')position=advance*3;
+  else if(p.t==='G')position=Math.min(5,advance)*5+cent*2;
+  else if(p.t==='B')position=cent*9+Math.min(5,advance)*3;
+  else if(p.t==='R')position=cent*7+Math.min(6,advance)*5;
+  else if(p.t==='K')position=-Math.max(0,advance)*90+Math.abs(col-4)*5;
+  if(p.p)position+=28;
+  total+=(p.s===side?1:-1)*(v+position);
+  if(p.t!=='K')material+=(p.s===side?1:-1)*v;
+ }
+ for(const owner of [1,-1])for(const [t,count] of Object.entries(s.hands[owner]))total+=(owner===side?1:-1)*(VALUES[t]||0)*count*1.07;
+ // Nearby gold/silver are better defenders, especially around the king.
+ for(const owner of [1,-1]){
+  const k=kingPositions[owner];if(k<0)continue;
+  const r=Math.floor(k/9),c=k%9;let shield=0,invaders=0;
+  for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+   const rr=r+dr,cc=c+dc;if(rr<0||rr>=9||cc<0||cc>=9)continue;
+   const p=s.board[rr*9+cc];if(!p||p.t==='K')continue;
+   if(p.s===owner&&(p.t==='G'||p.t==='S'||(p.t==='P'&&Math.abs(dr)<=1)))shield+=Math.abs(dr)<=1&&Math.abs(dc)<=1?15:6;
+   if(p.s!==owner)invaders+=(p.t==='R'||p.t==='B'?23:11);
+  }
+  total+=(owner===side?1:-1)*(shield-invaders);
+ }
+ return total;
+}
+function order(s,m,pv='',killer=''){
+ let n=0;if(m.drop){n=(m.drop==='P'?9:24);}
+ else {
+  const a=s.board[m.from],captured=s.board[m.to];
+  if(captured)n+=4500+(VALUES[captured.t]||0)*10-(VALUES[a.t]||0);
+  if(m.promote)n+=a.t==='P'?1250:a.t==='R'||a.t==='B'?1050:450;
+  // Prefer creating threats around the opponent king; don't force random king moves.
+  if(a.t==='K')n-=75;
+ }
+ const key=keyMove(m);
+ if(key===pv)n+=100000;
+ if(key===killer)n+=150;
+ return n;
+}
+function profile(level){
+ if(level<=12)return {depth:1,maxMs:40,width:12,q:1,jitter:1800};
+ if(level<=28)return {depth:1,maxMs:100,width:15,q:1,jitter:450};
+ if(level<=45)return {depth:2,maxMs:240,width:20,q:2,jitter:150};
+ if(level<=65)return {depth:3,maxMs:750,width:26,q:3,jitter:35};
+ if(level<=80)return {depth:5,maxMs:2100,width:38,q:4,jitter:8};
+ if(level<=92)return {depth:6,maxMs:4500,width:54,q:5,jitter:0};
+ return {depth:8,maxMs:12000,width:64,q:6,jitter:0};
+}
+// Verified opening sequences in USI square notation (files 9..1, ranks a..i).
+// Exact-board matching means a different human move never forces a book reply.
+// The book guides the opening only; beyond a known position the search takes over.
+const OPENINGS=[
+ {name:'相掛かり',weight:2,moves:['2g2f','8c8d','2f2e','8d8e','6i7h','4a3b','3i4h','7a6b','7g7f','3c3d']},
+ {name:'角換わり',weight:2,moves:['7g7f','8c8d','2g2f','8d8e','8h7g','3c3d','7i8h','2b7g+','8h7g','4a3b','3i4h','7a6b']},
+ {name:'矢倉',weight:2,moves:['7g7f','8c8d','7i6h','3c3d','6g6f','7a6b','5g5f','5c5d','3i4h','3a4b','6h7g','4b3c']},
+ {name:'四間飛車',weight:2,moves:['7g7f','3c3d','6g6f','8c8d','2h6h','7a6b','5i4h','5a4b','4h3h','4b3b']},
+ {name:'三間飛車',weight:1,moves:['7g7f','3c3d','7f7e','8c8d','2h7h','7a6b','5i4h','5a4b','4h3h','4b3b']},
+ {name:'中飛車',weight:1,moves:['5g5f','8c8d','2h5h','3c3d','5f5e','7a6b','7g7f','5a4b','5i4h','4b3b']},
+ {name:'居飛車',weight:2,moves:['7g7f','3c3d','2g2f','8c8d','2f2e','8d8e','6i7h','4a3b','3i4h','7a6b']},
+ {name:'後手四間飛車',weight:1,moves:['7g7f','3c3d','2g2f','8b4b','3i4h','5c5d','5i6h','6a7b']},
+ {name:'後手中飛車',weight:1,moves:['7g7f','5c5d','2g2f','8b5b','2f2e','3c3d','3i4h','7a6b']},
+ {name:'後手の角道',weight:1,moves:['2g2f','3c3d','7g7f','8c8d','2f2e','8d8e','3i4h','7a6b']}
+];
+function parseUSI(usi){
+ const m=/^([1-9])([a-i])([1-9])([a-i])(\+)?$/.exec(usi);
+ if(!m)return null;
+ return {from:(m[2].charCodeAt(0)-97)*9+(9-Number(m[1])),to:(m[4].charCodeAt(0)-97)*9+(9-Number(m[3])),promote:!!m[5]};
+}
+let openingCache=null;
+function openingBook(){
+ if(openingCache)return openingCache;
+ const map=new Map(),invalid=[];
+ for(const row of OPENINGS){
+  let state=E.newGame();
+  for(const notation of row.moves){
+   const move=parseUSI(notation),legal=move&&E.legalMoves(state).find(x=>E.sameMove(x,move));
+   if(!legal){invalid.push({name:row.name,notation,ply:state.ply});break;}
+   const hash=E.posKey(state),entries=map.get(hash)||[],id=keyMove(legal);
+   const known=entries.find(x=>x.key===id);
+   if(known){known.weight+=row.weight;known.names.push(row.name);}
+   else entries.push({key:id,move:legal,weight:row.weight,names:[row.name]});
+   map.set(hash,entries);state=E.apply(state,legal);
+  }
+ }
+ return openingCache={map,invalid};
+}
+function findBookMove(state,level,legal,config){
+ if(level<42||state.ply>=12||E.inCheck(state,state.turn))return null;
+ const choices=openingBook().map.get(E.posKey(state));
+ if(!choices?.length)return null;
+ const available=choices.filter(x=>legal.some(m=>E.sameMove(x.move,m)));
+ if(!available.length)return null;
+ let ticket=Math.random()*available.reduce((s,x)=>s+x.weight,0);
+ const picked=available.find(x=>(ticket-=x.weight)<0)||available[available.length-1];
+ if(config.stats){config.stats.opening=picked.names.join(' / ');config.stats.depth=0;config.stats.nodes=0;}
+ return picked.move;
+}
+function openingInfo(){const b=openingBook();return {lines:OPENINGS.length,positions:b.map.size,invalid:b.invalid.slice()};}
+
+function bestMove(s,skill=60,config={}){
+ const level=clamp(Math.round(Number(skill)||60),1,100),p=profile(level),start=clock();
+ const deadline=start+(Number.isFinite(config.maxMs)?clamp(config.maxMs,30,30000):p.maxMs);
+ const all=E.legalMoves(s);if(!all.length)return null;
+ if(level<=10)return all[randint(all.length)];
+ const fromBook=findBookMove(s,level,all,config);if(fromBook)return fromBook;
+
+ let nodes=0,table=new Map(),killer=Array(30).fill(''),expired=false;
+ function checkTime(){if((++nodes&31)===0&&clock()>deadline){expired=true;throw 'timeout';}}
+ function quiesce(pos,alpha,beta,ply,remaining){
+  checkTime();let stand=score(pos,pos.turn);
+  const check=E.inCheck(pos,pos.turn);
+  if(!check){if(stand>=beta)return beta;if(stand>alpha)alpha=stand;}
+  if(remaining<=0)return stand;
+  const moves=E.legalMoves(pos);
+  if(!moves.length)return -MATE+ply;
+  const tactical=check?moves:moves.filter(m=>!m.drop&&(pos.board[m.to]||m.promote));
+  tactical.sort((a,b)=>order(pos,b)-order(pos,a));
+  for(const m of tactical.slice(0,check?28:12)){
+   const val=-quiesce(E.apply(pos,m),-beta,-alpha,ply+1,remaining-1);
+   if(val>=beta)return beta;if(val>alpha)alpha=val;
+  }
+  return alpha;
+ }
+ function search(pos,depth,alpha,beta,ply){
+  checkTime();if(depth<=0)return quiesce(pos,alpha,beta,ply,p.q);
+  const hash=E.posKey(pos),cached=table.get(hash),originalAlpha=alpha;
+  if(cached&&cached.depth>=depth){if(cached.flag===0)return cached.value;
+   if(cached.flag===1&&cached.value<=alpha)return cached.value;
+   if(cached.flag===2&&cached.value>=beta)return cached.value;}
+  const moves=E.legalMoves(pos);
+  if(!moves.length)return -MATE+ply;
+  moves.sort((a,b)=>order(pos,b,cached?.move,killer[ply])-order(pos,a,cached?.move,killer[ply]));
+  let local=-MATE-1,best='',count=0;
+  const width=Math.min(moves.length,p.width+Math.max(0,depth-3)*2);
+  for(const m of moves){
+   // Keep forcing captures / promotions even when pruning quiet moves.
+   if(count>=width&&!pos.board[m.to]&&!m.promote&&!E.inCheck(pos,pos.turn))continue;
+   count++;
+   const next=E.apply(pos,m);
+   const v=-search(next,depth-1,-beta,-alpha,ply+1);
+   if(v>local){local=v;best=keyMove(m);}
+   if(v>alpha)alpha=v;
+   if(alpha>=beta){killer[ply]=best;break;}
+  }
+  if(table.size>26000)table.clear();
+  table.set(hash,{depth,value:local,flag:local<=originalAlpha?1:local>=beta?2:0,move:best});
+  return local;
+ }
+ const ranked=all.map(m=>({m,k:keyMove(m),v:order(s,m)+(-score(E.apply(s,m),-s.turn))*0.10})).sort((a,b)=>b.v-a.v);
+ let best=ranked[0].m,bestScore=-MATE,completedDepth=0;
+ if(level<=28){
+  const subset=ranked.slice(0,Math.min(ranked.length,level<=16?14:8));
+  return subset.map(x=>({...x,noise:(Math.random()-.5)*p.jitter,k:-score(E.apply(s,x.m),-s.turn)}))
+   .sort((a,b)=>(b.k+b.noise)-(a.k+a.noise))[0].m;
+ }
+ try{
+  const root=ranked.slice();
+  for(let depth=1;depth<=p.depth;depth++){
+   const round=[];let roundBest=null,roundValue=-MATE-1;
+   for(const item of root){
+    checkTime();const val=-search(E.apply(s,item.m),depth-1,-MATE,MATE,1);
+    round.push({key:item.k,score:val});
+    if(val>roundValue){roundValue=val;roundBest=item.m;}
+   }
+   if(roundBest){
+    best=roundBest;bestScore=roundValue;completedDepth=depth;
+    const byKey=new Map(round.map(x=>[x.key,x.score]));
+    root.sort((a,b)=>byKey.get(b.k)-byKey.get(a.k));
+   }
+   if(Math.abs(roundValue)>MATE-1000)break;
+  }
+ }catch(e){if(e!=='timeout')throw e;}
+ // At low-medium levels, occasional suboptimal moves keep the scale meaningful.
+ if(level<=55&&completedDepth>0){
+  const jitter=p.jitter;
+  if(jitter){
+   const picked=ranked.slice(0,Math.min(7,ranked.length)).map(x=>({m:x.m,v:-score(E.apply(s,x.m),-s.turn)+(Math.random()-.5)*jitter})).sort((a,b)=>b.v-a.v)[0].m;
+   if(Math.random()<.13)return picked;
+  }
+ }
+ if(config.stats){config.stats.nodes=nodes;config.stats.depth=completedDepth;config.stats.timeMs=Math.round(clock()-start);config.stats.score=bestScore;config.stats.expired=expired;}
+ return best;
+}
+return {bestMove,score,profile,openingInfo};
+});
+
+</script>
+<script>
+(function(){
+'use strict';
+const E=window.ShogiEngine,A=window.ShogiAI,root=document.getElementById('app');
+if(!E||!A){root.innerHTML='<p class="ui-error">将棋を読み込めませんでした。Safari・Chromeから開くか、再読み込みしてください。</p>';return;}
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+const read=(k)=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}};
+const clean=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+const labelLevel=lv=>lv<=25?'入門':lv<=50?'初級':lv<=70?'中級':lv<=85?'上級':'最強';
+const HOME_KEY='kido-options-v04',SESSION_KEY='kido-session-v04';
+const saved=read(HOME_KEY)||{};
+let home={side:['1','-1','random'].includes(saved.side)?saved.side:'1',level:clamp(Math.floor(Number(saved.level)||85),1,100),time:Math.min(30,Math.max(2,Number(saved.time)||12))};
+let session=null,view='home',selected=null,pendingPromotion=null,modal=null,notice='';
+let thinking=false,thinkTimer=null,cpuWorker=null,strongWorker=null,strongBusy=false,strongStatus='未起動',engineKind='未開始',epoch=0;
+const humanSide=()=>session?.side||1;
+const viewSide=()=>humanSide();
+const sideName=x=>x===1?'先手':'後手';
+const coord=i=>i===undefined||i===null?'駒台':('９８７６５４３２１'[i%9]+'一二三四五六七八九'[Math.floor(i/9)]);
+function lastCpu(){if(!session)return null;for(let i=session.logs.length-1;i>=0;i--)if(session.logs[i].side!==session.side)return session.logs[i];return null;}
+function gameSaved(){const s=read(SESSION_KEY);return !!(s&&E.deserialize(s.s));}
+function save(){store(HOME_KEY,home);if(session)store(SESSION_KEY,{s:E.serialize(session.s),history:session.history.map(E.serialize),logs:session.logs,side:session.side,level:session.level,time:session.time,done:session.done,winner:session.winner,reason:session.reason});}
+function restore(){const data=read(SESSION_KEY);if(!data||!E.deserialize(data.s))return false;try{
+ const history=(data.history||[]).map(E.deserialize).filter(Boolean);
+ session={s:history.length?history[history.length-1]:E.deserialize(data.s),history:history.length?history:[E.deserialize(data.s)],logs:Array.isArray(data.logs)?data.logs:[],side:[1,-1].includes(data.side)?data.side:1,level:clamp(Number(data.level)||65,1,100),time:Math.min(30,Math.max(2,Number(data.time)||12)),done:!!data.done,winner:data.winner??null,reason:data.reason||''};return true;
+}catch{return false;}}
+function clearCPU(keepStrong=false){
+ epoch++;clearTimeout(thinkTimer);thinkTimer=null;
+ if(cpuWorker){cpuWorker.terminate();cpuWorker=null;}
+ if(strongWorker&&(!keepStrong||strongBusy)){strongWorker.terminate();strongWorker=null;strongBusy=false;}
+ thinking=false;
+}
+function launch(){clearCPU();const side=home.side==='random'?(Math.random()<.5?1:-1):Number(home.side),s=E.newGame();
+ session={s,history:[s],logs:[],side,level:home.level,time:home.time,done:false,winner:null,reason:''};selected=null;pendingPromotion=null;modal=null;view='game';notice='';save();render();scheduleCPU();}
+function header(){return `<header class="site-header"><div class="brand"><div class="monogram">棋</div><div><div class="brand-name">棋道</div><div class="brand-caption">スマホ将棋 · CPU対局</div></div></div><div class="head-actions">${view==='game'?'<button type="button" class="btn small secondary" data-act="home">タイトルへ</button>':''}</div></header>`;}
+function preview(){return `<div class="welcome-art"><div class="art-board">${['銀','金','玉','','歩','','','金','銀'].map((p,i)=>`<div class="art-square">${p?`<span class="art-piece ${i<3?'inv':''}">${p}</span>`:''}</div>`).join('')}</div></div>`;}
+function levelSlider(id,value){return `<div class="strength-block"><div class="strength-title"><span>CPUの強さ</span><strong id="${id}-readout">${value} / 100 <small>${labelLevel(value)}</small></strong></div><input type="range" id="${id}" min="1" max="100" value="${value}" step="1" aria-label="CPUの強さ"/><div class="strength-marks"><span>1 · やさしい</span><span>100 · 強い</span></div></div>`;}
+function timeSelector(id,value){return `<div class="strength-block" style="margin-top:11px"><div class="strength-title"><span>強いCPUの思考時間</span><strong id="${id}-readout">${value}秒</strong></div><input type="range" id="${id}" min="2" max="30" value="${value}" step="1" aria-label="本格CPUの思考時間"/><div class="strength-marks"><span>2秒 · 速い</span><span>30秒 · 深く読む</span></div></div>`;}
+function renderHome(){return `<div class="welcome"><div class="welcome-left"><div class="eyebrow">SHOGI · SOLO PLAY</div><h1 class="page-heading">将棋で、<br>ひと勝負。</h1><p class="page-lead">盤の駒をタップして移動。持ち駒・成り・王手に対応。強さ80以上では対応ブラウザで本格将棋エンジンを利用。非対応環境では軽量CPUに切り替わります。</p>${preview()}</div><section class="panel start-panel"><h2 class="panel-title">対局の設定</h2><div class="section-caption">先手・後手</div><div class="segmented" role="group" aria-label="先後の選択"><button data-act="side" data-value="1" class="${home.side==='1'?'active':''}">先手</button><button data-act="side" data-value="-1" class="${home.side==='-1'?'active':''}">後手</button><button data-act="side" data-value="random" class="${home.side==='random'?'active':''}">ランダム</button></div>${levelSlider('home-strength',home.level)}${timeSelector('home-time',home.time)}<div class="preset-row">${[20,50,75,100].map(lv=>`<button class="preset ${home.level===lv?'active':''}" data-act="preset" data-level="${lv}">${lv}</button>`).join('')}</div><button class="btn wide" data-act="launch">CPUと対局する</button>${gameSaved()?'<button class="btn wide secondary" data-act="resume" style="margin-top:9px">前回の対局を再開</button>':''}<p class="hint" style="margin-top:12px">CPU100は本格将棋エンジンを優先しますが、ぴよ将棋Lv30との勝ち越しは未検証です。端末非対応の場合は軽量AIになります。</p></section></div>`;}
+function selectedLegal(){if(!session||session.done||thinking||modal||pendingPromotion||session.s.turn!==session.side||!selected)return [];
+ const all=E.legalMoves(session.s);return all.filter(m=>selected.kind==='board'?m.from===selected.i:!!m.drop&&m.drop===selected.t);}
+function arrowMarkup(m){if(!m||m.from===undefined||m.drop)return '';
+ const orient=i=>viewSide()===1?i:80-i;
+ const a=orient(m.from),b=orient(m.to),x1=(a%9+.5)*100,y1=(Math.floor(a/9)+.5)*100,x2=(b%9+.5)*100,y2=(Math.floor(b/9)+.5)*100;
+ const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy)||1,endX=x2-dx/d*24,endY=y2-dy/d*24;
+ return `<svg class="move-arrow" viewBox="0 0 900 900" aria-hidden="true"><defs><marker id="shogi-arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c64d32"/></marker></defs><path d="M ${x1} ${y1} L ${endX} ${endY}" stroke="#fff2a6" stroke-width="21" opacity=".38" fill="none" stroke-linecap="round"/><path d="M ${x1} ${y1} L ${endX} ${endY}" stroke="#c64d32" stroke-width="10" opacity=".91" fill="none" stroke-linecap="round" marker-end="url(#shogi-arrowhead)"/></svg>`;
+}
+function boardMarkup(){const s=session.s,moves=selectedLegal(),last=s.trail?.at(-1),cpuMove=last&&last.side!==session.side?last:null,check=E.inCheck(s,s.turn),checkKing=check?E.kingIndex(s,s.turn):-1;
+ return `<div class="board-wrap"><div class="board-plane"><div class="board" role="grid" aria-label="将棋盤">${Array.from({length:81},(_,j)=>{
+  const i=viewSide()===1?j:80-j,p=s.board[i],isSelected=selected?.kind==='board'&&selected.i===i,target=moves.some(m=>m.to===i),lastFrom=cpuMove?.from===i,lastTo=cpuMove?.to===i,checked=checkKing===i;
+  const char=p?(p.p?E.PROMOTED[p.t]:E.NAMES[p.t]):'';
+  const aria=(p?((p.s===session.side?'自分の':'CPUの')+(p.p?'成':'')+E.NAMES[p.t]):'空き')+' '+coord(i);
+  return `<button type="button" data-act="cell" data-square="${i}" role="gridcell" class="cell ${isSelected?'selected':''} ${target?'target':''} ${p?'occupied':''} ${checked?'king-in-check':''} ${lastFrom?'cpu-from':''} ${lastTo?'cpu-to':''}" aria-label="${aria}" ${session.done?'disabled':''}>${p?`<span class="koma ${p.s===viewSide()?'':'opp'} ${p.p?'promoted':''}">${char}</span>`:''}</button>`;}).join('')}</div>${arrowMarkup(cpuMove)}</div></div>`;}
+function handMarkup(side,allowed){const h=session.s.hands[side]||{},list=E.TYPES.filter(t=>h[t]>0);if(!list.length)return '<span class="empty-label">持ち駒なし</span>';
+ return `<div class="hands">${list.map(t=>`<button type="button" class="hand-piece ${selected?.kind==='hand'&&selected.t===t?'selected':''}" data-act="hand" data-piece="${t}" ${allowed&&!thinking&&!session.done&&session.s.turn===session.side?'':'disabled'}>${E.NAMES[t]} <em>×${h[t]}</em></button>`).join('')}</div>`;
+}
+function playerPanel(side){const ours=side===session.side,turn=side===session.s.turn&&!session.done,check=turn&&E.inCheck(session.s,side);return `<div class="player-panel"><div class="avatar">${ours?'自':'将'}</div><div class="player-meta"><div class="player-name">${ours?'あなた':'CPU'} <span class="dim">${sideName(side)}</span></div><div class="player-title">${ours?'対局者':'強さ '+session.level+' / 100 '+(engineKind==='WASM'?'・高性能AI':engineKind==='JS'?'・簡易AI':'')}</div></div>${turn?`<span class="status-pill ${check?'check':''}">${check?'王手':'手番'}</span>`:''}</div>`;}
+function statusText(){if(session.done)return session.winner===0?'引き分け・千日手':session.winner===session.side?'あなたの勝ち':'CPUの勝ち';return thinking?(engineKind==='WASM'?'本格エンジンが考えています…':'CPUが考えています…'):session.s.turn===session.side?'あなたの手番':'CPUの手番';}
+function moveNotice(){const recent=lastCpu();if(!recent)return '<div class="move-info is-empty">CPUの直前の指し手は、盤上の矢印と色で表示されます。</div>';
+ return `<div class="move-info"><div class="move-info-icon">↗</div><div><div class="move-info-label">CPUの直近の一手</div><div class="move-info-main">${clean(recent.text)} <span class="move-coords">${recent.drop?'駒台':coord(recent.from)} → ${coord(recent.to)}</span></div></div></div>`;}
+function logsMarkup(){const logs=session.logs.slice(-22);return `<div class="record">${logs.length?logs.map((o,j)=>`<div class="record-item ${j===logs.length-1?'latest':''}">${session.logs.length-logs.length+j+1}. ${clean(o.text)}${o.gaveCheck?' 王手':''}</div>`).join(''):'<span class="empty-label">指し手はまだありません。</span>'}</div>`;}
+function renderGame(){const s=session;return `<div class="game-layout"><section class="game-center"><div class="turn-head"><div><div class="eyebrow">対局中 · ${s.s.ply}手目</div><div class="turn-line">${statusText()}</div></div><button class="btn small secondary" data-act="help">遊び方</button></div><div class="top-player">${playerPanel(-s.side)}${handMarkup(-s.side,false)}</div>${boardMarkup()}<div class="bottom-player">${playerPanel(s.side)}${handMarkup(s.side,true)}</div>${moveNotice()}${notice?`<div class="notice">${clean(notice)}</div>`:''}${s.done?`<div class="panel end-panel"><div class="result-big">${s.winner===0?'引き分け':s.winner===s.side?'勝利':'敗北'}</div><p>${clean(s.reason)}</p><button class="btn wide" data-act="retry">もう一局</button></div>`:''}<div class="actions"><button class="btn secondary" data-act="undo" ${s.history.length<2||s.done?'disabled':''}>待った</button><button class="btn ghost" data-act="resign" ${s.done?'disabled':''}>投了する</button></div></section><aside class="side-stack"><div class="panel"><h3 class="panel-title">CPUの強さ</h3>${levelSlider('game-strength',s.level)}${timeSelector('game-time',s.time)}<p class="hint">変更した強さは、次のCPUの指し手から適用されます。</p><div class="mini-divider"></div><div class="detail-row"><span>AI動作状態</span><strong>${clean(strongStatus)}</strong></div><div class="detail-row"><span>手数</span><strong>${s.s.ply}手</strong></div><div class="detail-row"><span>あなた</span><strong>${sideName(s.side)}</strong></div></div><div class="panel"><h3 class="panel-title">指し手の記録</h3>${logsMarkup()}</div><p class="hint">駒を選び、光る移動先をタップしてください。持ち駒も盤上に打てます。</p></aside></div>`;}
+function promotionModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><h2>この駒を成りますか？</h2><div class="actions"><button class="btn" data-act="promotion" data-value="yes">成る</button><button class="btn secondary" data-act="promotion" data-value="no">成らない</button></div></div></div>`;}
+function helpModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><h2>将棋の遊び方</h2><p class="help-list">① 自分の駒をタップする<br>② 光ったマスをタップして動かす<br>③ 成れる場合は成り・不成りを選ぶ<br>④ 持ち駒は駒台から選んで盤に打つ</p><p class="hint">CPUが動かしたマスは赤い矢印と色付きのマスで表示する。二歩・打ち歩詰め・王手放置などはルール上禁止です。</p><button class="btn wide" data-act="modal-close">対局に戻る</button></div></div>`;}
+function resignModal(){return `<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><h2>投了しますか？</h2><div class="actions"><button class="btn danger" data-act="resign-yes">投了する</button><button class="btn secondary" data-act="modal-close">戻る</button></div></div></div>`;}
+function render(){const y=window.scrollY;root.innerHTML=`<div class="app-shell">${header()}<main>${view==='game'&&session?renderGame():renderHome()}</main></div>${pendingPromotion?promotionModal():modal==='help'?helpModal():modal==='resign'?resignModal():''}`;if(window.scrollY!==y)window.scrollTo(0,y);}
+function workerFromPage(){const inline=document.getElementById('embedded-worker-code');if(inline){const url=URL.createObjectURL(new Blob([inline.textContent],{type:'text/javascript'}));try{return new Worker(url);}finally{URL.revokeObjectURL(url);}}return new Worker('./ai-worker.js');}
+const usiSquare=i=>`${9-i%9}${'abcdefghi'[Math.floor(i/9)]}`;
+function usiMove(m){if(m.drop)return m.drop+'*'+usiSquare(m.to);return usiSquare(m.from)+usiSquare(m.to)+(m.promote?'+':'');}
+function fallbackCPU(stamp,why){
+ if(stamp!==epoch||!session||session.done)return;
+ if(strongWorker){strongWorker.terminate();strongWorker=null;}
+ strongBusy=false;
+ engineKind='JS';strongStatus=why||'軽量AI（互換モード）';
+ render();
+ try{
+  cpuWorker=workerFromPage();
+  cpuWorker.onmessage=e=>{if(stamp!==epoch||!session||session.done)return;const m=e.data?.move;cpuWorker?.terminate();cpuWorker=null;onCPUMove(m);};
+  cpuWorker.onerror=error=>{console.error('fallback worker',error.message);if(stamp!==epoch)return;cpuWorker?.terminate();cpuWorker=null;try{onCPUMove(A.bestMove(session.s,session.level,{maxMs:650}));}catch(_){onCPUMove(E.legalMoves(session.s)[0]);}};
+  cpuWorker.postMessage({id:stamp,position:E.serialize(session.s),level:session.level});
+ }catch(error){console.warn('fallback AI',error);try{onCPUMove(A.bestMove(session.s,session.level,{maxMs:800}));}catch(_){onCPUMove(E.legalMoves(session.s)[0]);}}
+}
+function onCPUMove(move){thinking=false;if(!session||session.done)return;if(move&&E.legalMoves(session.s).some(m=>E.sameMove(move,m)))commitMove(move);else {const m=E.legalMoves(session.s)[0];strongStatus='エンジン応答異常（要調査）';if(m)commitMove(m);else render();}}
+function runStrongCPU(stamp){
+ if(!crossOriginIsolated||typeof SharedArrayBuffer==='undefined'){
+  fallbackCPU(stamp,'軽量AI（端末のWASM条件が未対応）');return;
+ }
+ engineKind='WASM';strongStatus='高性能エンジン準備中';render();
+ try{
+  if(!strongWorker)strongWorker=new Worker('./strong-worker.js');
+  strongBusy=true;
+  strongWorker.onmessage=e=>{
+   if(stamp!==epoch||!session||session.done)return;
+   const data=e.data||{};
+   if(data.status==='loading'){strongStatus='本格AIを読み込み中';render();return;}
+   if(data.status==='ready'){strongStatus='高性能AI（Fairy-Stockfish）';render();return;}
+   if(data.error){console.warn('strong engine',data.error);fallbackCPU(stamp,'軽量AI（高性能AIの起動に失敗）');return;}
+   if(data.id!==stamp||!data.usi)return;
+   strongBusy=false;strongStatus='高性能AI（Fairy-Stockfish）';engineKind='WASM';
+   const m=E.legalMoves(session.s).find(x=>usiMove(x)===data.usi);
+   if(m){onCPUMove(m);}else{console.warn('illegal USI',data.usi);fallbackCPU(stamp,'軽量AI（高性能AIの指し手が不一致）');}
+  };
+  strongWorker.onerror=error=>{console.warn('strong worker',error.message);if(stamp!==epoch)return;fallbackCPU(stamp,'軽量AI（高性能AIが起動しませんでした）');};
+  const moves=session.s.trail.map(usiMove);
+  strongWorker.postMessage({id:stamp,moves,level:session.level,ms:clamp(session.time*1000,2000,30000)});
+ }catch(err){console.warn('strong engine unavailable',err);fallbackCPU(stamp,'軽量AI（本格AIの実行に失敗）');}
+}
+function scheduleCPU(){clearCPU(true);if(!session||session.done||session.s.turn===session.side||modal)return;
+ thinking=true;render();const stamp=++epoch;
+ thinkTimer=setTimeout(()=>{
+  if(stamp!==epoch||!session||session.done||modal)return;
+  if(session.level>=80)runStrongCPU(stamp);
+  else fallbackCPU(stamp,'軽量AI（難易度設定）');
+ },180);
+}
+function commitMove(move){if(!session||session.done)return false;const actual=E.legalMoves(session.s).find(m=>E.sameMove(move,m));if(!actual)return false;
+ const before=session.s,txt=E.moveText(before,actual),next=E.apply(before,actual),gaveCheck=E.inCheck(next,next.turn);
+ session.s=next;session.history.push(next);session.logs.push({text:txt,side:before.turn,from:actual.from,to:actual.to,drop:actual.drop||null,gaveCheck});
+ const end=E.evaluateEnd(next,session.history,session.logs);if(end.done){session.done=true;session.winner=end.winner;session.reason=end.reason;}
+ selected=null;pendingPromotion=null;notice='';save();render();if(!session.done)scheduleCPU();return true;}
+function cellClick(i){if(!session||session.done||thinking||modal||pendingPromotion||session.s.turn!==session.side)return;
+ const p=session.s.board[i],candidates=selectedLegal().filter(m=>m.to===i);
+ if(candidates.length){if(candidates.length===2&&candidates.some(m=>m.promote)){pendingPromotion=candidates;render();}else commitMove(candidates[0]);return;}
+ if(p&&p.s===session.side){selected=selected?.kind==='board'&&selected.i===i?null:{kind:'board',i};notice='';render();return;}
+ selected=null;notice='選んだ駒の移動先をタップしてください。';render();}
+function undo(){if(!session||session.done||session.history.length<2)return;clearCPU();
+ do{session.history.pop();session.logs.pop();}while(session.history.length>1&&session.history[session.history.length-1].turn!==session.side);
+ session.s=session.history.at(-1);selected=null;pendingPromotion=null;notice='一手戻しました。';save();render();scheduleCPU();}
+root.addEventListener('click',event=>{const b=event.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
+ if(a==='cell')return cellClick(Number(b.dataset.square));
+ if(a==='hand'){if(!session||thinking||session.s.turn!==session.side)return;selected=selected?.kind==='hand'&&selected.t===b.dataset.piece?null:{kind:'hand',t:b.dataset.piece};notice='';render();return;}
+ if(a==='promotion'){const m=pendingPromotion?.find(x=>!!x.promote===(b.dataset.value==='yes'));if(m)commitMove(m);return;}
+ if(a==='launch')return launch();
+ if(a==='resume'){clearCPU();if(restore()){view='game';selected=null;pendingPromotion=null;modal=null;render();scheduleCPU();}return;}
+ if(a==='side'){home.side=b.dataset.value;store(HOME_KEY,home);render();return;}
+ if(a==='preset'){home.level=clamp(Number(b.dataset.level),1,100);store(HOME_KEY,home);render();return;}
+ if(a==='home'){clearCPU();view='home';selected=null;modal=null;pendingPromotion=null;render();return;}
+ if(a==='help'||a==='resign'){modal=a;render();return;}
+ if(a==='modal-close'){modal=null;render();scheduleCPU();return;}
+ if(a==='resign-yes'){clearCPU();modal=null;session.done=true;session.winner=-session.side;session.reason='投了';save();render();return;}
+ if(a==='undo')return undo();
+ if(a==='retry')return launch();
+});
+root.addEventListener('input',event=>{const el=event.target;if(!el||!['home-strength','game-strength','home-time','game-time'].includes(el.id))return;
+ if(el.id==='home-time'||el.id==='game-time'){const time=clamp(Math.round(Number(el.value)),2,30),lab=document.getElementById(el.id+'-readout');if(lab)lab.textContent=time+'秒';home.time=time;if(session&&el.id==='game-time'){session.time=time;save();}store(HOME_KEY,home);return;}
+ const level=clamp(Math.round(Number(el.value)),1,100),label=document.getElementById(el.id+'-readout');if(label)label.innerHTML=`${level} / 100 <small>${labelLevel(level)}</small>`;
+ if(el.id==='home-strength'){home.level=level;store(HOME_KEY,home);}else if(session){session.level=level;home.level=level;save();}
+});
+root.addEventListener('change',event=>{if(['home-strength','game-strength','home-time','game-time'].includes(event.target?.id)){
+ if(event.target.id==='game-strength'&&session&&thinking){scheduleCPU();}else render();
+}});
+window.ShogiLabDebug={engine:E,ai:A,getGame:()=>session?.s,getSession:()=>session,launch,commitMove,usiMove,getEngineStatus:()=>({engineKind,strongStatus,thinking})};
+render();
+})();
+
+</script>
+<script type="text/plain" id="embedded-worker-code">
+/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const TYPES=['R','B','G','S','N','L','P'];
+const NAMES={K:'玉',R:'飛',B:'角',G:'金',S:'銀',N:'桂',L:'香',P:'歩'};
+const PROMOTED={R:'龍',B:'馬',S:'全',N:'圭',L:'杏',P:'と'};
+const PRICE={K:20000,R:1020,B:890,G:580,S:490,N:320,L:290,P:105};
+const rc=i=>[Math.floor(i/9),i%9];const idx=(r,c)=>r*9+c;const inside=(r,c)=>r>=0&&r<9&&c>=0&&c<9;
+const piece=(t,s,p=false)=>({t,s,p});
+const clone=s=>({board:s.board.map(p=>p?{...p}:null),hands:{1:{...s.hands[1]},'-1':{...s.hands[-1]}},turn:s.turn,ply:s.ply,trail:s.trail?s.trail.slice():[]});
+function newGame(){
+ const b=Array(81).fill(null),top=['L','N','S','G','K','G','S','N','L'];
+ for(let c=0;c<9;c++){b[idx(0,c)]=piece(top[c],-1);b[idx(8,c)]=piece(top[c],1);b[idx(2,c)]=piece('P',-1);b[idx(6,c)]=piece('P',1);}
+ b[idx(1,1)]=piece('R',-1);b[idx(1,7)]=piece('B',-1);
+ b[idx(7,1)]=piece('B',1);b[idx(7,7)]=piece('R',1);
+ return {board:b,hands:{1:{},'-1':{}},turn:1,ply:0,trail:[]};
+}
+const gold=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,0]];
+const silver=[[1,-1],[1,0],[1,1],[-1,-1],[-1,1]];
+const king=[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1]];
+const knight=[[2,-1],[2,1]];
+const diagonal=[[1,-1],[1,1],[-1,-1],[-1,1]];
+const orthogonal=[[1,0],[-1,0],[0,-1],[0,1]];
+const forward=[[1,0]];
+function directions(p){
+ const t=p.p&&['P','L','N','S'].includes(p.t)?'G':p.t;
+ let step=[],slide=[],jump=[];
+ switch(t){case 'K':step=king;break;case 'G':step=gold;break;case 'S':step=silver;break;case 'N':jump=knight;break;case 'L':slide=forward;break;case 'P':step=forward;break;case 'B':slide=diagonal;if(p.p)step=orthogonal;break;case 'R':slide=orthogonal;if(p.p)step=diagonal;break;}
+ return {step,slide,jump};
+}
+function eachTarget(s,from,p,fn){
+ const [r,c]=rc(from),{step,slide,jump}=directions(p),dr0=-p.s;
+ for(const [dr,dc] of [...step,...jump]){const rr=r+dr*dr0,cc=c+dc;if(inside(rr,cc)){const q=s.board[idx(rr,cc)];if(!q||q.s!==p.s)fn(idx(rr,cc));}}
+ for(const [dr,dc] of slide){let rr=r+dr*dr0,cc=c+dc;while(inside(rr,cc)){const j=idx(rr,cc),q=s.board[j];if(q?.s===p.s)break;fn(j);if(q)break;rr+=dr*dr0;cc+=dc;}}
+}
+function attacks(s,to,by){for(let f=0;f<81;f++){const p=s.board[f];if(!p||p.s!==by)continue;let a=false;eachTarget(s,f,p,t=>{if(t===to)a=true;});if(a)return true;}return false;}
+function kingIndex(s,side){return s.board.findIndex(p=>p&&p.t==='K'&&p.s===side);}
+function inCheck(s,side=s.turn){const k=kingIndex(s,side);return k<0||attacks(s,k,-side);}
+function zone(row,side){return side===1?row<=2:row>=6;}
+function lastRow(side){return side===1?0:8;}
+function lastTwo(row,side){return side===1?row<=1:row>=7;}
+function mustPromote(t,row,side){return (t==='P'||t==='L')&&row===lastRow(side)||t==='N'&&lastTwo(row,side);}
+function promotable(t){return t!=='K'&&t!=='G';}
+function apply(s,m){
+ const n=clone(s),side=s.turn;
+ if(m.drop){n.board[m.to]=piece(m.drop,side);n.hands[side][m.drop]--;if(n.hands[side][m.drop]===0)delete n.hands[side][m.drop];}
+ else{const moving=n.board[m.from],taken=n.board[m.to];n.board[m.from]=null;
+  if(taken){n.hands[side][taken.t]=(n.hands[side][taken.t]||0)+1;}
+  n.board[m.to]={...moving,p:m.promote||moving.p};
+ }
+ n.turn=-side;n.ply=s.ply+1;n.trail=[...(s.trail||[]),{...m,side}];return n;
+}
+function pseudo(s){
+ const out=[],side=s.turn;
+ for(let i=0;i<81;i++){
+  const p=s.board[i];if(!p||p.s!==side)continue;
+  eachTarget(s,i,p,to=>{
+   if(s.board[to]?.t==='K')return;
+   const [fr]=rc(i),[tr]=rc(to);
+   if(!p.p&&promotable(p.t)&&(zone(fr,side)||zone(tr,side))){
+     if(!mustPromote(p.t,tr,side))out.push({from:i,to,promote:false});
+     out.push({from:i,to,promote:true});
+   }else out.push({from:i,to,promote:false});
+  });
+ }
+ const hand=s.hands[side];for(const t of TYPES){if(!hand[t])continue;for(let to=0;to<81;to++){
+  if(s.board[to])continue;const [r,c]=rc(to);if(mustPromote(t,r,side))continue;
+  if(t==='P'){
+    let found=false;for(let rr=0;rr<9;rr++){const p=s.board[idx(rr,c)];if(p?.t==='P'&&p.s===side&&!p.p){found=true;break;}}
+    if(found)continue;
+  }
+  out.push({drop:t,to});
+ }}
+ return out;
+}
+function sameMove(a,b){return a.to===b.to&&a.from===b.from&&a.drop===b.drop&&!!a.promote===!!b.promote;}
+function legalMoves(s,options={}){
+ const side=s.turn;const moves=[];
+ for(const m of pseudo(s)){
+  const after=apply(s,m);if(inCheck(after,side))continue;
+  if(m.drop==='P'&&!options.skipPawnMate){
+   // If a pawn drop is checkmate, the drop is illegal (打ち歩詰め).
+   if(inCheck(after,-side)&&legalMoves(after,{skipPawnMate:true}).length===0)continue;
+  }
+  moves.push(m);
+ }
+ return moves;
+}
+function posKey(s){
+ return s.turn+'|'+s.board.map(p=>p?p.s+':'+p.t+(p.p?'+':''):'_').join(',')+'|'+[1,-1].map(side=>TYPES.map(t=>s.hands[side][t]||0).join('.')).join('|');
+}
+function evaluateEnd(state,history=[],moveLog=[]){
+ const moves=legalMoves(state);
+ if(moves.length===0)return {done:true,winner:-state.turn,reason:inCheck(state)?'詰み':'合法手なし'};
+ const key=posKey(state),matches=history.map((s,i)=>posKey(s)===key?i:-1).filter(i=>i>=0);
+ if(matches.length>=4){
+  const a=matches[matches.length-4],b=matches[matches.length-1];let perp=null;
+  for(const side of [1,-1]){
+   const seq=moveLog.slice(a,b).filter(m=>m.side===side);
+   if(seq.length&&seq.every(m=>m.gaveCheck))perp=side;
+  }
+  return perp?{done:true,winner:-perp,reason:'連続王手の千日手'}:{done:true,winner:0,reason:'千日手（引き分け）'};
+ }
+ return {done:false,winner:null,reason:''};
+}
+function moveText(s,m){
+ const c=9-(m.to%9),r=Math.floor(m.to/9)+1,nums='１２３４５６７８９',kan='一二三四五六七八九',t=m.drop?m.drop:s.board[m.from].t;
+ const hand=m.drop?'打':m.promote?'成':'';
+ return (s.turn===1?'▲':'△')+nums[c-1]+kan[r-1]+(NAMES[t]||'')+hand;
+}
+function pieceValue(p){return p?PRICE[p.t]*(p.p?(p.t==='P'?4.7:p.t==='L'?1.75:p.t==='N'?1.65:p.t==='S'?1.35:1.3):1):0;}
+function totalPieces(s){const count={};for(const p of s.board)if(p)count[p.t]=(count[p.t]||0)+1;for(const side of [1,-1])for(const [t,n]of Object.entries(s.hands[side]))count[t]=(count[t]||0)+n;return count;}
+function serialize(s){return JSON.stringify(s);}
+function deserialize(raw){try{const s=JSON.parse(raw);if(s.board?.length!==81||![-1,1].includes(s.turn)||!s.hands?.[1]||!s.hands?.[-1]||kingIndex(s,1)<0||kingIndex(s,-1)<0)throw Error('Invalid shogi position');return s;}catch{return null;}}
+return {TYPES,NAMES,PROMOTED,PRICE,newGame,clone,rc,idx,inside,eachTarget,attacks,kingIndex,inCheck,zone,mustPromote,legalMoves,pseudo,apply,sameMove,posKey,evaluateEnd,moveText,pieceValue,totalPieces,serialize,deserialize};
+});
+
+/* KIDO v0.3 CPU -- iterative deepening alpha-beta, capture extensions, and transposition cache.
+   Pure offline JavaScript. Rating 1-100 is a game difficulty setting, NOT a shogi rank. */
+(function(root,factory){const engine=root.ShogiEngine||(typeof require!=='undefined'?require('./engine.js'):null),api=factory(engine);if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiAI=api;})(typeof globalThis!=='undefined'?globalThis:this,function(E){
+'use strict';
+const VALUES={K:30000,R:1100,B:970,G:610,S:515,N:340,L:300,P:115};
+const PROMO={R:1.40,B:1.43,S:1.44,N:1.65,L:1.72,P:4.45};
+const MATE=1000000;
+const clock=()=>typeof performance!=='undefined'?performance.now():Date.now();
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const randint=n=>Math.floor(Math.random()*n);
+const keyMove=m=>m?(m.drop?`d${m.drop}:${m.to}`:`${m.from}:${m.to}:${m.promote?1:0}`):'';
+function score(s,side){
+ let total=0;const kingPositions={1:-1,'-1':-1};let material=0;
+ for(let i=0;i<81;i++){
+  const p=s.board[i];if(!p)continue;
+  if(p.t==='K')kingPositions[p.s]=i;
+  const row=Math.floor(i/9),col=i%9,advance=p.s===1?8-row:row;
+  const cent=4-Math.abs(col-4),dev=Math.min(4,advance),v=VALUES[p.t]*(p.p?(PROMO[p.t]||1):1);
+  let position=0;
+  if(p.t==='P')position=advance*9+cent*1.5;
+  else if(p.t==='S')position=dev*12+cent*4-(advance>5?(advance-5)*10:0);
+  else if(p.t==='N')position=dev*10+cent*3;
+  else if(p.t==='L')position=advance*3;
+  else if(p.t==='G')position=Math.min(5,advance)*5+cent*2;
+  else if(p.t==='B')position=cent*9+Math.min(5,advance)*3;
+  else if(p.t==='R')position=cent*7+Math.min(6,advance)*5;
+  else if(p.t==='K')position=-Math.max(0,advance)*90+Math.abs(col-4)*5;
+  if(p.p)position+=28;
+  total+=(p.s===side?1:-1)*(v+position);
+  if(p.t!=='K')material+=(p.s===side?1:-1)*v;
+ }
+ for(const owner of [1,-1])for(const [t,count] of Object.entries(s.hands[owner]))total+=(owner===side?1:-1)*(VALUES[t]||0)*count*1.07;
+ // Nearby gold/silver are better defenders, especially around the king.
+ for(const owner of [1,-1]){
+  const k=kingPositions[owner];if(k<0)continue;
+  const r=Math.floor(k/9),c=k%9;let shield=0,invaders=0;
+  for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+   const rr=r+dr,cc=c+dc;if(rr<0||rr>=9||cc<0||cc>=9)continue;
+   const p=s.board[rr*9+cc];if(!p||p.t==='K')continue;
+   if(p.s===owner&&(p.t==='G'||p.t==='S'||(p.t==='P'&&Math.abs(dr)<=1)))shield+=Math.abs(dr)<=1&&Math.abs(dc)<=1?15:6;
+   if(p.s!==owner)invaders+=(p.t==='R'||p.t==='B'?23:11);
+  }
+  total+=(owner===side?1:-1)*(shield-invaders);
+ }
+ return total;
+}
+function order(s,m,pv='',killer=''){
+ let n=0;if(m.drop){n=(m.drop==='P'?9:24);}
+ else {
+  const a=s.board[m.from],captured=s.board[m.to];
+  if(captured)n+=4500+(VALUES[captured.t]||0)*10-(VALUES[a.t]||0);
+  if(m.promote)n+=a.t==='P'?1250:a.t==='R'||a.t==='B'?1050:450;
+  // Prefer creating threats around the opponent king; don't force random king moves.
+  if(a.t==='K')n-=75;
+ }
+ const key=keyMove(m);
+ if(key===pv)n+=100000;
+ if(key===killer)n+=150;
+ return n;
+}
+function profile(level){
+ if(level<=12)return {depth:1,maxMs:40,width:12,q:1,jitter:1800};
+ if(level<=28)return {depth:1,maxMs:100,width:15,q:1,jitter:450};
+ if(level<=45)return {depth:2,maxMs:240,width:20,q:2,jitter:150};
+ if(level<=65)return {depth:3,maxMs:750,width:26,q:3,jitter:35};
+ if(level<=80)return {depth:5,maxMs:2100,width:38,q:4,jitter:8};
+ if(level<=92)return {depth:6,maxMs:4500,width:54,q:5,jitter:0};
+ return {depth:8,maxMs:12000,width:64,q:6,jitter:0};
+}
+// Verified opening sequences in USI square notation (files 9..1, ranks a..i).
+// Exact-board matching means a different human move never forces a book reply.
+// The book guides the opening only; beyond a known position the search takes over.
+const OPENINGS=[
+ {name:'相掛かり',weight:2,moves:['2g2f','8c8d','2f2e','8d8e','6i7h','4a3b','3i4h','7a6b','7g7f','3c3d']},
+ {name:'角換わり',weight:2,moves:['7g7f','8c8d','2g2f','8d8e','8h7g','3c3d','7i8h','2b7g+','8h7g','4a3b','3i4h','7a6b']},
+ {name:'矢倉',weight:2,moves:['7g7f','8c8d','7i6h','3c3d','6g6f','7a6b','5g5f','5c5d','3i4h','3a4b','6h7g','4b3c']},
+ {name:'四間飛車',weight:2,moves:['7g7f','3c3d','6g6f','8c8d','2h6h','7a6b','5i4h','5a4b','4h3h','4b3b']},
+ {name:'三間飛車',weight:1,moves:['7g7f','3c3d','7f7e','8c8d','2h7h','7a6b','5i4h','5a4b','4h3h','4b3b']},
+ {name:'中飛車',weight:1,moves:['5g5f','8c8d','2h5h','3c3d','5f5e','7a6b','7g7f','5a4b','5i4h','4b3b']},
+ {name:'居飛車',weight:2,moves:['7g7f','3c3d','2g2f','8c8d','2f2e','8d8e','6i7h','4a3b','3i4h','7a6b']},
+ {name:'後手四間飛車',weight:1,moves:['7g7f','3c3d','2g2f','8b4b','3i4h','5c5d','5i6h','6a7b']},
+ {name:'後手中飛車',weight:1,moves:['7g7f','5c5d','2g2f','8b5b','2f2e','3c3d','3i4h','7a6b']},
+ {name:'後手の角道',weight:1,moves:['2g2f','3c3d','7g7f','8c8d','2f2e','8d8e','3i4h','7a6b']}
+];
+function parseUSI(usi){
+ const m=/^([1-9])([a-i])([1-9])([a-i])(\+)?$/.exec(usi);
+ if(!m)return null;
+ return {from:(m[2].charCodeAt(0)-97)*9+(9-Number(m[1])),to:(m[4].charCodeAt(0)-97)*9+(9-Number(m[3])),promote:!!m[5]};
+}
+let openingCache=null;
+function openingBook(){
+ if(openingCache)return openingCache;
+ const map=new Map(),invalid=[];
+ for(const row of OPENINGS){
+  let state=E.newGame();
+  for(const notation of row.moves){
+   const move=parseUSI(notation),legal=move&&E.legalMoves(state).find(x=>E.sameMove(x,move));
+   if(!legal){invalid.push({name:row.name,notation,ply:state.ply});break;}
+   const hash=E.posKey(state),entries=map.get(hash)||[],id=keyMove(legal);
+   const known=entries.find(x=>x.key===id);
+   if(known){known.weight+=row.weight;known.names.push(row.name);}
+   else entries.push({key:id,move:legal,weight:row.weight,names:[row.name]});
+   map.set(hash,entries);state=E.apply(state,legal);
+  }
+ }
+ return openingCache={map,invalid};
+}
+function findBookMove(state,level,legal,config){
+ if(level<42||state.ply>=12||E.inCheck(state,state.turn))return null;
+ const choices=openingBook().map.get(E.posKey(state));
+ if(!choices?.length)return null;
+ const available=choices.filter(x=>legal.some(m=>E.sameMove(x.move,m)));
+ if(!available.length)return null;
+ let ticket=Math.random()*available.reduce((s,x)=>s+x.weight,0);
+ const picked=available.find(x=>(ticket-=x.weight)<0)||available[available.length-1];
+ if(config.stats){config.stats.opening=picked.names.join(' / ');config.stats.depth=0;config.stats.nodes=0;}
+ return picked.move;
+}
+function openingInfo(){const b=openingBook();return {lines:OPENINGS.length,positions:b.map.size,invalid:b.invalid.slice()};}
+
+function bestMove(s,skill=60,config={}){
+ const level=clamp(Math.round(Number(skill)||60),1,100),p=profile(level),start=clock();
+ const deadline=start+(Number.isFinite(config.maxMs)?clamp(config.maxMs,30,30000):p.maxMs);
+ const all=E.legalMoves(s);if(!all.length)return null;
+ if(level<=10)return all[randint(all.length)];
+ const fromBook=findBookMove(s,level,all,config);if(fromBook)return fromBook;
+
+ let nodes=0,table=new Map(),killer=Array(30).fill(''),expired=false;
+ function checkTime(){if((++nodes&31)===0&&clock()>deadline){expired=true;throw 'timeout';}}
+ function quiesce(pos,alpha,beta,ply,remaining){
+  checkTime();let stand=score(pos,pos.turn);
+  const check=E.inCheck(pos,pos.turn);
+  if(!check){if(stand>=beta)return beta;if(stand>alpha)alpha=stand;}
+  if(remaining<=0)return stand;
+  const moves=E.legalMoves(pos);
+  if(!moves.length)return -MATE+ply;
+  const tactical=check?moves:moves.filter(m=>!m.drop&&(pos.board[m.to]||m.promote));
+  tactical.sort((a,b)=>order(pos,b)-order(pos,a));
+  for(const m of tactical.slice(0,check?28:12)){
+   const val=-quiesce(E.apply(pos,m),-beta,-alpha,ply+1,remaining-1);
+   if(val>=beta)return beta;if(val>alpha)alpha=val;
+  }
+  return alpha;
+ }
+ function search(pos,depth,alpha,beta,ply){
+  checkTime();if(depth<=0)return quiesce(pos,alpha,beta,ply,p.q);
+  const hash=E.posKey(pos),cached=table.get(hash),originalAlpha=alpha;
+  if(cached&&cached.depth>=depth){if(cached.flag===0)return cached.value;
+   if(cached.flag===1&&cached.value<=alpha)return cached.value;
+   if(cached.flag===2&&cached.value>=beta)return cached.value;}
+  const moves=E.legalMoves(pos);
+  if(!moves.length)return -MATE+ply;
+  moves.sort((a,b)=>order(pos,b,cached?.move,killer[ply])-order(pos,a,cached?.move,killer[ply]));
+  let local=-MATE-1,best='',count=0;
+  const width=Math.min(moves.length,p.width+Math.max(0,depth-3)*2);
+  for(const m of moves){
+   // Keep forcing captures / promotions even when pruning quiet moves.
+   if(count>=width&&!pos.board[m.to]&&!m.promote&&!E.inCheck(pos,pos.turn))continue;
+   count++;
+   const next=E.apply(pos,m);
+   const v=-search(next,depth-1,-beta,-alpha,ply+1);
+   if(v>local){local=v;best=keyMove(m);}
+   if(v>alpha)alpha=v;
+   if(alpha>=beta){killer[ply]=best;break;}
+  }
+  if(table.size>26000)table.clear();
+  table.set(hash,{depth,value:local,flag:local<=originalAlpha?1:local>=beta?2:0,move:best});
+  return local;
+ }
+ const ranked=all.map(m=>({m,k:keyMove(m),v:order(s,m)+(-score(E.apply(s,m),-s.turn))*0.10})).sort((a,b)=>b.v-a.v);
+ let best=ranked[0].m,bestScore=-MATE,completedDepth=0;
+ if(level<=28){
+  const subset=ranked.slice(0,Math.min(ranked.length,level<=16?14:8));
+  return subset.map(x=>({...x,noise:(Math.random()-.5)*p.jitter,k:-score(E.apply(s,x.m),-s.turn)}))
+   .sort((a,b)=>(b.k+b.noise)-(a.k+a.noise))[0].m;
+ }
+ try{
+  const root=ranked.slice();
+  for(let depth=1;depth<=p.depth;depth++){
+   const round=[];let roundBest=null,roundValue=-MATE-1;
+   for(const item of root){
+    checkTime();const val=-search(E.apply(s,item.m),depth-1,-MATE,MATE,1);
+    round.push({key:item.k,score:val});
+    if(val>roundValue){roundValue=val;roundBest=item.m;}
+   }
+   if(roundBest){
+    best=roundBest;bestScore=roundValue;completedDepth=depth;
+    const byKey=new Map(round.map(x=>[x.key,x.score]));
+    root.sort((a,b)=>byKey.get(b.k)-byKey.get(a.k));
+   }
+   if(Math.abs(roundValue)>MATE-1000)break;
+  }
+ }catch(e){if(e!=='timeout')throw e;}
+ // At low-medium levels, occasional suboptimal moves keep the scale meaningful.
+ if(level<=55&&completedDepth>0){
+  const jitter=p.jitter;
+  if(jitter){
+   const picked=ranked.slice(0,Math.min(7,ranked.length)).map(x=>({m:x.m,v:-score(E.apply(s,x.m),-s.turn)+(Math.random()-.5)*jitter})).sort((a,b)=>b.v-a.v)[0].m;
+   if(Math.random()<.13)return picked;
+  }
+ }
+ if(config.stats){config.stats.nodes=nodes;config.stats.depth=completedDepth;config.stats.timeMs=Math.round(clock()-start);config.stats.score=bestScore;config.stats.expired=expired;}
+ return best;
+}
+return {bestMove,score,profile,openingInfo};
+});
+
+/* Standalone worker: keeps search off the UI thread while the CPU is thinking. */
+
+self.onmessage = function(event){
+ const {id,position,level}=event.data||{};
+ try{
+  const state=self.ShogiEngine.deserialize(position);
+  if(!state)throw Error('Invalid shogi state');
+  const stats={};
+  const move=self.ShogiAI.bestMove(state,level,{stats});
+  self.postMessage({id,move,stats});
+ }catch(error){self.postMessage({id,error:String(error)});}
+};
+
+</script>
+</body>
+</html>
