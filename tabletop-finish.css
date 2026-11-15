@@ -104,3 +104,49 @@ body.ttm-daifugo .my-zone-head strong{color:#fff4ca}
 @media(prefers-reduced-motion:reduce){
  .ttm-motion-control button,.ttm-shogi .koma,.ttm-mahjong .tile,.ttm-daifugo .play-card{transition:none!important}
 }
+
+
+/* Input feedback — distinguish grabbing from actually submitting. */
+.ttm-pointer-ghost{
+  transform-style:preserve-3d!important;
+  box-shadow:0 12px 25px #0007!important;
+  will-change:transform;user-select:none
+}
+.ttm-being-dragged{opacity:.43!important;filter:saturate(.5)!important}
+body.ttm-shogi .board-plane{touch-action:none}
+body.ttm-shogi .cell.ttm-drag-target{
+  background:#dfcb85!important;
+  box-shadow:inset 0 0 0 3px #5e9470,0 0 14px #3f9c6085!important;z-index:2
+}
+body.ttm-shogi .cell.ttm-drag-target.target{
+  background:#c3e1a2!important;
+  box-shadow:inset 0 0 0 3px #3f895e,0 0 14px #66c795a8!important
+}
+body.ttm-mahjong .hand-tiles button.tile.hand,
+body.ttm-daifugo .myhand button.play-card{touch-action:none}
+body.ttm-mahjong .tile.hand.ttm-being-dragged,
+body.ttm-daifugo .play-card.ttm-being-dragged{
+  opacity:.46!important;outline:2px dashed #edce80;
+}
+.ttm-gesture-hint{
+  clear:both;
+  display:block;
+  margin:7px 4px 5px!important;
+  color:#e8d9b7;
+  font:600 11px/1.55 system-ui,"Yu Gothic",sans-serif;
+  letter-spacing:.012em;opacity:.85;
+}
+body.ttm-shogi .ttm-gesture-hint{text-align:center;color:#dbdece}
+body.ttm-mahjong .ttm-gesture-hint{color:#d4e7d1}
+body.ttm-daifugo .ttm-gesture-hint{color:#e9d5ae}
+body.ttm-shogi .board-plane button.cell,
+body.ttm-mahjong .tile.hand,
+body.ttm-daifugo .play-card{cursor:grab}
+body.ttm-shogi .board-plane button.cell:active,
+body.ttm-mahjong .tile.hand:active,
+body.ttm-daifugo .play-card:active{cursor:grabbing}
+@media(max-width:540px){
+  .ttm-gesture-hint{font-size:10px;line-height:1.45}
+  .ttm-motion-control{bottom:calc(7px + env(safe-area-inset-bottom))}
+  .ttm-motion-control button{min-height:34px;padding:5px 9px;min-width:76px;font-size:11px}
+}
