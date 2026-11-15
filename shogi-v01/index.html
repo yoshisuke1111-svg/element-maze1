@@ -13,6 +13,9 @@
 @media(max-width:450px){.app-shell{padding:0 9px 28px}.site-header{min-height:58px}.brand-name{font-size:19px}.brand-caption{font-size:8px}.monogram{width:36px;height:36px;font-size:22px}.btn.small{min-height:34px;font-size:11px;padding:7px 8px}.page-heading{font-size:29px}.welcome{padding-top:19px}.panel{padding:12px;border-radius:13px}.board-wrap{padding:7px;border-width:2px}.koma{font-size:clamp(12px,5.1vw,22px)}.top-player,.bottom-player{padding:8px 9px}.avatar{width:35px;height:35px;font-size:20px;border-radius:11px}.player-name{font-size:13px}.player-title{font-size:10px}.turn-line{font-size:13px}.game-layout{gap:9px}.cell.target.occupied:after{border-width:2px}.hand-piece{min-height:36px;font-size:16px}.btn{font-size:13px;padding:10px}.record{max-height:160px}.modal{padding:15px}}
 
 </style>
+<style id="creator-credit-style">
+#creator-credit{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom, 0px));z-index:12;pointer-events:none;user-select:none;background:rgba(9,21,22,.76);border:1px solid rgba(250,235,204,.2);color:#f7ebd6;border-radius:6px;padding:3px 6px;font:600 10px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:.02em}
+</style>
 </head>
 <body>
 <div id="app"><div class="loading-fallback">棋道 SHOGI LAB<br><small>将棋を読み込んでいます…</small></div></div>
@@ -355,5 +358,6 @@ render();
 })();
 
 </script>
+<div id="creator-credit">作成者 鈾</div>
 </body>
 </html>
