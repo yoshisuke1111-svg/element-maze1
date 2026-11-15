@@ -62,7 +62,10 @@
 .board-result-heading{font:bold clamp(34px,9vw,54px) "Yu Mincho",serif;color:#ffe0a0}.board-result-detail{font-size:14px;line-height:1.7;margin-top:8px;overflow-wrap:anywhere}
 .room-clock-label{display:block;margin:12px 0 6px;color:#d6e3d6;font-size:12px}
 @media(max-width:450px){.shogi-clock{font-size:13px;min-width:61px;padding:4px 5px}.hand-piece .hand-koma{width:19px;height:23px;font-size:13px}}
-</style><script src="./vendor/peerjs.min.js"></script></head><body><div id="app" class="loading-fallback">オンライン将棋<br><small>読み込み中…</small></div><script>/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
+</style><script src="./vendor/peerjs.min.js"></script><style id="creator-credit-style">
+#creator-credit{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom, 0px));z-index:12;pointer-events:none;user-select:none;background:rgba(9,21,22,.76);border:1px solid rgba(250,235,204,.2);color:#f7ebd6;border-radius:6px;padding:3px 6px;font:600 10px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:.02em}
+</style>
+</head><body><div id="app" class="loading-fallback">オンライン将棋<br><small>読み込み中…</small></div><script>/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const TYPES=['R','B','G','S','N','L','P'];
@@ -472,4 +475,5 @@ root.addEventListener('change',e=>{if(e.target?.id==='nickname'){saveName();rend
 window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,isConnected:()=>linked,getName:()=>name,getClock:()=>({limit:clockLimit,remaining:{...clockRemaining},shown:{1:clockShow(1),'-1':clockShow(-1)},done,winner}),normalizeRoomCode};
 const incoming=roomFromURL();if(incoming)openGuest(incoming);else render();
 })();
-</script></body></html>
+</script><div id="creator-credit">作成者 鈾</div>
+</body></html>
