@@ -88,6 +88,15 @@
     el.style.visibility='hidden';
     let finished=false;
     const finish=()=>{if(finished)return;finished=true;ghost.remove();el.style.visibility='';};
+    const impact=()=>{
+      if(reduced)return;
+      const ring=document.createElement('span');ring.className='ttm-impact';
+      ring.style.left=(dest.x+dest.width/2)+'px';ring.style.top=(dest.y+dest.height*.86)+'px';
+      document.body.appendChild(ring);
+      const a=ring.animate([{opacity:.58,transform:'translate(-50%,-50%) scale(.6)'},{opacity:0,transform:'translate(-50%,-50%) scale(2.4)'}],{duration:340,easing:'ease-out'});
+      a.onfinish=()=>ring.remove();a.oncancel=()=>ring.remove();
+    };
+
     try{
       const a=ghost.animate([
         {offset:0,transform:'translate3d('+dx+'px,'+dy+'px,0) rotateZ('+rot+'deg) rotateX(0deg)'},
@@ -95,7 +104,7 @@
         {offset:.82,transform:'translate3d(1px,-6px,8px) rotateZ('+(rot+1.5)+'deg) rotateX(7deg)'},
         {offset:1,transform:'translate3d(0,0,0) rotateZ('+rot+'deg) rotateX(0deg)'}
       ],{duration:470,easing:'cubic-bezier(.22,.61,.25,1)',fill:'forwards'});
-      a.onfinish=finish;
+      a.onfinish=()=>{impact();finish();};
       a.oncancel=finish;
     }catch(e){finish();}
   }
@@ -110,31 +119,81 @@
     }
     last=now;
   }
+  function rectOf(el){
+    if(!el)return null;const r=el.getBoundingClientRect();
+    return {x:r.left,y:r.top,w:r.width,h:r.height};
+  }
+  function keyOfHandCard(el){
+    const corner=el.querySelector('.corner');
+    return textOf(corner)||textOf(el);
+  }
+  function keyOfTableCard(el){
+    return textOf(el.querySelector('strong'))+textOf(el.querySelector('span'));
+  }
+  function physicalThrow(el,source,delay,kind){
+    if(reduced||!el||!el.isConnected)return;
+    if(!source){(kind==='tile'?tileFlight:cardFlight)(el,kind==='tile'?'hand':'top',delay);return;}
+    const r=rectOf(el);if(!r)return;
+    const dx=Math.max(-750,Math.min(750,source.x-r.x));
+    const dy=Math.max(-750,Math.min(750,source.y-r.y));
+    const sc=Math.max(.75,Math.min(1.23,source.w/r.w||1));
+    const origin='translate3d('+dx+'px,'+dy+'px,50px) rotateZ(-16deg) rotateX(39deg) scale('+sc+')';
+    const mid='translate3d('+(dx*.29)+'px,'+(dy*.27-14)+'px,28px) rotateZ(5deg) rotateX(12deg) scale(1.05)';
+    const settle='translate3d(1px,3px,3px) rotateZ(-1.1deg) rotateX(2deg) scale(1.007)';
+    spring(el,[
+      {offset:0,opacity:.8,transform:origin},
+      {offset:.63,opacity:1,transform:mid},
+      {offset:.87,opacity:1,transform:settle},
+      {offset:1,opacity:1,transform:'translate3d(0,0,0) rotateZ(0deg) rotateX(0deg) scale(1)'}
+    ],kind==='tile'?510:650,delay);
+  }
   function updateDaifugo(){
+    const table=document.querySelector('.played-area');
     const cards=Array.from(document.querySelectorAll('.played-area .table-card'));
     const hand=Array.from(document.querySelectorAll('.myhand .play-card'));
-    const current=cards.map(textOf).join('|');
-    const handSignature=hand.map(textOf).join('|');
+    if(!table && !hand.length){last=null;return;}
+    const current=cards.map(keyOfTableCard).join('|');
+    const handCards=hand.map(el=>({id:el.dataset.id||'',key:keyOfHandCard(el),
+      selected:el.classList.contains('selected'),r:rectOf(el)}));
     if(last && current!==last.sig && cards.length){
-      cards.forEach((el,i)=>cardFlight(el,'bottom',i*65));
+      let oldUsed=new Set();
+      // Only animate from the actual hand if those cards disappeared from it.
+      const inHand=new Set(handCards.map(c=>c.id));
+      const consumed=(last.cards||[]).filter(c=>c.id&&!inHand.has(c.id));
+      cards.forEach((el,i)=>{
+        const key=keyOfTableCard(el);
+        let match=consumed.find((c,j)=>!oldUsed.has(j)&&c.key===key);
+        if(match){oldUsed.add(consumed.indexOf(match));physicalThrow(el,match.r,Math.min(i*65,280),'card');}
+        else cardFlight(el,'top',Math.min(i*65,280));
+      });
       const felt=document.querySelector('.table-area');
-      if(felt && !reduced)felt.animate([{filter:'brightness(1.13)'},{filter:'brightness(1)'}],{duration:490,easing:'ease-out'});
+      if(felt && !reduced)felt.animate([{filter:'brightness(1.08)'},{filter:'brightness(1)'}],
+        {duration:480,easing:'ease-out'});
     }
-    if(hand.length && (!last || !last.handCount || (hand.length>last.handCount+1 && handSignature!==last.handSig))){
-      hand.forEach((el,i)=>cardFlight(el,'top',Math.min(360,35*i)));
+    if(hand.length && (!last || !last.handCount || (hand.length>last.handCount+1))){
+      hand.forEach((el,i)=>cardFlight(el,'top',Math.min(320,27*i)));
     }
-    last={sig:current,handSig:handSignature,handCount:hand.length};
+    last={sig:current,cards:handCards,handCount:hand.length};
   }
   function updateMahjong(){
     const rivers=Array.from(document.querySelectorAll('.river')).map(r=>Array.from(r.querySelectorAll('.tiles .tile')));
     const hand=Array.from(document.querySelectorAll('.hand-tiles .tile.hand'));
     const melds=Array.from(document.querySelectorAll('.seat-melds')).map(r=>Array.from(r.querySelectorAll('.meld')));
-    const now={rivers:rivers.map(r=>r.map(textOf)),hand:hand.map(textOf),melds:melds.map(r=>r.length)};
+    if(!rivers.length && !hand.length){last=null;return;}
+    const handCards=hand.map(el=>({name:textOf(el),r:rectOf(el),
+      chosen:el.classList.contains('is-chosen')||el.classList.contains('selected')}));
+    const now={rivers:rivers.map(r=>r.map(textOf)),
+      hand:handCards.map(c=>c.name),melds:melds.map(r=>r.length),handCards};
     if(last){
       rivers.forEach((r,i)=>{
         const before=last.rivers[i]||[];
-        if(r.length>before.length && r.length-before.length<=3){
-          r.slice(before.length).forEach((el,j)=>tileFlight(el,'hand',j*60));
+        if(r.length>before.length && r.length-before.length<=4){
+          r.slice(before.length).forEach((el,j)=>{
+            // The last selected tile travels from your hand into your river.
+            const from=i===0?last.handCards?.find(x=>x.chosen)?.r:null;
+            if(from)physicalThrow(el,from,j*65,'tile');
+            else tileFlight(el,'hand',j*60);
+          });
         }
       });
       if(hand.length>last.hand.length){
@@ -145,7 +204,7 @@
         if(m.length>(last.melds[i]||0))tileFlight(m[m.length-1],'hand');
       });
     }else if(hand.length){
-      hand.forEach((el,i)=>tileFlight(el,'top',Math.min(i*36,360)));
+      hand.forEach((el,i)=>tileFlight(el,'top',Math.min(i*30,350)));
     }
     last=now;
   }
