@@ -157,6 +157,9 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#102934
 @media(max-width:780px){.config{grid-template-columns:1fr 1fr}.config label:first-child{grid-column:1/-1}}
 @media(max-width:440px){.config{grid-template-columns:1fr}.config label:first-child{grid-column:auto}}
 </style>
+<style id="creator-credit-style">
+#creator-credit{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom, 0px));z-index:12;pointer-events:none;user-select:none;background:rgba(9,21,22,.76);border:1px solid rgba(250,235,204,.2);color:#f7ebd6;border-radius:6px;padding:3px 6px;font:600 10px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:.02em}
+</style>
 </head>
 <body>
 <main id="em-solo" tabindex="0">
@@ -1629,5 +1632,6 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#102934
   window.__EM_SOLO_DEBUG={get game(){return g;}, get quality(){return quality;}, applyQuality, symbols, knownCompounds, reactions, start, get mode(){return mode;}, setMode, spawnAtom, spawnRain, addPack, mergeSlots, throwBall, blast, chemicalEffect, segmentNear, toggleDev, chem, nuclearStep, radiationStep, radiationDemo, deathFact, damage, finish, wetScreen, pushAtoms, registerDirectHit, draw};
 })();
 </script>
+<div id="creator-credit">作成者 鈾</div>
 </body>
 </html>
