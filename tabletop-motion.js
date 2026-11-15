@@ -5,7 +5,25 @@
   const tag=document.currentScript;
   const game=tag ? tag.getAttribute('data-game') : '';
   if (!game || !('animate' in Element.prototype)) return;
-  const reduced=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const systemReduced=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let stored=null;
+  try{stored=localStorage.getItem('ttm-motion-'+game);}catch(e){}
+  let reduced=stored==='off'||(stored===null&&systemReduced);
+  document.body.classList.add('ttm-'+game);
+  function mountControl(){
+    if(document.querySelector('.ttm-motion-control'))return;
+    const control=document.createElement('div');control.className='ttm-motion-control';
+    const button=document.createElement('button');button.type='button';
+    button.title='ゲーム中のカードや駒の動きを切り替えます。ルールには影響しません';
+    function refresh(){button.textContent=reduced?'動き OFF':'動き ON';button.setAttribute('aria-pressed',String(!reduced));button.setAttribute('aria-label','カード・駒の演出 '+(reduced?'オフ':'オン'));}
+    button.addEventListener('click',()=>{
+      reduced=!reduced;
+      try{localStorage.setItem('ttm-motion-'+game,reduced?'off':'on');}catch(e){}
+      refresh();
+    });
+    refresh();control.appendChild(button);document.body.appendChild(control);
+  }
+  mountControl();
   const style=document.createElement('style');
   style.textContent=[
     '.board-plane,.board-wrap,.table-area,.played-area,.hand-tiles,.hand-row,.felt{perspective:980px}',
@@ -94,11 +112,18 @@
   }
   function updateDaifugo(){
     const cards=Array.from(document.querySelectorAll('.played-area .table-card'));
+    const hand=Array.from(document.querySelectorAll('.myhand .play-card'));
     const current=cards.map(textOf).join('|');
+    const handSignature=hand.map(textOf).join('|');
     if(last && current!==last.sig && cards.length){
       cards.forEach((el,i)=>cardFlight(el,'bottom',i*65));
+      const felt=document.querySelector('.table-area');
+      if(felt && !reduced)felt.animate([{filter:'brightness(1.13)'},{filter:'brightness(1)'}],{duration:490,easing:'ease-out'});
     }
-    last={sig:current};
+    if(hand.length && (!last || !last.handCount || (hand.length>last.handCount+1 && handSignature!==last.handSig))){
+      hand.forEach((el,i)=>cardFlight(el,'top',Math.min(360,35*i)));
+    }
+    last={sig:current,handSig:handSignature,handCount:hand.length};
   }
   function updateMahjong(){
     const rivers=Array.from(document.querySelectorAll('.river')).map(r=>Array.from(r.querySelectorAll('.tiles .tile')));
