@@ -65,6 +65,7 @@
 </style><script src="./vendor/peerjs.min.js"></script><style id="creator-credit-style">
 #creator-credit{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom, 0px));z-index:12;pointer-events:none;user-select:none;background:rgba(9,21,22,.76);border:1px solid rgba(250,235,204,.2);color:#f7ebd6;border-radius:6px;padding:3px 6px;font:600 10px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:.02em}
 </style>
+<link rel="stylesheet" href="../tabletop-finish.css?v=11">
 </head><body><div id="app" class="loading-fallback">オンライン将棋<br><small>読み込み中…</small></div><script>/* SHOGI LAB - standalone local shogi rules engine. No network calls. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ShogiEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
@@ -476,4 +477,5 @@ window.ShogiOnlineDebug={getState:()=>state,getRole:()=>role,getRoom:()=>room,is
 const incoming=roomFromURL();if(incoming)openGuest(incoming);else render();
 })();
 </script><div id="creator-credit">作成者 鈾</div>
+<script src="../tabletop-motion.js?v=11" data-game="shogi"></script>
 </body></html>
