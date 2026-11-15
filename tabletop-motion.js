@@ -164,7 +164,15 @@
         const key=keyOfTableCard(el);
         let match=consumed.find((c,j)=>!oldUsed.has(j)&&c.key===key);
         if(match){oldUsed.add(consumed.indexOf(match));physicalThrow(el,match.r,Math.min(i*65,280),'card');}
-        else cardFlight(el,'top',Math.min(i*65,280));
+        else {
+          const ownerText=document.querySelector('.table-head')?.textContent||'';
+          const ownerName=ownerText.split(' が出したカード')[0].trim();
+          const fromSeat=[...document.querySelectorAll('.players-top .opponent')].find(p=>ownerName && p.textContent.includes(ownerName))
+                       ||document.querySelector('.players-top .opponent');
+          const sr=fromSeat&&rectOf(fromSeat);
+          const origin=sr?{x:sr.x+sr.w/2,y:sr.y+sr.h*.5,w:50,h:80}:null;
+          physicalThrow(el,origin,Math.min(i*65,280),'card');
+        }
       });
       const felt=document.querySelector('.table-area');
       if(felt && !reduced)felt.animate([{filter:'brightness(1.08)'},{filter:'brightness(1)'}],
@@ -189,9 +197,12 @@
         const before=last.rivers[i]||[];
         if(r.length>before.length && r.length-before.length<=4){
           r.slice(before.length).forEach((el,j)=>{
-            // The last selected tile travels from your hand into your river.
-            const from=i===0?last.handCards?.find(x=>x.chosen)?.r:null;
-            if(from)physicalThrow(el,from,j*65,'tile');
+            // When the source hand is hidden, originate the tile at that player's edge of the table.
+            const chosen=i===0?last.handCards?.find(x=>x.chosen)?.r:null;
+            const rr=el.closest('.river')&&rectOf(el.closest('.river'));
+            const from=chosen || (rr?{x:i===1?rr.x+rr.w+35:i===3?rr.x-45:rr.x+rr.w/2,
+              y:i===2?rr.y-65:rr.y+rr.h/2,w:27,h:40}:null);
+            if(from)physicalThrow(el,from,j*60,'tile');
             else tileFlight(el,'hand',j*60);
           });
         }
