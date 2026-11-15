@@ -44,6 +44,9 @@
 @media(max-width:450px){.game-layout{gap:10px}.move-info{padding:9px;min-height:61px}.move-info-main{font-size:15px}.move-coords{font-size:12px}.strength-title strong{font-size:17px}.strength-block{margin-top:12px}.board-wrap{padding:7px}.koma{font-size:clamp(12px,5.1vw,22px)}.welcome-art{min-height:185px}}
 
 </style>
+<style id="creator-credit-style">
+#creator-credit{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom, 0px));z-index:12;pointer-events:none;user-select:none;background:rgba(9,21,22,.76);border:1px solid rgba(250,235,204,.2);color:#f7ebd6;border-radius:6px;padding:3px 6px;font:600 10px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:.02em}
+</style>
 </head>
 <body>
 <div id="app"><div class="loading-fallback">棋道<br><small>将棋を読み込んでいます…</small></div></div>
@@ -740,5 +743,6 @@ render();
 })();
 
 </script>
+<div id="creator-credit">作成者 鈾</div>
 </body>
 </html>
