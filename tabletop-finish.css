@@ -1,0 +1,106 @@
+/* Tabletop physical finish 1.1.
+   Visual treatment only: rules, turns, CPU, rooms and scoring are unchanged. */
+.ttm-motion-control{
+  position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:150;pointer-events:none;filter:drop-shadow(0 4px 8px #0009)
+}
+.ttm-motion-control button{
+  pointer-events:auto;cursor:pointer;min-height:38px;min-width:86px;padding:7px 11px;
+  border:1px solid #cba96c;border-radius:99px;background:#12241eec;color:#ffe7ae;
+  box-shadow:inset 0 1px 0 #ffffff25,0 4px 12px #0008;
+  font:750 12px/1.1 system-ui,-apple-system,"Yu Gothic",sans-serif;
+  letter-spacing:.02em;touch-action:manipulation
+}
+.ttm-motion-control button[aria-pressed="false"]{border-color:#76847c;color:#e0e6d9;background:#27352dea}
+.ttm-motion-control button:focus-visible{outline:3px solid #ffde92;outline-offset:3px}
+.ttm-motion-control button:active{transform:translateY(1px);filter:brightness(1.11)}
+body.ttm-shogi .board-wrap{box-shadow:0 18px 34px #0008,inset 0 2px 1px #fff2;background-image:linear-gradient(145deg,#a17b4d,#5b432c 76%,#987045)}
+body.ttm-shogi .board-plane{perspective:1100px;isolation:isolate}
+body.ttm-shogi .cell{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body.ttm-shogi .koma{
+  transform-style:preserve-3d;
+  box-shadow:inset 0 2px 1px #fff6,inset 0 -2px 1px #61421d66,1px 2px 2px #2918055e;
+  background:linear-gradient(117deg,#fff0c8 0%,#edd2a3 42%,#d3ac76 88%,#bf9559);
+  filter:drop-shadow(0 2px 1px #4c311e8a);
+  transition:filter .15s ease,box-shadow .15s ease
+}
+body.ttm-shogi .koma.promoted{color:#9d2c2a}
+body.ttm-shogi .cell.selected .koma:not(.opp){transform:translateY(-3px) scale(1.035);filter:drop-shadow(0 5px 3px #48331c88)}
+body.ttm-shogi .cell.selected .koma.opp{transform:rotate(180deg) translateY(3px) scale(1.035);filter:drop-shadow(0 5px 3px #48331c88)}
+body.ttm-shogi .cell:active .koma:not(.opp){filter:drop-shadow(0 4px 3px #68482caa)}
+body.ttm-shogi .cell:focus-visible{outline:3px solid #4d9d7a;outline-offset:-2px;z-index:5}
+body.ttm-shogi .hand-piece:focus-visible,body.ttm-shogi button:focus-visible{outline-offset:2px}
+body.ttm-shogi .btn{touch-action:manipulation}
+body.ttm-shogi .game-center .hands .hand-piece{min-height:40px}
+body.ttm-shogi .ttm-impact{
+  position:fixed;z-index:9998;pointer-events:none;border:2px solid #f5d093aa;
+  border-radius:50%;width:25px;height:12px;transform:translate(-50%,-50%);
+  box-shadow:0 0 8px #f4ce7c66
+}
+/* Mahjong: glazed ivory faces, layered tile edges and clear discard choice. */
+body.ttm-mahjong .board,body.ttm-mahjong .table-board{
+  box-shadow:inset 0 2px 25px #84dfac12,0 15px 24px #0007
+}
+body.ttm-mahjong .tile{
+  box-shadow:inset 0 1px 1px #fff,1px 1px 0 #7d9f8c,1px 3px 0 #5e8a79,2px 5px 5px #0006;
+  border-bottom-color:#86a898;
+  background:linear-gradient(117deg,#fffefa,#f0f2e7 58%,#c9d6cb);
+  transform-style:preserve-3d
+}
+body.ttm-mahjong .tile.hand{
+  transition:transform .14s cubic-bezier(.19,.7,.3,1),box-shadow .14s ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative
+}
+body.ttm-mahjong .hand-tiles .tile.hand.is-chosen,
+body.ttm-mahjong .hand-tiles .tile.hand.selected{
+  transform:translateY(-10px) rotateX(-5deg);z-index:5;
+  box-shadow:0 0 0 2px #ffe3a1,0 9px 2px #53745d,0 15px 17px #0009
+}
+body.ttm-mahjong .tile.hand:active:not(:disabled){transform:translateY(-5px) scale(.985)}
+body.ttm-mahjong .tile.hand:focus-visible{outline:3px solid #ffd47c;outline-offset:2px;z-index:6}
+body.ttm-mahjong .river .tiles{perspective:900px}
+body.ttm-mahjong .river .tile{border-bottom-width:3px}
+body.ttm-mahjong .river-name{color:#ebf6ed}
+body.ttm-mahjong .handline strong{color:#ffe3a4}
+body.ttm-mahjong [data-v02="discardConfirm"]{
+  min-height:44px;font-weight:900;border-color:#efcf7a;box-shadow:0 3px 0 #8c6534
+}
+body.ttm-mahjong .actions .btn{min-height:44px}
+body.ttm-mahjong .discard-guide{gap:12px}
+@media(max-width:600px){
+  body.ttm-mahjong .hand-tiles .tile.hand{height:clamp(53px,13.6vw,70px)}
+  body.ttm-mahjong .hand-tiles .tile.hand .val.glyph{font-size:clamp(20px,5.5vw,33px)}
+  body.ttm-mahjong .discard-guide>span{line-height:1.5}
+}
+/* Daifugo: little spring in the fingertips, no "magic floating" after release. */
+body.ttm-daifugo .table-area{perspective:1050px}
+body.ttm-daifugo .play-card{
+  transform-origin:50% 85%;transform-style:preserve-3d;
+  border-color:#f9f4e7;
+  box-shadow:inset 0 1px 1px #fff,0 2px 1px #d0cfc1,0 5px 9px #03190eb3;
+  transition:transform .16s cubic-bezier(.21,.73,.22,1),box-shadow .16s ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation
+}
+body.ttm-daifugo .play-card.selected{
+  transform:translateY(-11px) rotateX(-5deg);z-index:5;
+  box-shadow:0 0 0 2px #f7db91,0 4px 1px #b5a17b,0 13px 20px #00140cda
+}
+body.ttm-daifugo .play-card:active:not(:disabled){transform:translateY(-4px) rotateX(7deg) scale(.98)}
+body.ttm-daifugo .play-card:focus-visible{outline:3px solid #ffe6ac;outline-offset:4px;z-index:7}
+body.ttm-daifugo .table-card{
+  transform-style:preserve-3d;border-bottom:3px solid #c8c5b8;
+  box-shadow:0 2px 1px #cfc9bb,0 7px 10px #03180fbb
+}
+body.ttm-daifugo .played-area{perspective:1100px}
+body.ttm-daifugo .myhand{padding-top:16px;gap:clamp(4px,.65vw,8px)}
+body.ttm-daifugo .play-buttons button{min-height:47px;touch-action:manipulation}
+body.ttm-daifugo .validation.ok{color:#dbf6cc}
+body.ttm-daifugo .my-zone-head strong{color:#fff4ca}
+@media(max-width:500px){
+ body.ttm-daifugo .play-card{width:clamp(43px,12vw,55px);height:clamp(69px,19vw,80px)}
+ body.ttm-daifugo .table-card{width:clamp(49px,13.3vw,59px);height:clamp(72px,19vw,86px)}
+ body.ttm-daifugo .myhand{gap:5px;padding-top:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ttm-motion-control button,.ttm-shogi .koma,.ttm-mahjong .tile,.ttm-daifugo .play-card{transition:none!important}
+}
